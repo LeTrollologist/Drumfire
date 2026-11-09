@@ -1,0 +1,20 @@
+[package]
+name = "drumfire-gui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "egui desktop application for Drumfire"
+
+[[bin]]
+name = "drumfire-gui"
+path = "src/main.rs"
+
+[dependencies]
+drumfire-model = { path = "../model" }
+drumfire-core = { path = "../core" }
+drumfire-ns = { path = "../ns" }
+eframe.workspace = true
+serde_json.workspace = true
+getrandom.workspace = true

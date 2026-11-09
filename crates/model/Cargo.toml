@@ -1,0 +1,16 @@
+[package]
+name = "drumfire-model"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Validated domain types and battle input schema for Drumfire"
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+hex.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true

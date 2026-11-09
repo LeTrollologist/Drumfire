@@ -1,0 +1,217 @@
+{
+  "input": {
+    "attacker": {
+      "name": "Arcadia",
+      "forces": 12000,
+      "morale": 72,
+      "tech": 7,
+      "training": 6,
+      "experience": 5,
+      "logistics": 6,
+      "intel": 5,
+      "home": false
+    },
+    "defender": {
+      "name": "Borealis",
+      "forces": 15000,
+      "morale": 65,
+      "tech": 6,
+      "training": 7,
+      "experience": 6,
+      "logistics": 5,
+      "intel": 6,
+      "home": true
+    },
+    "config": {
+      "max_rounds": 12,
+      "scale": 2.5,
+      "home_bonus": 0.35,
+      "casualty_rate": 0.12,
+      "morale_rout_threshold": 20
+    },
+    "seed": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+  },
+  "input_hash": "97ae8b93dbd9c64e3038b1fc8e0be46ba05b1fddfe1006065847cf65b824702f",
+  "rounds": [
+    {
+      "round": 1,
+      "attacker_strength": 10.992745258631441,
+      "defender_strength": 11.49087214452889,
+      "attacker_win_probability": 0.45035146031663026,
+      "roll": 0.41445576247967597,
+      "round_winner": "attacker",
+      "attacker_casualties": 531,
+      "defender_casualties": 1316,
+      "attacker_forces_after": 11469,
+      "defender_forces_after": 13684,
+      "attacker_morale_after": 77,
+      "defender_morale_after": 58
+    },
+    {
+      "round": 2,
+      "attacker_strength": 11.072490210123416,
+      "defender_strength": 11.224055621474779,
+      "attacker_win_probability": 0.484848099521627,
+      "roll": 0.5708758142541149,
+      "round_winner": "defender",
+      "attacker_casualties": 1259,
+      "defender_casualties": 587,
+      "attacker_forces_after": 10210,
+      "defender_forces_after": 13097,
+      "attacker_morale_after": 70,
+      "defender_morale_after": 63
+    },
+    {
+      "round": 3,
+      "attacker_strength": 10.781220849555536,
+      "defender_strength": 11.305214825777998,
+      "attacker_win_probability": 0.4477915938568868,
+      "roll": 0.17828319638848278,
+      "round_winner": "attacker",
+      "attacker_casualties": 368,
+      "defender_casualties": 927,
+      "attacker_forces_after": 9842,
+      "defender_forces_after": 12170,
+      "attacker_morale_after": 75,
+      "defender_morale_after": 57
+    },
+    {
+      "round": 4,
+      "attacker_strength": 10.86951582162921,
+      "defender_strength": 11.081811351874558,
+      "attacker_win_probability": 0.4787831951567089,
+      "roll": 0.15353796989198676,
+      "round_winner": "attacker",
+      "attacker_casualties": 332,
+      "defender_casualties": 1088,
+      "attacker_forces_after": 9510,
+      "defender_forces_after": 11082,
+      "attacker_morale_after": 80,
+      "defender_morale_after": 50
+    },
+    {
+      "round": 5,
+      "attacker_strength": 10.960204302482385,
+      "defender_strength": 10.813167681775653,
+      "attacker_win_probability": 0.5146994250062007,
+      "roll": 0.3642110120099745,
+      "round_winner": "attacker",
+      "attacker_casualties": 405,
+      "defender_casualties": 885,
+      "attacker_forces_after": 9105,
+      "defender_forces_after": 10197,
+      "attacker_morale_after": 85,
+      "defender_morale_after": 44
+    },
+    {
+      "round": 6,
+      "attacker_strength": 11.041688815894727,
+      "defender_strength": 10.5799469016151,
+      "attacker_win_probability": 0.5460433763781812,
+      "roll": 0.8021634336321674,
+      "round_winner": "defender",
+      "attacker_casualties": 1153,
+      "defender_casualties": 415,
+      "attacker_forces_after": 7952,
+      "defender_forces_after": 9782,
+      "attacker_morale_after": 77,
+      "defender_morale_after": 49
+    },
+    {
+      "round": 7,
+      "attacker_strength": 10.706304494957134,
+      "defender_strength": 10.66340146445743,
+      "attacker_win_probability": 0.5042901977593083,
+      "roll": 0.7177568839892925,
+      "round_winner": "defender",
+      "attacker_casualties": 976,
+      "defender_casualties": 372,
+      "attacker_forces_after": 6976,
+      "defender_forces_after": 9410,
+      "attacker_morale_after": 69,
+      "defender_morale_after": 54
+    },
+    {
+      "round": 8,
+      "attacker_strength": 10.375374303939235,
+      "defender_strength": 10.749634496858787,
+      "attacker_win_probability": 0.4626437215926994,
+      "roll": 0.493409356929294,
+      "round_winner": "defender",
+      "attacker_casualties": 898,
+      "defender_casualties": 357,
+      "attacker_forces_after": 6078,
+      "defender_forces_after": 9053,
+      "attacker_morale_after": 61,
+      "defender_morale_after": 59
+    },
+    {
+      "round": 9,
+      "attacker_strength": 10.037595487748721,
+      "defender_strength": 10.835961927995903,
+      "attacker_win_probability": 0.42083500051193173,
+      "roll": 0.4930914025172287,
+      "round_winner": "defender",
+      "attacker_casualties": 711,
+      "defender_casualties": 482,
+      "attacker_forces_after": 5367,
+      "defender_forces_after": 8571,
+      "attacker_morale_after": 53,
+      "defender_morale_after": 64
+    },
+    {
+      "round": 10,
+      "attacker_strength": 9.713210678651516,
+      "defender_strength": 10.906256356593467,
+      "attacker_win_probability": 0.3829092047826587,
+      "roll": 0.5106097114051742,
+      "round_winner": "defender",
+      "attacker_casualties": 693,
+      "defender_casualties": 443,
+      "attacker_forces_after": 4674,
+      "defender_forces_after": 8128,
+      "attacker_morale_after": 45,
+      "defender_morale_after": 68
+    },
+    {
+      "round": 11,
+      "attacker_strength": 9.374984441722786,
+      "defender_strength": 10.953193193746571,
+      "attacker_win_probability": 0.3472195648847759,
+      "roll": 0.7838106825947505,
+      "round_winner": "defender",
+      "attacker_casualties": 425,
+      "defender_casualties": 213,
+      "attacker_forces_after": 4249,
+      "defender_forces_after": 7915,
+      "attacker_morale_after": 38,
+      "defender_morale_after": 72
+    },
+    {
+      "round": 12,
+      "attacker_strength": 9.104674261918461,
+      "defender_strength": 11.026641306722457,
+      "attacker_win_probability": 0.3167416003204338,
+      "roll": 0.5614980929332927,
+      "round_winner": "defender",
+      "attacker_casualties": 354,
+      "defender_casualties": 247,
+      "attacker_forces_after": 3895,
+      "defender_forces_after": 7668,
+      "attacker_morale_after": 32,
+      "defender_morale_after": 76
+    }
+  ],
+  "result": {
+    "winner": "defender",
+    "ending": "max_rounds",
+    "final_forces": {
+      "attacker": 3895,
+      "defender": 7668
+    },
+    "final_morale": {
+      "attacker": 32,
+      "defender": 76
+    }
+  }
+}

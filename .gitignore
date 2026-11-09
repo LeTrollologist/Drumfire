@@ -1,0 +1,35 @@
+# Rust build output
+/target/
+**/*.rs.bk
+*.pdb
+*.ilk
+*.exp
+
+# IDE / editor
+.idea/
+*.iml
+.vscode/
+*.swp
+*.swo
+
+# OS metadata
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local configuration and secrets
+.env
+.env.*
+*.local
+secrets/
+
+# Tooling scratch space
+/.chrome-tmp/
+.tmp/
+.tmp-build/
+.tmp-release/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp

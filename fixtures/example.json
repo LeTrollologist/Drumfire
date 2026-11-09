@@ -1,0 +1,32 @@
+{
+  "attacker": {
+    "name": "Arcadia",
+    "forces": 12000,
+    "morale": 72,
+    "tech": 7,
+    "training": 6,
+    "experience": 5,
+    "logistics": 6,
+    "intel": 5,
+    "home": false
+  },
+  "defender": {
+    "name": "Borealis",
+    "forces": 15000,
+    "morale": 65,
+    "tech": 6,
+    "training": 7,
+    "experience": 6,
+    "logistics": 5,
+    "intel": 6,
+    "home": true
+  },
+  "config": {
+    "max_rounds": 12,
+    "scale": 2.5,
+    "home_bonus": 0.35,
+    "casualty_rate": 0.12,
+    "morale_rout_threshold": 20
+  },
+  "seed": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+}

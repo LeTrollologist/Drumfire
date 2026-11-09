@@ -1,0 +1,32 @@
+Drumfire
+Copyright (C) 2026 Drumfire contributors
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, version 2 only.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, see <https://www.gnu.org/licenses/>.
+
+Provenance
+----------
+
+Drumfire is a spiritual successor to NationStatesBattleSim:
+  https://github.com/GhostlyBanjo/NationStatesBattleSim
+  Original author: Forrest Davis ("GhostlyBanjo")
+  Last upstream commit: 1f795fbd6c547ef4f5f073ca2c2821ffcbda2f85 (2015-05-18)
+  Original license: GNU General Public License, version 2
+
+The original Java source was not carried over. The domain model (force count,
+morale, technology, training, combat experience, logistics, intel, home
+advantage, and round-based resolution) was re-derived from the original
+project's README and observed behavior, then reimplemented in Rust with a new
+deterministic engine.
+
+NationStates is a game by Max Barry. Drumfire is an independent project and is
+not affiliated with, endorsed by, or operated by NationStates or Max Barry.

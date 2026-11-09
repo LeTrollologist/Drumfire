@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Drumfire — war room mockup</title>
+<style>
+  :root {
+    --bg: #0d1215;
+    --panel: #151d21;
+    --panel-2: #1a2429;
+    --line: #2a373d;
+    --text: #e9e3d6;
+    --muted: #8d9aa1;
+    --faint: #5d6b72;
+    --sand: #d6a45d;
+    --sand-soft: rgba(214,164,93,.16);
+    --blue: #77a9c9;
+    --blue-soft: rgba(119,169,201,.16);
+    --red: #c97a6d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; width: 1400px; height: 900px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(900px 500px at 15% -10%, rgba(214,164,93,.07), transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, rgba(119,169,201,.07), transparent 55%),
+      var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    padding: 26px 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .topbar { display:flex; align-items:center; justify-content:space-between; }
+  .brand { display:flex; align-items:baseline; gap:12px; }
+  .brand .name { font-family: Georgia, serif; font-size: 24px; letter-spacing:.4px; }
+  .brand .kicker { font-size: 10px; letter-spacing: 2.4px; color: var(--muted); text-transform: uppercase; }
+  .chips { display:flex; gap:8px; }
+  .chip { border:1px solid var(--line); background:rgba(255,255,255,.015); color:var(--muted);
+          padding:6px 9px; border-radius:999px; font-size:10px; letter-spacing:1.2px; text-transform:uppercase; }
+  .chip b { color:var(--text); font-weight:600; letter-spacing:.6px; }
+
+  .battlehead { display:flex; align-items:flex-end; justify-content:space-between; padding: 2px 2px 0; }
+  .sides { display:flex; align-items:baseline; gap:18px; }
+  .side { display:flex; flex-direction:column; gap:3px; }
+  .side .role { font-size:10px; letter-spacing:2px; color:var(--faint); text-transform:uppercase; }
+  .side .team { font-family: Georgia, serif; font-size: 34px; line-height:1; }
+  .side.att .team { color: var(--sand); }
+  .side.def { text-align:right; align-items:flex-end; }
+  .side.def .team { color: var(--blue); }
+  .vs { color: var(--faint); font-size: 12px; letter-spacing:2px; padding-bottom:5px; }
+  .verdict { text-align:right; }
+  .verdict .badge { display:inline-block; font-size:10px; letter-spacing:1.6px; text-transform:uppercase;
+                    color:#d9c7a7; border:1px solid rgba(214,164,93,.35); background:var(--sand-soft);
+                    padding:5px 9px; border-radius:999px; }
+  .verdict .line { margin-top:7px; color:var(--muted); font-size:12px; }
+
+  .grid { flex:1; display:grid; grid-template-columns: minmax(0, 1fr) 370px; gap:16px; min-height:0; }
+  .left { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .card { background: linear-gradient(180deg, rgba(255,255,255,.018), rgba(255,255,255,0)) , var(--panel);
+          border:1px solid var(--line); border-radius:12px; }
+  .card .cardhead { display:flex; align-items:center; justify-content:space-between; padding:13px 16px 0; }
+  .label { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--faint); }
+  .hint { font-size:11px; color:var(--faint); }
+
+  .momentum { padding-bottom:12px; }
+  .momentum .numbers { display:flex; justify-content:space-between; padding: 8px 16px 0; font-size:12px; color:var(--muted); }
+  .momentum .numbers b { font-size:15px; }
+  .barwrap { padding: 8px 16px 0; }
+  .bar { height: 26px; border-radius:7px; overflow:hidden; display:flex; border:1px solid #26343a; }
+  .bar .att { width:38%; background: linear-gradient(90deg, #8e642f, #d6a45d); }
+  .bar .def { width:62%; background: linear-gradient(90deg, #3f6b86, #77a9c9); }
+  .bar .att, .bar .def { position:relative; }
+  .bar .att::after, .bar .def::after { content:""; position:absolute; top:0; bottom:0; width:1px; background:rgba(255,255,255,.2); }
+  .bar .att::after { right:0; }
+  .bar .def::after { left:0; }
+  .ticks { display:flex; justify-content:space-between; padding: 7px 16px 0; color:var(--faint); font-size:9px; letter-spacing:1px; }
+
+  .spark { padding: 4px 16px 8px; }
+  .spark svg { width:100%; height:104px; display:block; }
+
+  .timeline { display:flex; gap:8px; padding: 4px 16px 14px; }
+  .round { flex:1; min-width:0; border:1px solid var(--line); background:var(--panel-2); border-radius:8px;
+           padding:8px 7px 7px; position:relative; }
+  .round.sel { border-color: rgba(214,164,93,.75); box-shadow: 0 0 0 1px rgba(214,164,93,.18) inset; background:#1d262a; }
+  .round .n { font-size:9px; letter-spacing:1px; color:var(--faint); }
+  .round .dot { width:6px; height:6px; border-radius:50%; margin:6px 0 4px; }
+  .round .dot.a { background:var(--sand); }
+  .round .dot.d { background:var(--blue); }
+  .round .l { font-size:8.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-variant-numeric:tabular-nums; letter-spacing:-.1px; }
+  .round .l b { color:var(--text); font-weight:600; }
+  .round .m { margin-top:4px; font-size:9px; color:var(--faint); font-variant-numeric:tabular-nums; }
+
+  .moments { padding-bottom:0; }
+  .momentrow { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; padding: 10px 16px 14px; }
+  .moment { border-left:2px solid rgba(214,164,93,.35); padding-left:10px; }
+  .moment:nth-child(2) { border-left-color: rgba(119,169,201,.55); }
+  .moment:nth-child(3) { border-left-color: rgba(201,122,109,.55); }
+  .moment .mn { font-size:9px; letter-spacing:1.4px; color:var(--faint); }
+  .moment b { display:block; margin:3px 0 3px; font-family:Georgia, serif; font-size:14px; font-weight:500; }
+  .moment p { margin:0; color:#aeb8bc; font-size:10.5px; line-height:1.4; }
+
+  .event { display:flex; gap:14px; padding: 14px 16px 15px; align-items:flex-start; }
+  .event .marker { width:34px; height:34px; border-radius:9px; background:var(--blue-soft); border:1px solid rgba(119,169,201,.35);
+                   display:flex; align-items:center; justify-content:center; color:var(--blue); font-size:13px; flex:none; }
+  .event h3 { margin:0 0 4px; font-family:Georgia, serif; font-size:18px; font-weight:500; }
+  .event p { margin:0; color:#b9c2c6; font-size:12.5px; line-height:1.5; max-width:760px; }
+  .chipsrow { display:flex; gap:6px; margin-top:9px; flex-wrap:wrap; }
+  .mini { font-size:10px; color:var(--muted); border:1px solid var(--line); background:#121a1e; border-radius:999px; padding:4px 8px; }
+  .mini.a { color:#e0ba80; border-color:rgba(214,164,93,.28); background:var(--sand-soft); }
+  .mini.d { color:#9fc6dd; border-color:rgba(119,169,201,.28); background:var(--blue-soft); }
+
+  .inspector { display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+  .inspector .head { padding:16px 16px 10px; border-bottom:1px solid var(--line); }
+  .inspector .head .row { display:flex; align-items:baseline; justify-content:space-between; }
+  .inspector .p { font-family:Georgia, serif; font-size:38px; line-height:1; color:var(--blue); }
+  .inspector .p span { font-family:"Segoe UI", sans-serif; font-size:12px; color:var(--muted); }
+  .inspector .sub { margin-top:5px; color:var(--muted); font-size:11.5px; }
+  .factors { padding: 12px 16px 6px; display:flex; flex-direction:column; gap:9px; }
+  .factor { display:grid; grid-template-columns: 76px 1fr 42px; gap:8px; align-items:center; }
+  .factor .name { font-size:10.5px; color:var(--muted); }
+  .factor .track { height:7px; background:#11191d; border-radius:99px; position:relative; overflow:hidden; border:1px solid #253238; }
+  .factor .track .a { position:absolute; left:4%; top:0; bottom:0; background:var(--sand); border-radius:99px; }
+  .factor .track .d { position:absolute; right:4%; top:0; bottom:0; background:var(--blue); border-radius:99px; }
+  .factor .val { text-align:right; font-size:10px; color:var(--faint); font-variant-numeric: tabular-nums; }
+  .why { margin: 8px 16px 12px; padding: 10px 11px; border-left:2px solid rgba(214,164,93,.55);
+         background:rgba(214,164,93,.06); color:#c7bfae; font-size:11.5px; line-height:1.5; border-radius:0 7px 7px 0; }
+  .final { margin:auto 16px 12px; border-top:1px solid var(--line); padding-top:11px; }
+  .final .frow { display:flex; justify-content:space-between; gap:12px; padding:3px 0; font-size:10.5px; color:var(--muted); }
+  .final .frow b { color:var(--text); font-weight:600; font-variant-numeric:tabular-nums; }
+  .inspector .foot { border-top:1px solid var(--line); padding:11px 16px; display:flex; justify-content:space-between; color:var(--faint); font-size:10px; }
+
+  .footer { display:flex; align-items:center; justify-content:space-between; padding: 0 2px; }
+  .play { display:flex; align-items:center; gap:7px; }
+  .btn { border:1px solid var(--line); background:var(--panel); color:var(--text); border-radius:7px;
+         padding:7px 10px; font-size:11px; letter-spacing:.4px; }
+  .btn.primary { background:var(--sand); color:#22180d; border-color:var(--sand); font-weight:700; }
+  .speed { color:var(--muted); font-size:11px; padding-left:3px; }
+  .tabs { display:flex; gap:2px; border:1px solid var(--line); background:var(--panel); border-radius:8px; padding:2px; }
+  .tab { padding:6px 11px; font-size:10.5px; color:var(--muted); border-radius:6px; }
+  .tab.on { background:#243036; color:var(--text); }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="name">Drumfire</div>
+      <div class="kicker">After-action report</div>
+    </div>
+    <div class="chips">
+      <div class="chip">Seed <b>0001…1E1F</b></div>
+      <div class="chip">Rules <b>v1</b></div>
+      <div class="chip"><b>12</b> rounds</div>
+    </div>
+  </div>
+
+  <div class="battlehead">
+    <div class="sides">
+      <div class="side att"><div class="role">Attacker</div><div class="team">Arcadia</div></div>
+      <div class="vs">VS</div>
+      <div class="side def"><div class="role">Defender</div><div class="team">Borealis</div></div>
+    </div>
+    <div class="verdict">
+      <div class="badge">Borealis wins · maximum rounds</div>
+      <div class="line">Final forces 3,895 / 7,668 &nbsp;·&nbsp; morale 32 / 76</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="left">
+      <div class="card momentum">
+        <div class="cardhead">
+          <div class="label">Momentum</div>
+          <div class="hint">round losses: attacker / defender</div>
+        </div>
+        <div class="numbers">
+          <div><b style="color:var(--sand)">38%</b> &nbsp;Arcadia</div>
+          <div>Borealis&nbsp; <b style="color:var(--blue)">62%</b></div>
+        </div>
+        <div class="barwrap"><div class="bar"><div class="att"></div><div class="def"></div></div></div>
+        <div class="ticks"><span>R1</span><span>R2</span><span>R3</span><span>R4</span><span>R5</span><span>R6</span><span>R7</span><span>R8</span><span>R9</span><span>R10</span><span>R11</span><span>R12</span></div>
+        <div class="spark">
+          <svg viewBox="0 0 760 104" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#77a9c9" stop-opacity=".22"/>
+                <stop offset="1" stop-color="#77a9c9" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="52" x2="760" y2="52" stroke="#2a373d" stroke-width="1"/>
+            <path d="M0,58 L63,52 L126,57 L189,52 L252,47 L315,42 L378,46 L441,52 L504,58 L567,64 L630,68 L693,72 L760,76 L760,104 L0,104 Z" fill="url(#fade)"/>
+            <path d="M0,58 L63,52 L126,57 L189,52 L252,47 L315,42 L378,46 L441,52 L504,58 L567,64 L630,68 L693,72 L760,76" fill="none" stroke="#77a9c9" stroke-width="2"/>
+            <circle cx="378" cy="46" r="4" fill="#0d1215" stroke="#d6a45d" stroke-width="2"/>
+            <line x1="378" y1="8" x2="378" y2="96" stroke="#d6a45d" stroke-width="1" stroke-dasharray="3 4" opacity=".55"/>
+            <text x="384" y="16" fill="#d6a45d" font-size="9" font-family="Segoe UI">selected · R7</text>
+          </svg>
+        </div>
+        <div class="timeline">
+          <div class="round"><div class="n">R1</div><div class="dot a"></div><div class="l">531/1316</div><div class="m">45.0%</div></div>
+          <div class="round"><div class="n">R2</div><div class="dot d"></div><div class="l">1259/587</div><div class="m">48.5%</div></div>
+          <div class="round"><div class="n">R3</div><div class="dot a"></div><div class="l">368/927</div><div class="m">44.8%</div></div>
+          <div class="round"><div class="n">R4</div><div class="dot a"></div><div class="l">332/1088</div><div class="m">47.9%</div></div>
+          <div class="round"><div class="n">R5</div><div class="dot a"></div><div class="l">405/885</div><div class="m">51.5%</div></div>
+          <div class="round"><div class="n">R6</div><div class="dot d"></div><div class="l">1153/415</div><div class="m">54.6%</div></div>
+          <div class="round sel"><div class="n">R7</div><div class="dot d"></div><div class="l">976/372</div><div class="m">50.4%</div></div>
+          <div class="round"><div class="n">R8</div><div class="dot d"></div><div class="l">898/357</div><div class="m">46.3%</div></div>
+          <div class="round"><div class="n">R9</div><div class="dot d"></div><div class="l">711/482</div><div class="m">42.1%</div></div>
+          <div class="round"><div class="n">R10</div><div class="dot d"></div><div class="l">693/443</div><div class="m">38.3%</div></div>
+          <div class="round"><div class="n">R11</div><div class="dot d"></div><div class="l">425/213</div><div class="m">34.7%</div></div>
+          <div class="round"><div class="n">R12</div><div class="dot d"></div><div class="l">354/247</div><div class="m">31.7%</div></div>
+        </div>
+      </div>
+
+      <div class="card event">
+        <div class="marker">7</div>
+        <div>
+          <h3>Borealis holds the line</h3>
+          <p>The seventh interval turns on the defender’s interior lines: Borealis gives ground slowly, then lets the Arcadian thrust spend itself against the prepared fallback. Arcadia loses nearly a thousand troops; Borealis loses fewer than four hundred and keeps the initiative.</p>
+          <div class="chipsrow">
+            <span class="mini a">Arcadia −976</span>
+            <span class="mini d">Borealis −372</span>
+            <span class="mini">Morale 69 / 54</span>
+            <span class="mini">Forces 6,976 / 9,410</span>
+            <span class="mini">Roll 0.718</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card moments">
+        <div class="cardhead">
+          <div class="label">Turning points</div>
+          <div class="hint">the shape of the battle</div>
+        </div>
+        <div class="momentrow">
+          <div class="moment">
+            <div class="mn">ROUND 1</div>
+            <b>The first probe</b>
+            <p>Arcadia opens with a narrow advantage and pays for it: the first interval costs more than it gains.</p>
+          </div>
+          <div class="moment">
+            <div class="mn">ROUND 7</div>
+            <b>Borealis holds</b>
+            <p>The defender gives ground, then lets the thrust spend itself. The initiative does not come back.</p>
+          </div>
+          <div class="moment">
+            <div class="mn">ROUND 12</div>
+            <b>The line breaks</b>
+            <p>Arcadia’s remaining force is too small to convert; Borealis wins on the round cap.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card inspector">
+      <div class="head">
+        <div class="row">
+          <div class="label">Round 7 · interval</div>
+          <div class="hint">defender wins</div>
+        </div>
+        <div class="p">54.6% <span>attacker win chance</span></div>
+        <div class="sub">The roll was <b style="color:var(--text)">0.718</b> — above the threshold, so Borealis takes the interval.</div>
+      </div>
+
+      <div class="factors">
+        <div class="factor"><div class="name">Forces</div><div class="track"><div class="a" style="width:42%"></div><div class="d" style="width:58%"></div></div><div class="val">42 / 58</div></div>
+        <div class="factor"><div class="name">Morale</div><div class="track"><div class="a" style="width:56%"></div><div class="d" style="width:44%"></div></div><div class="val">56 / 44</div></div>
+        <div class="factor"><div class="name">Technology</div><div class="track"><div class="a" style="width:61%"></div><div class="d" style="width:39%"></div></div><div class="val">61 / 39</div></div>
+        <div class="factor"><div class="name">Training</div><div class="track"><div class="a" style="width:46%"></div><div class="d" style="width:54%"></div></div><div class="val">46 / 54</div></div>
+        <div class="factor"><div class="name">Experience</div><div class="track"><div class="a" style="width:44%"></div><div class="d" style="width:56%"></div></div><div class="val">44 / 56</div></div>
+        <div class="factor"><div class="name">Logistics</div><div class="track"><div class="a" style="width:52%"></div><div class="d" style="width:48%"></div></div><div class="val">52 / 48</div></div>
+        <div class="factor"><div class="name">Intel</div><div class="track"><div class="a" style="width:45%"></div><div class="d" style="width:55%"></div></div><div class="val">45 / 55</div></div>
+        <div class="factor"><div class="name">Home</div><div class="track"><div class="a" style="width:0%"></div><div class="d" style="width:100%"></div></div><div class="val">— / +0.35</div></div>
+      </div>
+
+      <div class="why"><b style="color:#e6d6b8">Why this round:</b> Borealis’s training and home-soil edge outweigh Arcadia’s marginal tech and morale advantage. The force ratio is close enough that the interval is still a coin-flip, not a foregone conclusion.</div>
+
+      <div class="final">
+        <div class="label">Final state</div>
+        <div class="frow"><span>Forces</span><b>3,895 / 7,668</b></div>
+        <div class="frow"><span>Morale</span><b>32 / 76</b></div>
+        <div class="frow"><span>Losses</span><b>8,105 / 7,332</b></div>
+      </div>
+
+      <div class="foot"><span>Attacker 10.62 · Defender 10.93</span><span>± 0.31</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <div class="play">
+      <button class="btn">⏮</button>
+      <button class="btn primary">▶ Play</button>
+      <button class="btn">⏭</button>
+      <span class="speed">1× &nbsp;·&nbsp; round 7 of 12</span>
+    </div>
+    <div class="tabs">
+      <div class="tab">Report</div>
+      <div class="tab on">Analysis</div>
+      <div class="tab">Share</div>
+    </div>
+  </div>
+
+</body>
+</html>

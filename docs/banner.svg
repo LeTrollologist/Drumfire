@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-label="Drumfire — deterministic battle resolution for NationStates roleplay">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#15110c"/>
+      <stop offset="0.6" stop-color="#1d1710"/>
+      <stop offset="1" stop-color="#241b12"/>
+    </linearGradient>
+    <linearGradient id="att" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#a56d28"/>
+      <stop offset="1" stop-color="#d6a45d"/>
+    </linearGradient>
+    <linearGradient id="def" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3f6f8c"/>
+      <stop offset="1" stop-color="#77a9c9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="300" fill="none" stroke="#3a2f22" stroke-width="2"/>
+
+  <g opacity="0.18" stroke="#d6a45d" stroke-width="1">
+    <path d="M0 70 H1200 M0 150 H1200 M0 230 H1200"/>
+    <path d="M900 0 V300 M1000 0 V300 M1100 0 V300"/>
+  </g>
+
+  <text x="70" y="118" fill="#d6a45d" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="12" letter-spacing="5">NATIONSTATES ROLEPLAY</text>
+  <text x="66" y="198" fill="#f3e7d6" font-family="Georgia, Times New Roman, serif" font-size="78" letter-spacing="1">Drumfire</text>
+  <text x="72" y="234" fill="#b9aa92" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="17">Deterministic battle resolution. Every roll replayable.</text>
+
+  <g font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="11" letter-spacing="1.6">
+    <rect x="70" y="256" width="92" height="24" rx="12" fill="none" stroke="#7a5a31"/>
+    <text x="116" y="272" fill="#d6a45d" text-anchor="middle">SKIRMISH</text>
+    <rect x="174" y="256" width="78" height="24" rx="12" fill="none" stroke="#3f6278"/>
+    <text x="213" y="272" fill="#77a9c9" text-anchor="middle">BATTLE</text>
+    <text x="272" y="272" fill="#7f7362">PLANNED: FRONTLINES · DOGFIGHT · NAVAL · CAMPAIGN</text>
+  </g>
+
+  <g>
+    <text x="780" y="112" fill="#8d9aa1" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="10" letter-spacing="2.4">MOMENTUM</text>
+    <text x="780" y="136" fill="#d6a45d" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="600">38% ARCADIA</text>
+    <text x="1128" y="136" fill="#77a9c9" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="13" font-weight="600" text-anchor="end">62% BOREALIS</text>
+    <rect x="780" y="150" width="348" height="26" rx="7" fill="#2a2118"/>
+    <rect x="780" y="150" width="132" height="26" rx="7" fill="url(#att)"/>
+    <rect x="912" y="150" width="216" height="26" rx="7" fill="url(#def)"/>
+    <line x1="912" y1="146" x2="912" y2="180" stroke="#f3e7d6" stroke-width="1" opacity=".7"/>
+
+    <g fill="#6e6354" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" font-size="9">
+      <text x="788" y="198">R1</text>
+      <text x="846" y="198">R3</text>
+      <text x="904" y="198">R5</text>
+      <text x="962" y="198">R7</text>
+      <text x="1020" y="198">R9</text>
+      <text x="1078" y="198">R11</text>
+    </g>
+
+    <path d="M780 244 L814 238 L848 242 L882 236 L916 228 L950 222 L984 226 L1018 234 L1052 240 L1086 246 L1120 250 L1128 251" fill="none" stroke="#77a9c9" stroke-width="2" opacity=".85"/>
+    <circle cx="962" cy="226" r="4" fill="#15110c" stroke="#d6a45d" stroke-width="2"/>
+  </g>
+</svg>

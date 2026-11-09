@@ -1,0 +1,22 @@
+[package]
+name = "drumfire-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Command-line interface for Drumfire"
+
+[[bin]]
+name = "drumfire"
+path = "src/main.rs"
+
+[dependencies]
+drumfire-model = { path = "../model" }
+drumfire-core = { path = "../core" }
+drumfire-ns = { path = "../ns" }
+serde.workspace = true
+serde_json.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+getrandom.workspace = true

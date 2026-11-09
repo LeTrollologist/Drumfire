@@ -1,0 +1,33 @@
+{
+  "mode": "skirmish",
+  "attacker": {
+    "name": "Red Section",
+    "forces": 120,
+    "morale": 75,
+    "tech": 6,
+    "training": 7,
+    "experience": 5,
+    "logistics": 4,
+    "intel": 6,
+    "home": false
+  },
+  "defender": {
+    "name": "Blue Section",
+    "forces": 150,
+    "morale": 68,
+    "tech": 6,
+    "training": 6,
+    "experience": 6,
+    "logistics": 5,
+    "intel": 5,
+    "home": true
+  },
+  "config": {
+    "max_rounds": 8,
+    "scale": 2.2,
+    "home_bonus": 0.30,
+    "casualty_rate": 0.15,
+    "morale_rout_threshold": 25
+  },
+  "seed": "101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"
+}
