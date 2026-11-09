@@ -52,7 +52,8 @@ Status: implemented in the engine, CLI, and GUI.
     "scale": 2.5,
     "casualty_rate": 0.12,
     "morale_rout_threshold": 20,
-    "replenish_rate": 0.25
+    "replenish_rate": 0.25,
+    "capture_threshold": 0.10
   },
   "seed": "64 hex characters"
 }
@@ -65,6 +66,7 @@ Status: implemented in the engine, CLI, and GUI.
 | `fortification` | 1–10 | Defender bonus in that sector. |
 | `objective` | boolean | Whether capturing the sector counts toward a breakthrough. |
 | `reserves` | integer ≥ 0 | Troops available to replace daily losses. |
+| `capture_threshold` | 0.0–0.5 | A sector falls when the defender reaches this fraction of its starting troops. |
 | `morale` | 0–100 | Front-wide cohesion. |
 | `tech`, `training`, `experience`, `logistics`, `intel` | 1–10 | Front-wide quality. |
 
@@ -118,7 +120,9 @@ For every contested sector, in input order:
    ```text
    winner_frac = clamp(base * 0.35 * (0.60 + 0.80*u3), 0.0, 0.25)
    ```
-9. Apply losses. If the defender reaches zero, the sector is **captured**.
+9. Apply losses. A sector is **captured** when the defender falls to zero or to
+   `capture_threshold` of its starting troops; the surviving defenders are no
+   longer a coherent sector force.
 10. Morale changes:
     - sector win: `+1` for the winner, `-2` for the loser;
     - capture: an additional `+5` for the attacker, `-5` for the defender.

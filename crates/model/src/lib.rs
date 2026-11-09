@@ -800,6 +800,9 @@ pub struct FrontlineConfig {
     pub morale_rout_threshold: u8,
     /// Fraction of daily losses replaced from reserves. Range: 0.0..=1.0.
     pub replenish_rate: f64,
+    /// A sector is captured when the defender falls to this fraction of its
+    /// starting troops. Range: 0.0..=0.5.
+    pub capture_threshold: f64,
 }
 
 impl Default for FrontlineConfig {
@@ -810,6 +813,7 @@ impl Default for FrontlineConfig {
             casualty_rate: 0.12,
             morale_rout_threshold: 20,
             replenish_rate: 0.25,
+            capture_threshold: 0.10,
         }
     }
 }
@@ -839,6 +843,11 @@ impl FrontlineConfig {
         if !self.replenish_rate.is_finite() || !(0.0..=1.0).contains(&self.replenish_rate) {
             return Err(ValidationError::InvalidConfig(
                 "replenish_rate must be finite and between 0.0 and 1.0",
+            ));
+        }
+        if !self.capture_threshold.is_finite() || !(0.0..=0.5).contains(&self.capture_threshold) {
+            return Err(ValidationError::InvalidConfig(
+                "capture_threshold must be finite and between 0.0 and 0.5",
             ));
         }
         Ok(())

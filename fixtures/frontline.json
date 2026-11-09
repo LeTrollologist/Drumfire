@@ -48,7 +48,8 @@
     "scale": 2.5,
     "casualty_rate": 0.12,
     "morale_rout_threshold": 20,
-    "replenish_rate": 0.25
+    "replenish_rate": 0.25,
+    "capture_threshold": 0.1
   },
   "seed": "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"
 }

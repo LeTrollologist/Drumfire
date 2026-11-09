@@ -1,9 +1,9 @@
 # Drumfire modes — design proposal
 
 **Status:** framework implemented; **Skirmish**, **Battle**, **Dogfight**,
-**Naval**, and **Frontlines** are playable. **Campaign** is reserved/planned. This
-document defines the mode model before the engine grows incompatible input
-schemas.
+**Naval**, and **Frontlines** are playable, plus the **Halcyon Sweep** campaign
+slice. This document defines the mode model before the engine grows incompatible
+input schemas.
 
 ## 1. The core distinction
 
@@ -17,7 +17,7 @@ battle. The requested modes are not variations of that model:
 | **Frontlines** | Ground, spatial | Battalions/sectors | Days; sector pressure | Break the line, take objectives, collapse the front | **Implemented** |
 | **Dogfight** | Air | Aircraft/sorties | Minutes; a pass or missile exchange | Kills, drive-off, or protect the mission package | **Implemented** |
 | **Naval** | Sea | Ships/tonnage | Hours; detection and salvos | Sink/cripple, drive off, or protect the convoy | **Implemented** |
-| **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | Planned |
+| **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | **Implemented slice** |
 
 A single `forces: int` field cannot represent troops, aircraft, ships, and
 sectors. The input schema has to branch by mode.
@@ -169,8 +169,9 @@ mode together:
 - a strategic map/timeline.
 
 “All of them” means a campaign can contain skirmishes, battles, frontlines,
-dogfights, and naval actions. It should be built **after** the battle modes it
-needs to string together.
+dogfights, and naval actions. The shipped Halcyon Sweep slice strings Frontlines,
+Dogfight, and Naval together; the full seven-node campaign adds Battle and
+Skirmish operations later.
 
 ## 4. What changes in the UI
 
@@ -201,7 +202,9 @@ Do not build six shallow modes at once. Build vertical slices:
    readiness, CLI `naval run/replay`, GUI screen.
 4. **Frontlines** — ✅ done. Sectors, reserves, fortifications, objective
    capture, CLI `frontline run/replay`, GUI sector board.
-5. **Campaign** — persistent state over the modes that exist.
+5. **Campaign** — ✅ CLI slice done: three nodes, three formations, Frontlines →
+   Dogfight → Naval, persistent resources, campaign replay. The war-room GUI and
+   full seven-node theater are planned.
 
 Rough effort, part-time:
 
@@ -212,7 +215,7 @@ Rough effort, part-time:
 | Dogfight | 1–2 weeks | done |
 | Naval | 1–2 weeks | done |
 | Frontlines | 2–3 weeks | done |
-| Campaign | 2–3 weeks | planned |
+| Campaign | 2–3 weeks | slice done; full theater planned |
 
 Implemented in this slice:
 

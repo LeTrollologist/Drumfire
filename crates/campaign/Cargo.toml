@@ -1,0 +1,17 @@
+[package]
+name = "drumfire-campaign"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+description = "Persistent campaign layer for Drumfire"
+
+[dependencies]
+drumfire-model = { path = "../model" }
+drumfire-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+sha2.workspace = true
+hex.workspace = true

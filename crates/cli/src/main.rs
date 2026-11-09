@@ -1,9 +1,11 @@
 //! `drumfire` command-line interface.
 
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use drumfire_campaign::{replay_campaign, Campaign, OperationRecord};
 use drumfire_core::dogfight::{
     classify_dogfight, replay_dogfight, simulate_dogfight, DogfightEnding, DogfightLog,
 };
@@ -88,6 +90,11 @@ enum Command {
         #[command(subcommand)]
         command: FrontlineCommand,
     },
+    /// Play, demo, or verify the Halcyon Sweep campaign.
+    Campaign {
+        #[command(subcommand)]
+        command: CampaignCommand,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -165,6 +172,33 @@ enum FrontlineCommand {
         /// Print the verified log as JSON.
         #[arg(long)]
         json: bool,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum CampaignCommand {
+    /// Play the campaign interactively in the terminal.
+    Play {
+        /// Campaign seed, or `random`.
+        #[arg(long)]
+        seed: Option<String>,
+    },
+    /// Run the canonical three-operation demo.
+    Demo {
+        /// Campaign seed, or `random`.
+        #[arg(long)]
+        seed: Option<String>,
+        /// Write the campaign log to this path.
+        #[arg(long)]
+        out: Option<PathBuf>,
+        /// Print the campaign log as JSON.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Verify every operation in a saved campaign log.
+    Replay {
+        /// Path to a campaign log JSON.
+        log: PathBuf,
     },
 }
 
@@ -322,6 +356,29 @@ fn main() -> Result<()> {
                 }
             }
         },
+        Command::Campaign { command } => match command {
+            CampaignCommand::Play { seed } => {
+                play_campaign(campaign_seed(seed)?)?;
+            }
+            CampaignCommand::Demo { seed, out, json } => {
+                let campaign = Campaign::demo(campaign_seed(seed)?)?;
+                if let Some(path) = out {
+                    write_json(&path, &campaign)?;
+                }
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&campaign)?);
+                } else {
+                    print_campaign(&campaign);
+                }
+            }
+            CampaignCommand::Replay { log } => {
+                let campaign: Campaign = read_json(&log)?;
+                replay_campaign(&campaign)?;
+                println!("Campaign replay verified.");
+                println!();
+                print_campaign(&campaign);
+            }
+        },
     }
     Ok(())
 }
@@ -430,6 +487,122 @@ fn print_narrative(log: &BattleLog) {
         "Final morale: {} / {}",
         log.result.final_morale.attacker, log.result.final_morale.defender
     );
+}
+
+fn campaign_seed(value: Option<String>) -> Result<Seed> {
+    match value {
+        Some(value) => parse_seed(&value),
+        None => Ok(Seed::from_u64(5)),
+    }
+}
+
+fn play_campaign(seed: Seed) -> Result<()> {
+    let mut campaign = Campaign::new(seed);
+    while !campaign.finished {
+        print_campaign_status(&campaign);
+        let options = campaign.options();
+        for (index, option) in options.iter().enumerate() {
+            println!(
+                "  {}. {} — {} [{}]",
+                index + 1,
+                option.title,
+                option.kind.label(),
+                option.reason
+            );
+        }
+        print!("Choose an operation: ");
+        io::stdout().flush()?;
+        let mut line = String::new();
+        io::stdin().read_line(&mut line)?;
+        let choice = match line.trim().parse::<usize>() {
+            Ok(value) if (1..=options.len()).contains(&value) => value - 1,
+            _ => {
+                println!("Enter a number from 1 to {}.\n", options.len());
+                continue;
+            }
+        };
+        let option = &options[choice];
+        if !option.available {
+            println!("That operation is not available.\n");
+            continue;
+        }
+        match campaign.play_operation(option.kind) {
+            Ok(record) => print_operation(&record),
+            Err(err) => println!("Operation failed: {err}\n"),
+        }
+    }
+    print_campaign(&campaign);
+    Ok(())
+}
+
+fn print_campaign_status(campaign: &Campaign) {
+    println!(
+        "\n=== {} · Turn {}/{} ===",
+        campaign.name, campaign.turn, campaign.max_turns
+    );
+    println!(
+        "Will {}  ·  Supply {}  ·  Intel {}  ·  Momentum {:+}  ·  Enemy: Hold",
+        campaign.political_will, campaign.supply, campaign.intel, campaign.momentum
+    );
+    for node in &campaign.nodes {
+        println!(
+            "  {:<16} {:<10} {}",
+            node.name,
+            format!("{:?}", node.control).to_lowercase(),
+            if node.objective { "objective" } else { "" }
+        );
+    }
+    for formation in &campaign.formations {
+        println!(
+            "  {:<34} str {:>3}  morale {:>3}  supply {:>3}",
+            formation.name, formation.strength, formation.morale, formation.supply
+        );
+    }
+}
+
+fn print_operation(record: &OperationRecord) {
+    println!(
+        "\n{} · {} — {}",
+        record.title,
+        record.kind.label(),
+        record.aftermath.summary
+    );
+    println!(
+        "  formation {} · strength {:+} · will {:+} · supply {:+} · intel {:+} · momentum {:+}",
+        record.aftermath.formation_id,
+        record.aftermath.strength_delta,
+        record.aftermath.will_delta,
+        record.aftermath.supply_delta,
+        record.aftermath.intel_delta,
+        record.aftermath.momentum_delta
+    );
+}
+
+fn print_campaign(campaign: &Campaign) {
+    println!("\n=== {} ===", campaign.name);
+    if let Some(result) = campaign.result {
+        println!("Result: {:?}", result);
+    } else {
+        println!("Result: incomplete");
+    }
+    println!(
+        "Will {} · Supply {} · Intel {} · Momentum {:+}",
+        campaign.political_will, campaign.supply, campaign.intel, campaign.momentum
+    );
+    println!("\nOperations:");
+    for operation in &campaign.operations {
+        println!(
+            "  Turn {} · {} · {} — {}",
+            operation.turn,
+            operation.title,
+            operation.kind.label(),
+            operation.aftermath.summary
+        );
+    }
+    println!("\nChronicle:");
+    for line in &campaign.chronicle {
+        println!("  {line}");
+    }
 }
 
 fn print_frontline(log: &FrontlineLog) {

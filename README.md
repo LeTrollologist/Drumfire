@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/badge/Engine-Rust-E8963F?style=for-the-badge&logo=rust&logoColor=1A120B&labelColor=1A120B" alt="Engine: Rust" />
   </a>
   <a href="docs/modes.md">
-    <img src="https://img.shields.io/badge/Modes-5_Playable-77A9C9?style=for-the-badge&labelColor=1A120B" alt="Modes: Skirmish, Battle, Dogfight, Naval, and Frontlines" />
+    <img src="https://img.shields.io/badge/Modes-6_Playable-77A9C9?style=for-the-badge&labelColor=1A120B" alt="Modes: Skirmish, Battle, Dogfight, Naval, Frontlines, and Campaign" />
   </a>
   <a href="crates/core/">
     <img src="https://img.shields.io/badge/Replay-Seeded_%26_Exact-3FA796?style=for-the-badge&labelColor=1A120B" alt="Replay: seeded and exact" />
@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-66_passing-3FA796?style=flat-square&labelColor=1A120B" alt="66 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-73_passing-3FA796?style=flat-square&labelColor=1A120B" alt="73 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -51,7 +51,7 @@
   </a>
   &nbsp;
   <a href="docs/modes.md">
-    <img src="https://img.shields.io/badge/%F0%9F%8E%AF_Modes-Five_Playable-E8963F?style=for-the-badge&labelColor=1A120B" alt="Modes" />
+    <img src="https://img.shields.io/badge/%F0%9F%8E%AF_Modes-Six_Playable-E8963F?style=for-the-badge&labelColor=1A120B" alt="Modes" />
   </a>
   &nbsp;
   <a href="docs/rules.md">
@@ -69,9 +69,9 @@
 
 </div>
 
-**Status:** Phase 7 — **Skirmish**, **Battle**, **Dogfight**, **Naval**, and
-**Frontlines** playable, deterministic core, CLI, egui desktop UI, and read-only
-NationStates import. Campaign is planned. No account login, no write actions, no
+**Status:** Phase 8 — all five battle modes plus the **Halcyon Sweep** campaign
+slice: deterministic core, CLI, egui desktop UI, read-only NationStates import.
+The campaign war-room GUI is next. No account login, no write actions, no
 credentials.
 
 <div align="center">
@@ -187,6 +187,19 @@ cargo run -p drumfire-cli -- frontline replay fixtures/frontline.log.json
   <img src="docs/frontlines.png" alt="Drumfire frontlines UI" width="92%" />
 </div>
 
+Campaign mode chains operations into one persistent war:
+
+```sh
+cargo run -p drumfire-cli -- campaign demo
+cargo run -p drumfire-cli -- campaign play
+cargo run -p drumfire-cli -- campaign replay fixtures/campaign.log.json
+```
+
+The first campaign slice is **The Halcyon Sweep**: three nodes, three named
+formations, and Frontlines → Dogfight → Naval. Air superiority earned in the
+dogfight raises naval air cover, and losses persist into the next operation.
+Full design: [`docs/campaign.md`](docs/campaign.md).
+
 Override the mode on any input:
 
 ```sh
@@ -263,6 +276,9 @@ DRUMFIRE_CONTACT="https://example.com/drumfire" cargo run -p drumfire-cli -- nat
 | `drumfire naval replay <log>` | Verify a saved naval log exactly. |
 | `drumfire frontline run <input>` | Resolve a multi-sector front-line battle. |
 | `drumfire frontline replay <log>` | Verify a saved front-line log exactly. |
+| `drumfire campaign play` | Play the Halcyon Sweep interactively. |
+| `drumfire campaign demo` | Run the canonical three-operation campaign. |
+| `drumfire campaign replay <log>` | Verify every operation in a campaign log. |
 | `drumfire explain <input> [--mode]` | Show each side’s strength components and opening probability. |
 | `drumfire nation <name>` | Fetch one nation from the public NationStates API. |
 | `drumfire nation <name> --json` | Same, as JSON. |
@@ -318,6 +334,7 @@ factors; `config` and `home` are optional.
 | `dogfight` | implemented, separate air schema | Pass | Aircraft |
 | `naval` | implemented, separate fleet schema | Salvo | Ships |
 | `frontlines` | implemented, sector/reserves schema | Day | Sectors |
+| `campaign` | implemented slice, meta-layer | Operation | Formations |
 
 A serialized Battle input omits `mode` so existing logs and hashes remain stable.
 A Skirmish input includes it.
@@ -419,6 +436,7 @@ drumfire/
     model/   # validated types and JSON schema
     core/    # deterministic simulation and battle logs
     ns/      # read-only NationStates client, rate gate, XML parsing
+    campaign/# persistent campaign state and mode adapters
     cli/     # headless commands
     gui/     # egui desktop application
   docs/
@@ -427,6 +445,7 @@ drumfire/
     dogfight.md
     naval.md
     frontlines.md
+    campaign.md
     nationstates.md
   fixtures/
     example.json
@@ -439,6 +458,7 @@ drumfire/
     naval.log.json
     frontline.json
     frontline.log.json
+    campaign.log.json
 ```
 
 ## Provenance and license

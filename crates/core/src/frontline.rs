@@ -111,6 +111,7 @@ struct SectorState {
     name: String,
     attacker: u32,
     defender: u32,
+    initial_defender: u32,
     fortification: u8,
     objective: bool,
     captured: bool,
@@ -190,6 +191,7 @@ pub fn simulate_frontline(input: &FrontlineInput) -> Result<FrontlineLog, Frontl
             name: sector.name.clone(),
             attacker: sector.attacker_troops.get(),
             defender: sector.defender_troops.get(),
+            initial_defender: sector.defender_troops.get(),
             fortification: sector.fortification.get(),
             objective: sector.objective,
             captured: false,
@@ -256,7 +258,9 @@ pub fn simulate_frontline(input: &FrontlineInput) -> Result<FrontlineLog, Frontl
             a_losses += a_loss;
             d_losses += d_loss;
 
-            let captured = sector.defender == 0;
+            let captured = sector.defender == 0
+                || sector.defender as f64
+                    <= sector.initial_defender as f64 * config.capture_threshold;
             if captured {
                 sector.captured = true;
             }
