@@ -6,8 +6,8 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
 use drumfire_campaign::{
-    Branch, Campaign, CampaignResult, Control, Formation, NodeKind, OperationId, OperationLog,
-    OperationRecord,
+    Branch, Campaign, CampaignModules, CampaignResult, Control, Formation, ModulePreset, NodeKind,
+    OperationId, OperationLog, OperationRecord,
 };
 use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
 use drumfire_core::frontline::{
@@ -1966,7 +1966,15 @@ impl DrumfireApp {
         };
 
         ui.heading("Campaign");
-        ui.label(tiny("THE HALCYON SWEEP · KESTREL COAST", p));
+        ui.label(tiny(
+            format!(
+                "{} · {} vs {}",
+                campaign.scenario.name.to_uppercase(),
+                campaign.scenario.player_name,
+                campaign.scenario.enemy_name
+            ),
+            p,
+        ));
         ui.add_space(4.0);
         ui.label(
             egui::RichText::new(format!("Turn {} / {}", campaign.turn, campaign.max_turns))
@@ -1982,8 +1990,22 @@ impl DrumfireApp {
             ),
             p,
         ));
-        ui.label(tiny("Enemy intent: Hold", p));
-        ui.add_space(8.0);
+        ui.label(tiny(
+            format!("Enemy intent: {}", campaign.enemy_intent.label()),
+            p,
+        ));
+        ui.label(
+            egui::RichText::new(format!(
+                "Ruleset: {}",
+                campaign.scenario.modules.preset_name()
+            ))
+            .size(10.0)
+            .color(p.muted),
+        );
+        ui.add_space(4.0);
+        self.campaign_ruleset_ui(ui, p);
+        self.campaign_scenario_ui(ui, p);
+        ui.add_space(4.0);
         if ui.button("War room").clicked() {
             self.campaign_screen = CampaignScreen::WarRoom;
         }
@@ -2006,6 +2028,300 @@ impl DrumfireApp {
             .small()
             .weak(),
         );
+    }
+
+    fn campaign_ruleset_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(campaign) = self.campaign.as_mut() else {
+            return;
+        };
+        let locked = campaign.scenario_locked();
+        egui::CollapsingHeader::new("Ruleset")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    for (preset, label) in [
+                        (ModulePreset::Abstract, "Abstract"),
+                        (ModulePreset::CombinedArms, "Combined Arms"),
+                        (ModulePreset::FullSpectrum, "Full Spectrum"),
+                    ] {
+                        if ui
+                            .add_enabled(!locked, egui::Button::new(label).small())
+                            .clicked()
+                        {
+                            campaign.scenario.modules = CampaignModules::preset(preset);
+                        }
+                    }
+                });
+                ui.label(tiny(
+                    format!("Preset: {}", campaign.scenario.modules.preset_name()),
+                    p,
+                ));
+                if locked {
+                    ui.label(
+                        egui::RichText::new("Locked after the first operation.")
+                            .size(10.0)
+                            .color(p.muted),
+                    );
+                }
+                ui.add_enabled_ui(!locked, |ui| {
+                    let modules = &mut campaign.scenario.modules;
+                    egui::CollapsingHeader::new("Foundations")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            module_checkbox(
+                                ui,
+                                &mut modules.advanced_rules,
+                                "Rules / Logic",
+                                "morale, attrition, readiness, initiative",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.intel,
+                                "Intel",
+                                "fog of war, enemy intent, estimates",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.logistics,
+                                "Logistics",
+                                "supply, routes, interdiction",
+                            );
+                        });
+                    egui::CollapsingHeader::new("Manpower and equipment")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            module_checkbox(
+                                ui,
+                                &mut modules.manpower,
+                                "Manpower",
+                                "personnel pool and replacements",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.reserve_manpower,
+                                "Reserve manpower",
+                                "mobilization and call-ups",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.tanks,
+                                "Tanks",
+                                "armored strength and attrition",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.planes,
+                                "Planes",
+                                "dogfight and air superiority",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.ships,
+                                "Ships",
+                                "naval control and sealift",
+                            );
+                        });
+                    egui::CollapsingHeader::new("Strategic")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            module_checkbox(
+                                ui,
+                                &mut modules.satellites,
+                                "Satellites",
+                                "recon and targeting",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.strategic_weapons,
+                                "Strategic weapons",
+                                "enables rods and nuclear",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.rods_from_god,
+                                "Rods from God",
+                                "kinetic strategic strike; requires satellites",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.nuclear_weapons,
+                                "Nuclear weapons",
+                                "deterrence, fallout, escalation",
+                            );
+                        });
+                    egui::CollapsingHeader::new("Society")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            module_checkbox(
+                                ui,
+                                &mut modules.population,
+                                "Population",
+                                "population base and casualties",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.population_stability,
+                                "Population stability",
+                                "unrest and war weariness",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.occupation,
+                                "Occupation",
+                                "garrisons and insurgency",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.liberation,
+                                "Liberation",
+                                "reclaiming occupied cities",
+                            );
+                        });
+                    egui::CollapsingHeader::new("External")
+                        .default_open(false)
+                        .show(ui, |ui| {
+                            module_checkbox(
+                                ui,
+                                &mut modules.nationstates,
+                                "NationStates",
+                                "read-only nation and capital import",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.alliances,
+                                "Alliances",
+                                "coalitions and obligations",
+                            );
+                            module_checkbox(
+                                ui,
+                                &mut modules.diplomacy,
+                                "Diplomacy",
+                                "negotiation and calls to arms",
+                            );
+                        });
+                    if let Err(err) = modules.validate() {
+                        ui.label(egui::RichText::new(err).size(10.0).color(p.red));
+                    }
+                });
+            });
+    }
+
+    fn campaign_scenario_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(campaign) = self.campaign.as_mut() else {
+            return;
+        };
+        let locked = campaign.scenario_locked();
+        egui::CollapsingHeader::new("Scenario setup")
+            .default_open(false)
+            .show(ui, |ui| {
+                if locked {
+                    ui.label(
+                        egui::RichText::new("Scenario is locked once the war starts.")
+                            .size(10.0)
+                            .color(p.muted),
+                    );
+                    return;
+                }
+                ui.add_enabled_ui(!locked, |ui| {
+                    egui::Grid::new("scenario_names")
+                        .num_columns(2)
+                        .spacing([6.0, 3.0])
+                        .show(ui, |ui| {
+                            ui.label("Scenario");
+                            ui.add(
+                                egui::TextEdit::singleline(&mut campaign.name).desired_width(180.0),
+                            );
+                            ui.end_row();
+                            ui.label("Player");
+                            ui.add(
+                                egui::TextEdit::singleline(&mut campaign.scenario.player_name)
+                                    .desired_width(180.0),
+                            );
+                            ui.end_row();
+                            ui.label("Enemy");
+                            ui.add(
+                                egui::TextEdit::singleline(&mut campaign.scenario.enemy_name)
+                                    .desired_width(180.0),
+                            );
+                            ui.end_row();
+                        });
+                    ui.add(egui::Slider::new(&mut campaign.max_turns, 1..=30).text("Max turns"));
+                    ui.add(
+                        egui::Slider::new(&mut campaign.political_will, 0..=100)
+                            .text("Starting will"),
+                    );
+                    ui.add(
+                        egui::Slider::new(&mut campaign.supply, 0..=100).text("Starting supply"),
+                    );
+                    ui.add(egui::Slider::new(&mut campaign.intel, 0..=100).text("Starting intel"));
+                    ui.add_space(4.0);
+                    ui.label(tiny("CITIES", p));
+                    egui::Grid::new("scenario_nodes")
+                        .num_columns(5)
+                        .spacing([4.0, 3.0])
+                        .show(ui, |ui| {
+                            for header in ["Name", "Owner", "Fort", "Garrison", "Obj"] {
+                                ui.label(egui::RichText::new(header).size(8.0).color(p.muted));
+                            }
+                            ui.end_row();
+                            for node in &mut campaign.nodes {
+                                ui.add(
+                                    egui::TextEdit::singleline(&mut node.name).desired_width(108.0),
+                                );
+                                egui::ComboBox::from_id_salt(format!("owner_{}", node.id))
+                                    .selected_text(control_label(node.control))
+                                    .width(64.0)
+                                    .show_ui(ui, |ui| {
+                                        ui.selectable_value(
+                                            &mut node.control,
+                                            Control::Contested,
+                                            "contested",
+                                        );
+                                        ui.selectable_value(
+                                            &mut node.control,
+                                            Control::Player,
+                                            "player",
+                                        );
+                                        ui.selectable_value(
+                                            &mut node.control,
+                                            Control::Enemy,
+                                            "enemy",
+                                        );
+                                    });
+                                ui.add(egui::DragValue::new(&mut node.fortification).range(1..=10));
+                                ui.add(egui::DragValue::new(&mut node.enemy_garrison).speed(100.0));
+                                ui.checkbox(&mut node.objective, "");
+                                ui.end_row();
+                            }
+                        });
+                    ui.add_space(4.0);
+                    ui.label(tiny("FORMATIONS", p));
+                    for formation in &mut campaign.formations {
+                        ui.horizontal(|ui| {
+                            ui.add(
+                                egui::TextEdit::singleline(&mut formation.name)
+                                    .desired_width(160.0),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut formation.strength, 10..=100)
+                                    .text("str")
+                                    .show_value(true),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut formation.morale, 0..=100)
+                                    .text("mor")
+                                    .show_value(true),
+                            );
+                            ui.add(
+                                egui::Slider::new(&mut formation.supply, 0..=100)
+                                    .text("sup")
+                                    .show_value(true),
+                            );
+                        });
+                    }
+                });
+                campaign.sync_scenario_from_state();
+            });
     }
 
     fn campaign_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -3636,6 +3952,10 @@ fn operation_synopsis(record: &OperationRecord) -> String {
             log.result.ending
         ),
     }
+}
+
+fn module_checkbox(ui: &mut egui::Ui, value: &mut bool, label: &str, help: &str) {
+    ui.checkbox(value, label).on_hover_text(help);
 }
 
 fn front_force_ui(ui: &mut egui::Ui, label: &str, form: &mut FrontForceForm, p: &Palette) {

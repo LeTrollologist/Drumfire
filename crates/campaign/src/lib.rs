@@ -135,6 +135,356 @@ impl OperationKind {
     }
 }
 
+/// Which campaign systems are switched on for this war.
+///
+/// These are ruleset toggles, not just display flags. Modules gate operations
+/// and change how results are applied. Modules without a full simulation yet
+/// are marked reserved in the GUI.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CampaignModules {
+    pub advanced_rules: bool,
+    pub intel: bool,
+    pub logistics: bool,
+    pub manpower: bool,
+    pub reserve_manpower: bool,
+    pub tanks: bool,
+    pub planes: bool,
+    pub ships: bool,
+    pub satellites: bool,
+    pub strategic_weapons: bool,
+    pub rods_from_god: bool,
+    pub nuclear_weapons: bool,
+    pub population: bool,
+    pub population_stability: bool,
+    pub occupation: bool,
+    pub liberation: bool,
+    pub nationstates: bool,
+    pub alliances: bool,
+    pub diplomacy: bool,
+}
+
+impl Default for CampaignModules {
+    fn default() -> Self {
+        Self::preset(ModulePreset::CombinedArms)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ModulePreset {
+    Abstract,
+    CombinedArms,
+    FullSpectrum,
+}
+
+impl CampaignModules {
+    pub fn preset(preset: ModulePreset) -> Self {
+        match preset {
+            ModulePreset::Abstract => Self {
+                advanced_rules: false,
+                intel: false,
+                logistics: false,
+                manpower: false,
+                reserve_manpower: false,
+                tanks: false,
+                planes: true,
+                ships: true,
+                satellites: false,
+                strategic_weapons: false,
+                rods_from_god: false,
+                nuclear_weapons: false,
+                population: false,
+                population_stability: false,
+                occupation: false,
+                liberation: false,
+                nationstates: false,
+                alliances: false,
+                diplomacy: false,
+            },
+            ModulePreset::CombinedArms => Self {
+                advanced_rules: true,
+                intel: true,
+                logistics: true,
+                manpower: true,
+                reserve_manpower: true,
+                tanks: true,
+                planes: true,
+                ships: true,
+                satellites: true,
+                strategic_weapons: false,
+                rods_from_god: false,
+                nuclear_weapons: false,
+                population: true,
+                population_stability: true,
+                occupation: true,
+                liberation: false,
+                nationstates: true,
+                alliances: true,
+                diplomacy: true,
+            },
+            ModulePreset::FullSpectrum => Self {
+                advanced_rules: true,
+                intel: true,
+                logistics: true,
+                manpower: true,
+                reserve_manpower: true,
+                tanks: true,
+                planes: true,
+                ships: true,
+                satellites: true,
+                strategic_weapons: true,
+                rods_from_god: true,
+                nuclear_weapons: true,
+                population: true,
+                population_stability: true,
+                occupation: true,
+                liberation: true,
+                nationstates: true,
+                alliances: true,
+                diplomacy: true,
+            },
+        }
+    }
+
+    pub fn preset_name(&self) -> &'static str {
+        if *self == Self::preset(ModulePreset::Abstract) {
+            "Abstract"
+        } else if *self == Self::preset(ModulePreset::CombinedArms) {
+            "Combined Arms"
+        } else if *self == Self::preset(ModulePreset::FullSpectrum) {
+            "Full Spectrum"
+        } else {
+            "Custom"
+        }
+    }
+
+    pub fn validate(&self) -> Result<(), String> {
+        if self.reserve_manpower && !self.manpower {
+            return Err("reserve manpower requires manpower".to_string());
+        }
+        if self.population_stability && !self.population {
+            return Err("population stability requires population".to_string());
+        }
+        if (self.occupation || self.liberation) && !self.population {
+            return Err("occupation and liberation require population".to_string());
+        }
+        if self.rods_from_god && (!self.satellites || !self.strategic_weapons) {
+            return Err("rods from god require satellites and strategic weapons".to_string());
+        }
+        if self.nuclear_weapons && !self.strategic_weapons {
+            return Err("nuclear weapons require strategic weapons".to_string());
+        }
+        if self.alliances && !self.diplomacy {
+            return Err("alliances require diplomacy".to_string());
+        }
+        Ok(())
+    }
+}
+
+/// A scenario is the initial state of a war. It is data, not a story.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct CampaignScenario {
+    pub name: String,
+    pub player_name: String,
+    pub enemy_name: String,
+    pub max_turns: u32,
+    pub starting_will: i32,
+    pub starting_supply: i32,
+    pub starting_intel: i32,
+    pub modules: CampaignModules,
+    pub nodes: Vec<Node>,
+    pub formations: Vec<Formation>,
+}
+
+impl Default for CampaignScenario {
+    fn default() -> Self {
+        Self {
+            name: "The Halcyon Sweep".to_string(),
+            player_name: "Coalition".to_string(),
+            enemy_name: "Concord".to_string(),
+            max_turns: MAX_TURNS,
+            starting_will: 70,
+            starting_supply: 60,
+            starting_intel: 40,
+            modules: CampaignModules::default(),
+            nodes: default_nodes(),
+            formations: default_formations(),
+        }
+    }
+}
+
+impl CampaignScenario {
+    pub fn validate(&self) -> Result<(), String> {
+        if self.name.trim().is_empty() {
+            return Err("scenario name must not be empty".to_string());
+        }
+        if self.player_name.trim().is_empty() || self.enemy_name.trim().is_empty() {
+            return Err("both sides need names".to_string());
+        }
+        if !(1..=50).contains(&self.max_turns) {
+            return Err("max_turns must be between 1 and 50".to_string());
+        }
+        for required in [
+            "vantage", "halcyon", "orne", "callas", "sable", "vesper", "meridian",
+        ] {
+            if !self.nodes.iter().any(|node| node.id == required) {
+                return Err(format!("scenario is missing required node {required}"));
+            }
+        }
+        for required in [
+            "old-ironsides",
+            "ridgewalkers",
+            "nightjars",
+            "salt-watch",
+            "reserve-corps",
+        ] {
+            if !self
+                .formations
+                .iter()
+                .any(|formation| formation.id == required)
+            {
+                return Err(format!("scenario is missing required formation {required}"));
+            }
+        }
+        self.modules.validate()?;
+        Ok(())
+    }
+}
+
+fn default_nodes() -> Vec<Node> {
+    vec![
+        Node {
+            id: "vantage".to_string(),
+            name: "Vantage Ridge".to_string(),
+            kind: NodeKind::Ridge,
+            control: Control::Contested,
+            objective: true,
+            enemy_garrison: 6000,
+            fortification: 6,
+            connections: vec!["halcyon".to_string(), "orne".to_string()],
+        },
+        Node {
+            id: "halcyon".to_string(),
+            name: "Halcyon Airbase".to_string(),
+            kind: NodeKind::Airbase,
+            control: Control::Enemy,
+            objective: true,
+            enemy_garrison: 6000,
+            fortification: 7,
+            connections: vec!["vantage".to_string(), "sable".to_string()],
+        },
+        Node {
+            id: "orne".to_string(),
+            name: "Orne Bridge".to_string(),
+            kind: NodeKind::Bridge,
+            control: Control::Enemy,
+            objective: true,
+            enemy_garrison: 4500,
+            fortification: 5,
+            connections: vec!["vantage".to_string(), "callas".to_string()],
+        },
+        Node {
+            id: "callas".to_string(),
+            name: "Port Callas".to_string(),
+            kind: NodeKind::Port,
+            control: Control::Enemy,
+            objective: true,
+            enemy_garrison: 10000,
+            fortification: 6,
+            connections: vec!["orne".to_string(), "vesper".to_string()],
+        },
+        Node {
+            id: "sable".to_string(),
+            name: "Sable Junction".to_string(),
+            kind: NodeKind::RailHub,
+            control: Control::Enemy,
+            objective: true,
+            enemy_garrison: 6000,
+            fortification: 7,
+            connections: vec![
+                "halcyon".to_string(),
+                "vesper".to_string(),
+                "meridian".to_string(),
+            ],
+        },
+        Node {
+            id: "vesper".to_string(),
+            name: "Vesper Works".to_string(),
+            kind: NodeKind::Industrial,
+            control: Control::Enemy,
+            objective: true,
+            enemy_garrison: 6000,
+            fortification: 8,
+            connections: vec![
+                "callas".to_string(),
+                "sable".to_string(),
+                "meridian".to_string(),
+            ],
+        },
+        Node {
+            id: "meridian".to_string(),
+            name: "Meridian".to_string(),
+            kind: NodeKind::Capital,
+            control: Control::Enemy,
+            objective: true,
+            enemy_garrison: 500,
+            fortification: 6,
+            connections: vec!["sable".to_string(), "vesper".to_string()],
+        },
+    ]
+}
+
+fn default_formations() -> Vec<Formation> {
+    vec![
+        Formation {
+            id: "old-ironsides".to_string(),
+            name: "1st Armored — Old Ironsides".to_string(),
+            branch: Branch::Ground,
+            strength: 95,
+            morale: 75,
+            supply: 80,
+            experience: 2,
+        },
+        Formation {
+            id: "ridgewalkers".to_string(),
+            name: "7th Rifles — The Ridgewalkers".to_string(),
+            branch: Branch::Ground,
+            strength: 88,
+            morale: 78,
+            supply: 80,
+            experience: 2,
+        },
+        Formation {
+            id: "nightjars".to_string(),
+            name: "4th Air Wing — Nightjars".to_string(),
+            branch: Branch::Air,
+            strength: 85,
+            morale: 80,
+            supply: 80,
+            experience: 2,
+        },
+        Formation {
+            id: "salt-watch".to_string(),
+            name: "2nd Naval Group — Salt Watch".to_string(),
+            branch: Branch::Naval,
+            strength: 90,
+            morale: 75,
+            supply: 80,
+            experience: 2,
+        },
+        Formation {
+            id: "reserve-corps".to_string(),
+            name: "Reserve Corps".to_string(),
+            branch: Branch::Reserve,
+            strength: 95,
+            morale: 72,
+            supply: 75,
+            experience: 1,
+        },
+    ]
+}
+
 /// A concrete operation in the theater.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -277,6 +627,7 @@ pub enum CampaignResult {
 /// The campaign state and log.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Campaign {
+    pub scenario: CampaignScenario,
     pub name: String,
     pub seed: Seed,
     pub turn: u32,
@@ -297,6 +648,8 @@ pub struct Campaign {
 /// Errors from playing a campaign.
 #[derive(Debug, Error)]
 pub enum CampaignError {
+    #[error("invalid campaign scenario: {0}")]
+    Scenario(String),
     #[error("the campaign is already finished")]
     Finished,
     #[error("operation {0:?} is not available")]
@@ -336,149 +689,32 @@ pub enum CampaignReplayError {
 
 impl Campaign {
     /// Start the Halcyon Sweep.
+    /// Start with the default Kestrel Coast scenario.
     pub fn new(seed: Seed) -> Self {
-        Self {
-            name: "The Halcyon Sweep".to_string(),
+        Self::from_scenario(seed, CampaignScenario::default()).expect("default scenario is valid")
+    }
+
+    /// Start a war from an explicit scenario.
+    pub fn from_scenario(seed: Seed, scenario: CampaignScenario) -> Result<Self, CampaignError> {
+        scenario.validate().map_err(CampaignError::Scenario)?;
+        Ok(Self {
+            name: scenario.name.clone(),
             seed,
             turn: 1,
-            max_turns: MAX_TURNS,
-            political_will: 70,
-            supply: 60,
-            intel: 40,
+            max_turns: scenario.max_turns,
+            political_will: scenario.starting_will.clamp(0, 100),
+            supply: scenario.starting_supply.clamp(0, 100),
+            intel: scenario.starting_intel.clamp(0, 100),
             momentum: 0,
             enemy_intent: EnemyIntent::Hold,
-            nodes: vec![
-                Node {
-                    id: "vantage".to_string(),
-                    name: "Vantage Ridge".to_string(),
-                    kind: NodeKind::Ridge,
-                    control: Control::Contested,
-                    objective: true,
-                    enemy_garrison: 6000,
-                    fortification: 6,
-                    connections: vec!["halcyon".to_string(), "orne".to_string()],
-                },
-                Node {
-                    id: "halcyon".to_string(),
-                    name: "Halcyon Airbase".to_string(),
-                    kind: NodeKind::Airbase,
-                    control: Control::Enemy,
-                    objective: true,
-                    enemy_garrison: 6000,
-                    fortification: 7,
-                    connections: vec!["vantage".to_string(), "sable".to_string()],
-                },
-                Node {
-                    id: "orne".to_string(),
-                    name: "Orne Bridge".to_string(),
-                    kind: NodeKind::Bridge,
-                    control: Control::Enemy,
-                    objective: true,
-                    enemy_garrison: 4500,
-                    fortification: 5,
-                    connections: vec!["vantage".to_string(), "callas".to_string()],
-                },
-                Node {
-                    id: "callas".to_string(),
-                    name: "Port Callas".to_string(),
-                    kind: NodeKind::Port,
-                    control: Control::Enemy,
-                    objective: true,
-                    enemy_garrison: 10000,
-                    fortification: 6,
-                    connections: vec!["orne".to_string(), "vesper".to_string()],
-                },
-                Node {
-                    id: "sable".to_string(),
-                    name: "Sable Junction".to_string(),
-                    kind: NodeKind::RailHub,
-                    control: Control::Enemy,
-                    objective: true,
-                    enemy_garrison: 6000,
-                    fortification: 7,
-                    connections: vec![
-                        "halcyon".to_string(),
-                        "vesper".to_string(),
-                        "meridian".to_string(),
-                    ],
-                },
-                Node {
-                    id: "vesper".to_string(),
-                    name: "Vesper Works".to_string(),
-                    kind: NodeKind::Industrial,
-                    control: Control::Enemy,
-                    objective: true,
-                    enemy_garrison: 6000,
-                    fortification: 8,
-                    connections: vec![
-                        "callas".to_string(),
-                        "sable".to_string(),
-                        "meridian".to_string(),
-                    ],
-                },
-                Node {
-                    id: "meridian".to_string(),
-                    name: "Meridian".to_string(),
-                    kind: NodeKind::Capital,
-                    control: Control::Enemy,
-                    objective: true,
-                    enemy_garrison: 500,
-                    fortification: 6,
-                    connections: vec!["sable".to_string(), "vesper".to_string()],
-                },
-            ],
-            formations: vec![
-                Formation {
-                    id: "old-ironsides".to_string(),
-                    name: "1st Armored — Old Ironsides".to_string(),
-                    branch: Branch::Ground,
-                    strength: 95,
-                    morale: 75,
-                    supply: 80,
-                    experience: 2,
-                },
-                Formation {
-                    id: "ridgewalkers".to_string(),
-                    name: "7th Rifles — The Ridgewalkers".to_string(),
-                    branch: Branch::Ground,
-                    strength: 88,
-                    morale: 78,
-                    supply: 80,
-                    experience: 2,
-                },
-                Formation {
-                    id: "nightjars".to_string(),
-                    name: "4th Air Wing — Nightjars".to_string(),
-                    branch: Branch::Air,
-                    strength: 85,
-                    morale: 80,
-                    supply: 80,
-                    experience: 2,
-                },
-                Formation {
-                    id: "salt-watch".to_string(),
-                    name: "2nd Naval Group — Salt Watch".to_string(),
-                    branch: Branch::Naval,
-                    strength: 90,
-                    morale: 75,
-                    supply: 80,
-                    experience: 2,
-                },
-                Formation {
-                    id: "reserve-corps".to_string(),
-                    name: "Reserve Corps".to_string(),
-                    branch: Branch::Reserve,
-                    strength: 95,
-                    morale: 72,
-                    supply: 75,
-                    experience: 1,
-                },
-            ],
+            nodes: scenario.nodes.clone(),
+            formations: scenario.formations.clone(),
             operations: Vec::new(),
             chronicle: Vec::new(),
             finished: false,
             result: None,
-        }
+            scenario,
+        })
     }
 
     /// Run the canonical seven-operation demo.
@@ -560,14 +796,18 @@ impl Campaign {
                             }
                         }
                         OperationId::BrightLance => {
-                            if self.is_player("vantage") {
+                            if !self.scenario.modules.planes {
+                                (false, "planes module is off".to_string())
+                            } else if self.is_player("vantage") {
                                 (true, "available".to_string())
                             } else {
                                 (false, "take Vantage Ridge first".to_string())
                             }
                         }
                         OperationId::CrimsonWake => {
-                            if self.is_player("vantage") {
+                            if !self.scenario.modules.ships {
+                                (false, "ships module is off".to_string())
+                            } else if self.is_player("vantage") {
                                 (true, "available".to_string())
                             } else {
                                 (false, "take Vantage Ridge first".to_string())
@@ -617,6 +857,48 @@ impl Campaign {
             && self.is_player("sable")
             && self.is_player("callas")
             && self.is_player("vesper")
+    }
+
+    /// Scenario values can be edited until the first operation is launched.
+    pub fn scenario_locked(&self) -> bool {
+        !self.operations.is_empty()
+    }
+
+    /// Copy editable state back into the scenario snapshot. No-op once the war
+    /// has started, so replay still uses the original scenario.
+    pub fn sync_scenario_from_state(&mut self) {
+        if self.scenario_locked() {
+            return;
+        }
+        self.scenario.name = self.name.clone();
+        self.scenario.max_turns = self.max_turns;
+        self.scenario.starting_will = self.political_will;
+        self.scenario.starting_supply = self.supply;
+        self.scenario.starting_intel = self.intel;
+        for state in &self.nodes {
+            if let Some(node) = self.scenario.nodes.iter_mut().find(|n| n.id == state.id) {
+                node.name = state.name.clone();
+                node.control = state.control;
+                node.enemy_garrison = state.enemy_garrison;
+                node.fortification = state.fortification;
+                node.objective = state.objective;
+                node.connections = state.connections.clone();
+            }
+        }
+        for state in &self.formations {
+            if let Some(formation) = self
+                .scenario
+                .formations
+                .iter_mut()
+                .find(|f| f.id == state.id)
+            {
+                formation.name = state.name.clone();
+                formation.strength = state.strength;
+                formation.morale = state.morale;
+                formation.supply = state.supply;
+                formation.experience = state.experience;
+            }
+        }
     }
 
     /// Build the front-line input without mutating the campaign.
@@ -785,14 +1067,15 @@ impl Campaign {
         } else {
             100
         };
+        let mut force = (formation.strength as u32 * force_scale).clamp(400, 1_000_000);
+        if self.scenario.modules.tanks {
+            force = (force + force / 10).min(1_000_000);
+        }
         let air = self.air_superiority() >= 60;
         let intel = (5 + u8::from(air)).min(10);
         let attacker = TeamInput {
             name: formation.name.clone(),
-            forces: ForceCount::new(
-                (formation.strength as u32 * force_scale).clamp(400, 1_000_000),
-            )
-            .unwrap(),
+            forces: ForceCount::new(force).unwrap(),
             morale: Morale::new(formation.morale).unwrap(),
             tech: Rating::new(6).unwrap(),
             training: Rating::new((4 + formation.experience / 2 + u8::from(air)).min(10)).unwrap(),
@@ -839,6 +1122,10 @@ impl Campaign {
 
     /// Play one operation and apply its aftermath.
     pub fn play_operation(&mut self, id: OperationId) -> Result<OperationRecord, CampaignError> {
+        self.scenario
+            .modules
+            .validate()
+            .map_err(CampaignError::Scenario)?;
         if self.finished {
             return Err(CampaignError::Finished);
         }
@@ -1141,15 +1428,30 @@ impl Campaign {
     }
 
     fn apply_formation(&mut self, id: &str, strength_delta: i32, victory: bool) {
+        let strength_delta = if self.scenario.modules.manpower {
+            strength_delta
+        } else {
+            0
+        };
+        let supply_cost = if self.scenario.modules.logistics {
+            5
+        } else {
+            0
+        };
         if let Some(formation) = self.formation_mut(id) {
             formation.strength = (formation.strength as i32 + strength_delta).clamp(10, 100) as u8;
             let morale_delta = if victory { 3 } else { -8 };
             formation.morale = (formation.morale as i32 + morale_delta).clamp(0, 100) as u8;
-            formation.supply = (formation.supply as i32 - 5).clamp(0, 100) as u8;
+            formation.supply = (formation.supply as i32 - supply_cost).clamp(0, 100) as u8;
         }
     }
 
     fn apply_resources(&mut self, will: i32, supply: i32, intel: i32, momentum: i32) {
+        let supply = if self.scenario.modules.logistics {
+            supply
+        } else {
+            0
+        };
         self.political_will = (self.political_will + will).clamp(0, 100);
         self.supply = (self.supply + supply).clamp(0, 100);
         self.intel = (self.intel + intel).clamp(0, 100);
@@ -1261,7 +1563,7 @@ pub fn replay_campaign(campaign: &Campaign) -> Result<(), CampaignReplayError> {
         }
     }
 
-    let mut rebuilt = Campaign::new(campaign.seed);
+    let mut rebuilt = Campaign::from_scenario(campaign.seed, campaign.scenario.clone())?;
     for operation in &campaign.operations {
         let replay = rebuilt.play_operation(operation.id)?;
         if replay != *operation {
@@ -1347,5 +1649,41 @@ mod tests {
                 .expect("committed campaign log must be valid");
         assert!(!campaign.operations.is_empty());
         replay_campaign(&campaign).unwrap();
+    }
+
+    #[test]
+    fn custom_scenario_names_and_module_gating_work() {
+        let mut scenario = CampaignScenario {
+            name: "Custom War".to_string(),
+            player_name: "Aurelia".to_string(),
+            enemy_name: "Vermillion".to_string(),
+            ..CampaignScenario::default()
+        };
+        scenario.nodes[0].name = "Alder Gate".to_string();
+        scenario.modules.planes = false;
+        let campaign = Campaign::from_scenario(seed(), scenario).unwrap();
+        assert_eq!(campaign.name, "Custom War");
+        assert_eq!(campaign.nodes[0].name, "Alder Gate");
+        let bright_lance = campaign
+            .options()
+            .into_iter()
+            .find(|option| option.id == OperationId::BrightLance)
+            .unwrap();
+        assert!(!bright_lance.available);
+        assert_eq!(bright_lance.reason, "planes module is off");
+    }
+
+    #[test]
+    fn module_dependencies_are_validated() {
+        let modules = CampaignModules {
+            manpower: false,
+            reserve_manpower: true,
+            ..CampaignModules::default()
+        };
+        assert!(modules.validate().is_err());
+        assert_eq!(
+            CampaignModules::preset(ModulePreset::CombinedArms).preset_name(),
+            "Combined Arms"
+        );
     }
 }

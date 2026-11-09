@@ -36,6 +36,17 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - Campaign: **The Halcyon Sweep** with seven nodes, five named formations,
   persistent will/supply/intel/momentum, all five mode adapters, five enemy
   intents, the four-node combined-arms gate, campaign log, and exact replay.
+- Campaign scenario/ruleset layer: editable city and formation names, owners,
+  forts, garrisons, starting resources, turn limit, and module toggles.
+- Campaign modules: abstract/combined-arms/full-spectrum presets, dependency
+  validation, manpower/logistics/tanks/planes/ships effects, and reserved
+  strategic/society flags.
+- NationStates `capital` and `customcapital` shards; CLI prints the display
+  capital and the nation summary carries it.
+- CLI `campaign scenario --out`, `campaign demo --scenario`, and
+  `campaign play --scenario`.
+- [`docs/scenario.md`](docs/scenario.md) documenting the scenario and ruleset
+  schema.
 - CLI `campaign play`, `campaign demo`, and `campaign replay`.
 - [`docs/campaign.md`](docs/campaign.md) with the full campaign design.
 - Front-line `capture_threshold`: a sector falls when the defender drops to a

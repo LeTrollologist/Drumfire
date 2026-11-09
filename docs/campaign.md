@@ -23,9 +23,12 @@ The **Halcyon Sweep** is playable now:
 - Cross-mode effects: air superiority raises naval air cover; ground losses
   persist; the four-node combined-arms gate opens Meridian.
 - Campaign log with every mode log embedded, plus exact campaign replay.
-- CLI: `campaign play`, `campaign demo`, `campaign replay`.
+- Scenario ruleset: editable city/formation names, owners, forts, garrisons,
+  starting resources, turn limit, and module toggles.
+- NationStates `capital` / `customcapital` import for nation capitals.
+- CLI: `campaign play`, `campaign demo`, `campaign scenario`, `campaign replay`.
 - GUI war room: paper map, resource rail, formation rail, operation briefing,
-  after-action report, and chronicle.
+  after-action report, ruleset editor, scenario setup, and chronicle.
 
 A winning run uses all five modes and roughly seven operations:
 

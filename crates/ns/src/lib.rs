@@ -38,9 +38,25 @@ pub struct NationSummary {
     pub region: String,
     pub population: u64,
     pub category: String,
+    pub capital: String,
+    pub custom_capital: String,
     pub motto: String,
     pub currency: String,
     pub flag: String,
+}
+
+impl NationSummary {
+    /// The capital to show in a scenario: custom capital first, then the
+    /// canonical capital, then an explicit fallback.
+    pub fn display_capital(&self) -> String {
+        if !self.custom_capital.trim().is_empty() {
+            self.custom_capital.trim().to_string()
+        } else if !self.capital.trim().is_empty() {
+            self.capital.trim().to_string()
+        } else {
+            format!("{} Capital", self.name)
+        }
+    }
 }
 
 /// Errors from the read-only NationStates client.
@@ -190,7 +206,7 @@ pub fn fetch_nation(nation: &str) -> Result<NationSummary, NsError> {
         .build()?;
 
     let url = format!(
-        "{API_BASE}?nation={}&q=name+fullname+region+population+category+motto+currency+flag&v={API_VERSION}",
+        "{API_BASE}?nation={}&q=name+fullname+region+population+category+capital+customcapital+motto+currency+flag&v={API_VERSION}",
         urlencoding::encode(&nation)
     );
 
@@ -291,6 +307,8 @@ pub fn parse_nation_xml(xml: &str) -> Result<NationSummary, NsError> {
         region: required("REGION").unwrap_or_default(),
         population,
         category: required("CATEGORY").unwrap_or_default(),
+        capital: required("CAPITAL").unwrap_or_default(),
+        custom_capital: required("CUSTOMCAPITAL").unwrap_or_default(),
         motto: required("MOTTO").unwrap_or_default(),
         currency: required("CURRENCY").unwrap_or_default(),
         flag: required("FLAG").unwrap_or_default(),
@@ -317,6 +335,8 @@ mod tests {
   <REGION>The Pacific</REGION>
   <POPULATION>1250000</POPULATION>
   <CATEGORY>Corporate Police State</CATEGORY>
+  <CAPITAL>Testholm</CAPITAL>
+  <CUSTOMCAPITAL>New Testholm</CUSTOMCAPITAL>
   <MOTTO>We are watching.</MOTTO>
   <CURRENCY>testudo</CURRENCY>
   <FLAG>https://www.nationstates.net/images/flags/Testlandia.svg</FLAG>
@@ -330,6 +350,9 @@ mod tests {
         assert_eq!(nation.region, "The Pacific");
         assert_eq!(nation.population, 1_250_000);
         assert_eq!(nation.category, "Corporate Police State");
+        assert_eq!(nation.capital, "Testholm");
+        assert_eq!(nation.custom_capital, "New Testholm");
+        assert_eq!(nation.display_capital(), "New Testholm");
         assert_eq!(nation.motto, "We are watching.");
         assert_eq!(nation.currency, "testudo");
         assert!(nation.flag.ends_with("Testlandia.svg"));

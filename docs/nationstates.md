@@ -42,7 +42,7 @@ any local secret. That is a future design decision, not part of v1.
 ```text
 GET https://www.nationstates.net/cgi-bin/api.cgi
     ?nation=<url-encoded-name>
-    &q=name+fullname+region+population+category+motto+currency+flag
+    &q=name+fullname+region+population+category+capital+customcapital+motto+currency+flag
     &v=13
 ```
 
@@ -120,7 +120,7 @@ with `If-Modified-Since` and a 24-hour refresh floor.
 ## 5. What the import actually does
 
 The GUI shows the nation’s short name, full name, region, population, category,
-motto, currency, and flag URL. It then suggests:
+capital, motto, currency, and flag URL. It then suggests:
 
 ```text
 forces = clamp(population / 1000, 1, 10_000_000)

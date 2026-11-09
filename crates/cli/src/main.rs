@@ -5,7 +5,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use drumfire_campaign::{replay_campaign, Campaign, OperationRecord};
+use drumfire_campaign::{
+    replay_campaign, Campaign, CampaignScenario, OperationId, OperationRecord,
+};
 use drumfire_core::dogfight::{
     classify_dogfight, replay_dogfight, simulate_dogfight, DogfightEnding, DogfightLog,
 };
@@ -182,18 +184,30 @@ enum CampaignCommand {
         /// Campaign seed, or `random`.
         #[arg(long)]
         seed: Option<String>,
+        /// Scenario JSON. Uses the built-in Kestrel Coast scenario when omitted.
+        #[arg(long)]
+        scenario: Option<PathBuf>,
     },
-    /// Run the canonical three-operation demo.
+    /// Run the canonical seven-operation demo.
     Demo {
         /// Campaign seed, or `random`.
         #[arg(long)]
         seed: Option<String>,
+        /// Scenario JSON. Uses the built-in Kestrel Coast scenario when omitted.
+        #[arg(long)]
+        scenario: Option<PathBuf>,
         /// Write the campaign log to this path.
         #[arg(long)]
         out: Option<PathBuf>,
         /// Print the campaign log as JSON.
         #[arg(long)]
         json: bool,
+    },
+    /// Print or write the built-in scenario template.
+    Scenario {
+        /// Write the scenario JSON to this path.
+        #[arg(long)]
+        out: Option<PathBuf>,
     },
     /// Verify every operation in a saved campaign log.
     Replay {
@@ -357,11 +371,21 @@ fn main() -> Result<()> {
             }
         },
         Command::Campaign { command } => match command {
-            CampaignCommand::Play { seed } => {
-                play_campaign(campaign_seed(seed)?)?;
+            CampaignCommand::Play { seed, scenario } => {
+                let scenario = load_scenario(scenario)?;
+                play_campaign(campaign_seed(seed)?, scenario)?;
             }
-            CampaignCommand::Demo { seed, out, json } => {
-                let campaign = Campaign::demo(campaign_seed(seed)?)?;
+            CampaignCommand::Demo {
+                seed,
+                scenario,
+                out,
+                json,
+            } => {
+                let scenario = load_scenario(scenario)?;
+                let mut campaign = Campaign::from_scenario(campaign_seed(seed)?, scenario)?;
+                for id in OperationId::ALL {
+                    campaign.play_operation(id)?;
+                }
                 if let Some(path) = out {
                     write_json(&path, &campaign)?;
                 }
@@ -369,6 +393,14 @@ fn main() -> Result<()> {
                     println!("{}", serde_json::to_string_pretty(&campaign)?);
                 } else {
                     print_campaign(&campaign);
+                }
+            }
+            CampaignCommand::Scenario { out } => {
+                let scenario = CampaignScenario::default();
+                if let Some(path) = out {
+                    write_json(&path, &scenario)?;
+                } else {
+                    println!("{}", serde_json::to_string_pretty(&scenario)?);
                 }
             }
             CampaignCommand::Replay { log } => {
@@ -496,8 +528,15 @@ fn campaign_seed(value: Option<String>) -> Result<Seed> {
     }
 }
 
-fn play_campaign(seed: Seed) -> Result<()> {
-    let mut campaign = Campaign::new(seed);
+fn load_scenario(path: Option<PathBuf>) -> Result<CampaignScenario> {
+    match path {
+        Some(path) => read_json(&path),
+        None => Ok(CampaignScenario::default()),
+    }
+}
+
+fn play_campaign(seed: Seed, scenario: CampaignScenario) -> Result<()> {
+    let mut campaign = Campaign::from_scenario(seed, scenario)?;
     while !campaign.finished {
         print_campaign_status(&campaign);
         let options = campaign.options();
@@ -541,8 +580,17 @@ fn print_campaign_status(campaign: &Campaign) {
         campaign.name, campaign.turn, campaign.max_turns
     );
     println!(
-        "Will {}  ·  Supply {}  ·  Intel {}  ·  Momentum {:+}  ·  Enemy: Hold",
-        campaign.political_will, campaign.supply, campaign.intel, campaign.momentum
+        "Will {}  ·  Supply {}  ·  Intel {}  ·  Momentum {:+}  ·  Enemy: {}",
+        campaign.political_will,
+        campaign.supply,
+        campaign.intel,
+        campaign.momentum,
+        campaign.enemy_intent.label()
+    );
+    println!(
+        "Ruleset: {} · scenario: {}",
+        campaign.scenario.modules.preset_name(),
+        campaign.scenario.name
     );
     for node in &campaign.nodes {
         println!(
@@ -838,6 +886,7 @@ fn print_nation(nation: &drumfire_ns::NationSummary) {
         println!("Short name: {}", nation.name);
     }
     println!("Region: {}", nation.region);
+    println!("Capital: {}", nation.display_capital());
     println!("Population: {}", nation.population);
     println!("Category: {}", nation.category);
     if !nation.motto.is_empty() {

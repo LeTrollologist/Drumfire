@@ -1,0 +1,172 @@
+{
+  "name": "The Halcyon Sweep",
+  "player_name": "Coalition",
+  "enemy_name": "Concord",
+  "max_turns": 8,
+  "starting_will": 70,
+  "starting_supply": 60,
+  "starting_intel": 40,
+  "modules": {
+    "advanced_rules": true,
+    "intel": true,
+    "logistics": true,
+    "manpower": true,
+    "reserve_manpower": true,
+    "tanks": true,
+    "planes": true,
+    "ships": true,
+    "satellites": true,
+    "strategic_weapons": false,
+    "rods_from_god": false,
+    "nuclear_weapons": false,
+    "population": true,
+    "population_stability": true,
+    "occupation": true,
+    "liberation": false,
+    "nationstates": true,
+    "alliances": true,
+    "diplomacy": true
+  },
+  "nodes": [
+    {
+      "id": "vantage",
+      "name": "Vantage Ridge",
+      "kind": "ridge",
+      "control": "contested",
+      "objective": true,
+      "enemy_garrison": 6000,
+      "fortification": 6,
+      "connections": [
+        "halcyon",
+        "orne"
+      ]
+    },
+    {
+      "id": "halcyon",
+      "name": "Halcyon Airbase",
+      "kind": "airbase",
+      "control": "enemy",
+      "objective": true,
+      "enemy_garrison": 6000,
+      "fortification": 7,
+      "connections": [
+        "vantage",
+        "sable"
+      ]
+    },
+    {
+      "id": "orne",
+      "name": "Orne Bridge",
+      "kind": "bridge",
+      "control": "enemy",
+      "objective": true,
+      "enemy_garrison": 4500,
+      "fortification": 5,
+      "connections": [
+        "vantage",
+        "callas"
+      ]
+    },
+    {
+      "id": "callas",
+      "name": "Port Callas",
+      "kind": "port",
+      "control": "enemy",
+      "objective": true,
+      "enemy_garrison": 10000,
+      "fortification": 6,
+      "connections": [
+        "orne",
+        "vesper"
+      ]
+    },
+    {
+      "id": "sable",
+      "name": "Sable Junction",
+      "kind": "rail_hub",
+      "control": "enemy",
+      "objective": true,
+      "enemy_garrison": 6000,
+      "fortification": 7,
+      "connections": [
+        "halcyon",
+        "vesper",
+        "meridian"
+      ]
+    },
+    {
+      "id": "vesper",
+      "name": "Vesper Works",
+      "kind": "industrial",
+      "control": "enemy",
+      "objective": true,
+      "enemy_garrison": 6000,
+      "fortification": 8,
+      "connections": [
+        "callas",
+        "sable",
+        "meridian"
+      ]
+    },
+    {
+      "id": "meridian",
+      "name": "Meridian",
+      "kind": "capital",
+      "control": "enemy",
+      "objective": true,
+      "enemy_garrison": 500,
+      "fortification": 6,
+      "connections": [
+        "sable",
+        "vesper"
+      ]
+    }
+  ],
+  "formations": [
+    {
+      "id": "old-ironsides",
+      "name": "1st Armored — Old Ironsides",
+      "branch": "ground",
+      "strength": 95,
+      "morale": 75,
+      "supply": 80,
+      "experience": 2
+    },
+    {
+      "id": "ridgewalkers",
+      "name": "7th Rifles — The Ridgewalkers",
+      "branch": "ground",
+      "strength": 88,
+      "morale": 78,
+      "supply": 80,
+      "experience": 2
+    },
+    {
+      "id": "nightjars",
+      "name": "4th Air Wing — Nightjars",
+      "branch": "air",
+      "strength": 85,
+      "morale": 80,
+      "supply": 80,
+      "experience": 2
+    },
+    {
+      "id": "salt-watch",
+      "name": "2nd Naval Group — Salt Watch",
+      "branch": "naval",
+      "strength": 90,
+      "morale": 75,
+      "supply": 80,
+      "experience": 2
+    },
+    {
+      "id": "reserve-corps",
+      "name": "Reserve Corps",
+      "branch": "reserve",
+      "strength": 95,
+      "morale": 72,
+      "supply": 75,
+      "experience": 1
+    }
+  ]
+}

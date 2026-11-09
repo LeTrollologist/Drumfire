@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-76_passing-3FA796?style=flat-square&labelColor=1A120B" alt="76 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-78_passing-3FA796?style=flat-square&labelColor=1A120B" alt="78 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,10 +69,11 @@
 
 </div>
 
-**Status:** Phase 10 — all five battle modes plus the full seven-node **Halcyon
-Sweep** campaign with its war-room GUI: deterministic core, CLI, egui desktop UI,
-and read-only NationStates import. No account login, no write actions, no
-credentials.
+**Status:** Phase 11 — all five battle modes plus the seven-node **Halcyon Sweep**
+campaign, now with a scenario ruleset: editable city and formation names, forts,
+garrisons, starting resources, module toggles, and NationStates capital import.
+Deterministic core, CLI, egui desktop UI, and read-only NationStates data. No
+account login, no write actions, no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -190,15 +191,21 @@ cargo run -p drumfire-cli -- frontline replay fixtures/frontline.log.json
 Campaign mode chains operations into one persistent war:
 
 ```sh
-cargo run -p drumfire-cli -- campaign demo
+cargo run -p drumfire-cli -- campaign scenario --out scenarios/my-war.json
+cargo run -p drumfire-cli -- campaign demo --scenario scenarios/my-war.json
 cargo run -p drumfire-cli -- campaign play
 cargo run -p drumfire-cli -- campaign replay fixtures/campaign.log.json
 ```
 
-The campaign is **The Halcyon Sweep**: seven nodes, five named formations, and
-seven operations using all five battle modes. Winning Halcyon raises naval air
-cover, ground losses persist, and the four-node combined-arms gate opens
-Meridian. Full design: [`docs/campaign.md`](docs/campaign.md).
+The built-in campaign is **The Halcyon Sweep**. Its scenario file is
+[`scenarios/kestrel-coast.json`](scenarios/kestrel-coast.json): city names,
+formations, forts, garrisons, starting resources, and ruleset modules are
+editable. The GUI exposes the same values as text fields and sliders under
+**Ruleset** and **Scenario setup**. NationStates `capital` and `customcapital`
+shards provide the capital name for imported nations.
+
+Full design: [`docs/campaign.md`](docs/campaign.md). Scenario schema:
+[`docs/scenario.md`](docs/scenario.md).
 
 <div align="center">
   <img src="docs/campaign.png" alt="Drumfire campaign war room" width="92%" />
@@ -288,7 +295,9 @@ DRUMFIRE_CONTACT="https://example.com/drumfire" cargo run -p drumfire-cli -- nat
 | `drumfire frontline run <input>` | Resolve a multi-sector front-line battle. |
 | `drumfire frontline replay <log>` | Verify a saved front-line log exactly. |
 | `drumfire campaign play` | Play the Halcyon Sweep interactively. |
-| `drumfire campaign demo` | Run the canonical three-operation campaign. |
+| `drumfire campaign demo` | Run the canonical seven-operation campaign. |
+| `drumfire campaign demo --scenario <file>` | Run a custom scenario. |
+| `drumfire campaign scenario --out <file>` | Write the built-in scenario template for editing. |
 | `drumfire campaign replay <log>` | Verify every operation in a campaign log. |
 | `drumfire explain <input> [--mode]` | Show each side’s strength components and opening probability. |
 | `drumfire nation <name>` | Fetch one nation from the public NationStates API. |
@@ -457,7 +466,10 @@ drumfire/
     naval.md
     frontlines.md
     campaign.md
+    scenario.md
     nationstates.md
+  scenarios/
+    kestrel-coast.json
   fixtures/
     example.json
     example.log.json
