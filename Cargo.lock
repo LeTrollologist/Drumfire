@@ -550,7 +550,7 @@ checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 
 [[package]]
 name = "drumfire-campaign"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "drumfire-core",
  "drumfire-model",
@@ -563,7 +563,7 @@ dependencies = [
 
 [[package]]
 name = "drumfire-cli"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -578,7 +578,7 @@ dependencies = [
 
 [[package]]
 name = "drumfire-core"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "drumfire-model",
  "hex",
@@ -592,7 +592,7 @@ dependencies = [
 
 [[package]]
 name = "drumfire-gui"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "drumfire-campaign",
  "drumfire-core",
@@ -605,7 +605,7 @@ dependencies = [
 
 [[package]]
 name = "drumfire-model"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "hex",
  "serde",
@@ -615,7 +615,7 @@ dependencies = [
 
 [[package]]
 name = "drumfire-ns"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "quick-xml",
  "reqwest",

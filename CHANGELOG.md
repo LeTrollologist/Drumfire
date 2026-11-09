@@ -3,7 +3,11 @@
 All notable changes to Drumfire are documented here. The combat rules have
 their own version in [`docs/rules.md`](docs/rules.md).
 
-## Unreleased
+## 0.2.0 — 2026-11-09
+
+The combined-arms release: Frontlines, Dogfight, Naval, and the seven-node
+Halcyon Sweep campaign, plus an editable scenario ruleset and NationStates capital
+import.
 
 ### Added
 
@@ -65,6 +69,16 @@ their own version in [`docs/rules.md`](docs/rules.md).
   key `rounds` remains for schema stability.
 - Battle inputs omit `mode` when serialized; Skirmish, Dogfight, and Naval inputs
   include it.
+
+### Known limitations
+
+- The seven city role IDs are fixed; names, owners, forts, garrisons, formations,
+  and ruleset are editable, but arbitrary city topology is not yet supported.
+- Strategic and society module toggles are serialized and validated; their deeper
+  simulation hooks are reserved for the next release.
+- Windows is the tested binary target. Linux is supported in source and CI-style
+  builds but has not been exercised on this machine.
+- No installer, code signing, or authenticated NationStates features.
 
 ## 0.1.0 — 2026-11-09
 

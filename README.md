@@ -11,7 +11,7 @@
 <!-- Tier 1: project metadata -->
 <p align="center">
   <a href="https://github.com/LeTrollologist/Drumfire/releases">
-    <img src="https://img.shields.io/badge/Release-v0.1.0-D6A45D?style=for-the-badge&logo=github&logoColor=1A120B&labelColor=1A120B" alt="Release" />
+    <img src="https://img.shields.io/badge/Release-v0.2.0-D6A45D?style=for-the-badge&logo=github&logoColor=1A120B&labelColor=1A120B" alt="Release" />
   </a>
   <a href="crates/">
     <img src="https://img.shields.io/badge/Engine-Rust-E8963F?style=for-the-badge&logo=rust&logoColor=1A120B&labelColor=1A120B" alt="Engine: Rust" />
