@@ -1,7 +1,7 @@
 # Drumfire modes — design proposal
 
-**Status:** framework implemented; **Skirmish**, **Battle**, **Dogfight**, and
-**Naval** are playable. **Frontlines** and **Campaign** are reserved/planned. This
+**Status:** framework implemented; **Skirmish**, **Battle**, **Dogfight**,
+**Naval**, and **Frontlines** are playable. **Campaign** is reserved/planned. This
 document defines the mode model before the engine grows incompatible input
 schemas.
 
@@ -14,7 +14,7 @@ battle. The requested modes are not variations of that model:
 |---|---|---|---|---|---|
 | **Skirmish** | Ground, small | Fireteams / individual combatants | Minutes; a short exchange | Take/hold the objective, or rout the other side | **Implemented** |
 | **Battle** | Ground, large | Troops | Hours; a general engagement | Annihilation, rout, objective, or exhaustion | **Implemented** |
-| **Frontlines** | Ground, spatial | Battalions/sectors | Days; sector pressure | Break the line, take objectives, collapse the front | Planned |
+| **Frontlines** | Ground, spatial | Battalions/sectors | Days; sector pressure | Break the line, take objectives, collapse the front | **Implemented** |
 | **Dogfight** | Air | Aircraft/sorties | Minutes; a pass or missile exchange | Kills, drive-off, or protect the mission package | **Implemented** |
 | **Naval** | Sea | Ships/tonnage | Hours; detection and salvos | Sink/cripple, drive off, or protect the convoy | **Implemented** |
 | **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | Planned |
@@ -199,7 +199,8 @@ Do not build six shallow modes at once. Build vertical slices:
    weapons/radar/support factors, pass log, CLI `air run/replay`, GUI screen.
 3. **Naval** — ✅ done. Individual ships, detection, salvos, damage control,
    readiness, CLI `naval run/replay`, GUI screen.
-4. **Frontlines** — sectors, reserves, breakthroughs; the biggest model change.
+4. **Frontlines** — ✅ done. Sectors, reserves, fortifications, objective
+   capture, CLI `frontline run/replay`, GUI sector board.
 5. **Campaign** — persistent state over the modes that exist.
 
 Rough effort, part-time:
@@ -210,7 +211,7 @@ Rough effort, part-time:
 | Skirmish + Battle polish | ~1 week | done |
 | Dogfight | 1–2 weeks | done |
 | Naval | 1–2 weeks | done |
-| Frontlines | 2–3 weeks | planned |
+| Frontlines | 2–3 weeks | done |
 | Campaign | 2–3 weeks | planned |
 
 Implemented in this slice:
@@ -227,6 +228,9 @@ Implemented in this slice:
 - Naval engine with ships, hulls, sensors, weapons, air cover, damage control,
   readiness, salvo logs, `naval run/replay` CLI commands, GUI screen, and a
   committed fixture.
+- Frontline engine with sectors, reserves, fortifications, objectives, daily
+  logs, `frontline run/replay` CLI commands, GUI sector board, and a committed
+  fixture.
 - Planned modes are rejected by validation with a clear error rather than being
   silently simulated as Battle.
 

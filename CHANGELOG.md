@@ -8,9 +8,9 @@ their own version in [`docs/rules.md`](docs/rules.md).
 ### Added
 
 - Mode framework with a `mode` field on `BattleInput`:
-  - **Skirmish**, **Battle**, **Dogfight**, and **Naval** implemented.
-  - Frontlines and Campaign reserved and rejected by validation rather than
-    silently simulated.
+  - **Skirmish**, **Battle**, **Dogfight**, **Naval**, and **Frontlines**
+    implemented.
+  - Campaign reserved and rejected by validation rather than silently simulated.
 - Mode-aware ground profiles: Skirmish changes strength weights, casualty
   intensity, and morale volatility; Battle keeps the original v1 coefficients.
 - Mode-aware terminology: Battle uses “Phase”/“Troops”; Skirmish uses
@@ -18,7 +18,7 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - Outcome classification derived from the log: decisive, pyrrhic, marginal,
   rout, exhaustion, stalemate, draw.
 - CLI `--mode` override for `run` and `explain`.
-- GUI mode picker for Skirmish, Battle, Dogfight, and Naval.
+- GUI mode picker for Skirmish, Battle, Dogfight, Naval, and Frontlines.
 - Visual redesign: warm Paper theme by default (Night toggle), report hierarchy,
   momentum bar, probability sparkline, clickable phase cards, selected-phase
   detail, factor bars, and a compact stat grid instead of a wall of sliders.
@@ -28,6 +28,10 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - Naval mode: individual ships, hull/sensors/weapons/air-cover/damage-control
   ratings, readiness, salvos, `naval run/replay` CLI commands, GUI screen, and a
   committed fixture/replay test.
+- Frontline mode: sectors, reserves, fortifications, objectives, daily logs,
+  `frontline run/replay` CLI commands, GUI sector board, and a committed
+  fixture/replay test.
+- [`docs/frontlines.md`](docs/frontlines.md) documenting the sector model.
 - [`docs/naval.md`](docs/naval.md) documenting the fleet model.
 - [`docs/dogfight.md`](docs/dogfight.md) documenting the air model.
 - Skirmish fixture and committed replay log; Battle logs and hashes remain

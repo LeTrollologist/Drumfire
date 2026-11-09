@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/badge/Engine-Rust-E8963F?style=for-the-badge&logo=rust&logoColor=1A120B&labelColor=1A120B" alt="Engine: Rust" />
   </a>
   <a href="docs/modes.md">
-    <img src="https://img.shields.io/badge/Modes-4_Playable-77A9C9?style=for-the-badge&labelColor=1A120B" alt="Modes: Skirmish, Battle, Dogfight, and Naval" />
+    <img src="https://img.shields.io/badge/Modes-5_Playable-77A9C9?style=for-the-badge&labelColor=1A120B" alt="Modes: Skirmish, Battle, Dogfight, Naval, and Frontlines" />
   </a>
   <a href="crates/core/">
     <img src="https://img.shields.io/badge/Replay-Seeded_%26_Exact-3FA796?style=for-the-badge&labelColor=1A120B" alt="Replay: seeded and exact" />
@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-60_passing-3FA796?style=flat-square&labelColor=1A120B" alt="60 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-66_passing-3FA796?style=flat-square&labelColor=1A120B" alt="66 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -51,7 +51,7 @@
   </a>
   &nbsp;
   <a href="docs/modes.md">
-    <img src="https://img.shields.io/badge/%F0%9F%8E%AF_Modes-Four_Playable-E8963F?style=for-the-badge&labelColor=1A120B" alt="Modes" />
+    <img src="https://img.shields.io/badge/%F0%9F%8E%AF_Modes-Five_Playable-E8963F?style=for-the-badge&labelColor=1A120B" alt="Modes" />
   </a>
   &nbsp;
   <a href="docs/rules.md">
@@ -69,10 +69,10 @@
 
 </div>
 
-**Status:** Phase 6 — **Skirmish**, **Battle**, **Dogfight**, and **Naval**
-playable, deterministic core, CLI, egui desktop UI, and read-only NationStates
-import. Frontlines and Campaign are planned. No account login, no write actions,
-no credentials.
+**Status:** Phase 7 — **Skirmish**, **Battle**, **Dogfight**, **Naval**, and
+**Frontlines** playable, deterministic core, CLI, egui desktop UI, and read-only
+NationStates import. Campaign is planned. No account login, no write actions, no
+credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -176,6 +176,17 @@ cargo run -p drumfire-cli -- naval replay fixtures/naval.log.json
   <img src="docs/naval.png" alt="Drumfire naval UI" width="92%" />
 </div>
 
+Frontlines mode uses a sector-and-reserves schema:
+
+```sh
+cargo run -p drumfire-cli -- frontline run fixtures/frontline.json
+cargo run -p drumfire-cli -- frontline replay fixtures/frontline.log.json
+```
+
+<div align="center">
+  <img src="docs/frontlines.png" alt="Drumfire frontlines UI" width="92%" />
+</div>
+
 Override the mode on any input:
 
 ```sh
@@ -250,6 +261,8 @@ DRUMFIRE_CONTACT="https://example.com/drumfire" cargo run -p drumfire-cli -- nat
 | `drumfire air replay <log>` | Verify a saved dogfight log exactly. |
 | `drumfire naval run <input>` | Resolve a naval action from a fleet input. |
 | `drumfire naval replay <log>` | Verify a saved naval log exactly. |
+| `drumfire frontline run <input>` | Resolve a multi-sector front-line battle. |
+| `drumfire frontline replay <log>` | Verify a saved front-line log exactly. |
 | `drumfire explain <input> [--mode]` | Show each side’s strength components and opening probability. |
 | `drumfire nation <name>` | Fetch one nation from the public NationStates API. |
 | `drumfire nation <name> --json` | Same, as JSON. |
@@ -304,7 +317,7 @@ factors; `config` and `home` are optional.
 | `skirmish` | implemented | Exchange | Combatants |
 | `dogfight` | implemented, separate air schema | Pass | Aircraft |
 | `naval` | implemented, separate fleet schema | Salvo | Ships |
-| `frontlines` | planned; rejected by validation | — | — |
+| `frontlines` | implemented, sector/reserves schema | Day | Sectors |
 
 A serialized Battle input omits `mode` so existing logs and hashes remain stable.
 A Skirmish input includes it.
@@ -413,6 +426,7 @@ drumfire/
     modes.md
     dogfight.md
     naval.md
+    frontlines.md
     nationstates.md
   fixtures/
     example.json
@@ -423,6 +437,8 @@ drumfire/
     dogfight.log.json
     naval.json
     naval.log.json
+    frontline.json
+    frontline.log.json
 ```
 
 ## Provenance and license

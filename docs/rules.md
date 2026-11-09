@@ -7,9 +7,9 @@ The model is intentionally simple and legible. It is not a physics simulation,
 and it does not claim to predict real warfare. It exists to give roleplayers a
 consistent, explainable answer to “who wins this battle?”.
 
-This document covers the **ground** modes (Skirmish and Battle). Dogfight and
-Naval use separate models documented in [`dogfight.md`](dogfight.md) and
-[`naval.md`](naval.md).
+This document covers the **ground** modes (Skirmish and Battle). Dogfight, Naval,
+and Frontlines use separate models documented in [`dogfight.md`](dogfight.md),
+[`naval.md`](naval.md), and [`frontlines.md`](frontlines.md).
 
 ---
 

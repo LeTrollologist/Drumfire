@@ -1,0 +1,54 @@
+{
+  "mode": "frontlines",
+  "attacker": {
+    "name": "Red Front",
+    "reserves": 5000,
+    "morale": 70,
+    "tech": 6,
+    "training": 6,
+    "experience": 6,
+    "logistics": 5,
+    "intel": 5
+  },
+  "defender": {
+    "name": "Blue Front",
+    "reserves": 5000,
+    "morale": 70,
+    "tech": 6,
+    "training": 6,
+    "experience": 6,
+    "logistics": 5,
+    "intel": 5
+  },
+  "sectors": [
+    {
+      "name": "North",
+      "attacker_troops": 4000,
+      "defender_troops": 5000,
+      "fortification": 6,
+      "objective": false
+    },
+    {
+      "name": "Center",
+      "attacker_troops": 8000,
+      "defender_troops": 6000,
+      "fortification": 7,
+      "objective": true
+    },
+    {
+      "name": "South",
+      "attacker_troops": 5000,
+      "defender_troops": 5000,
+      "fortification": 5,
+      "objective": true
+    }
+  ],
+  "config": {
+    "max_days": 10,
+    "scale": 2.5,
+    "casualty_rate": 0.12,
+    "morale_rout_threshold": 20,
+    "replenish_rate": 0.25
+  },
+  "seed": "808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9f"
+}

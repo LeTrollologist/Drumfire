@@ -13,6 +13,7 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 pub mod dogfight;
+pub mod frontline;
 pub mod naval;
 
 /// Weight of the morale term in the strength score.

@@ -7,12 +7,15 @@ use clap::{Parser, Subcommand};
 use drumfire_core::dogfight::{
     classify_dogfight, replay_dogfight, simulate_dogfight, DogfightEnding, DogfightLog,
 };
+use drumfire_core::frontline::{
+    classify_frontline, replay_frontline, simulate_frontline, FrontlineEnding, FrontlineLog,
+};
 use drumfire_core::naval::{classify_naval, replay_naval, simulate_naval, NavalEnding, NavalLog};
 use drumfire_core::{
     classify, initial_win_probability, replay, simulate, strength_breakdown, BattleLog, Ending,
     Side, Winner,
 };
-use drumfire_model::{BattleInput, DogfightInput, Mode, NavalInput, Seed};
+use drumfire_model::{BattleInput, DogfightInput, FrontlineInput, Mode, NavalInput, Seed};
 use serde::de::DeserializeOwned;
 
 #[derive(Debug, Parser)]
@@ -80,6 +83,11 @@ enum Command {
         #[command(subcommand)]
         command: NavalCommand,
     },
+    /// Run or verify a front-line battle.
+    Frontline {
+        #[command(subcommand)]
+        command: FrontlineCommand,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -127,6 +135,32 @@ enum NavalCommand {
     /// Verify a saved naval log by re-simulating it.
     Replay {
         /// Path to a naval log JSON produced by `naval run --out`.
+        log: PathBuf,
+        /// Print the verified log as JSON.
+        #[arg(long)]
+        json: bool,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum FrontlineCommand {
+    /// Resolve a front-line battle from a JSON input file.
+    Run {
+        /// Path to the front-line input JSON.
+        input: PathBuf,
+        /// Override the input seed with 64 hex characters, or `random`.
+        #[arg(long)]
+        seed: Option<String>,
+        /// Print the full front-line log as JSON.
+        #[arg(long)]
+        json: bool,
+        /// Also write the full front-line log to this path.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Verify a saved front-line log by re-simulating it.
+    Replay {
+        /// Path to a front-line log JSON produced by `frontline run --out`.
         log: PathBuf,
         /// Print the verified log as JSON.
         #[arg(long)]
@@ -255,6 +289,39 @@ fn main() -> Result<()> {
                 }
             }
         },
+        Command::Frontline { command } => match command {
+            FrontlineCommand::Run {
+                input,
+                seed,
+                json,
+                out,
+            } => {
+                let mut input: FrontlineInput = read_json(&input)?;
+                if let Some(seed) = seed {
+                    input.seed = parse_seed(&seed)?;
+                }
+                let log = simulate_frontline(&input)?;
+                if let Some(path) = out {
+                    write_json(&path, &log)?;
+                }
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&log)?);
+                } else {
+                    print_frontline(&log);
+                }
+            }
+            FrontlineCommand::Replay { log, json } => {
+                let log: FrontlineLog = read_json(&log)?;
+                let verified = replay_frontline(&log)?;
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&verified)?);
+                } else {
+                    println!("Frontline replay verified.");
+                    println!();
+                    print_frontline(&verified);
+                }
+            }
+        },
     }
     Ok(())
 }
@@ -363,6 +430,95 @@ fn print_narrative(log: &BattleLog) {
         "Final morale: {} / {}",
         log.result.final_morale.attacker, log.result.final_morale.defender
     );
+}
+
+fn print_frontline(log: &FrontlineLog) {
+    let a = &log.input.attacker.name;
+    let d = &log.input.defender.name;
+
+    println!("Frontline: {a} (attacker) vs {d} (defender)");
+    println!("Seed: {}", log.input.seed.to_hex());
+    println!("Input hash: {}", log.input_hash);
+    println!();
+
+    for day in &log.days {
+        println!("Day {}:", day.day);
+        for sector in &day.sectors {
+            println!(
+                "  {:<10} {:<8} p={:5.1}% roll={:.3}  losses {:>5}/{:<5}  troops {:>5}/{:<5}{}",
+                sector.sector,
+                side_name(sector.sector_winner),
+                sector.attacker_win_probability * 100.0,
+                sector.roll,
+                sector.attacker_losses,
+                sector.defender_losses,
+                sector.attacker_troops_after,
+                sector.defender_troops_after,
+                if sector.captured { "  CAPTURED" } else { "" }
+            );
+        }
+    }
+
+    println!();
+    let outcome = classify_frontline(log);
+    match log.result.winner {
+        Winner::Draw => println!(
+            "Result: draw — {} after {} days.",
+            outcome.label(),
+            log.days.len()
+        ),
+        winner => println!(
+            "Result: {} — {} after {} days.",
+            frontline_winner(winner, log),
+            outcome.label(),
+            log.days.len()
+        ),
+    }
+    println!("Ending: {}.", frontline_ending(log.result.ending));
+    println!(
+        "Objectives: {} / {}",
+        log.result.objectives_captured, log.result.objectives_total
+    );
+    println!(
+        "Final reserves: {} / {}",
+        log.result.final_reserves.attacker, log.result.final_reserves.defender
+    );
+    println!(
+        "Final morale: {} / {}",
+        log.result.final_morale.attacker, log.result.final_morale.defender
+    );
+    for sector in &log.result.sectors {
+        println!(
+            "  {:<10} troops {:>5}/{:<5}  {}{}",
+            sector.name,
+            sector.attacker_troops,
+            sector.defender_troops,
+            if sector.objective { "objective " } else { "" },
+            if sector.captured {
+                "captured"
+            } else {
+                "contested"
+            }
+        );
+    }
+}
+
+fn frontline_winner(winner: Winner, log: &FrontlineLog) -> &str {
+    match winner {
+        Winner::Attacker => &log.input.attacker.name,
+        Winner::Defender => &log.input.defender.name,
+        Winner::Draw => "Draw",
+    }
+}
+
+fn frontline_ending(ending: FrontlineEnding) -> &'static str {
+    match ending {
+        FrontlineEnding::Breakthrough => "breakthrough",
+        FrontlineEnding::Exhaustion => "exhaustion",
+        FrontlineEnding::Withdrawal => "withdrawal",
+        FrontlineEnding::MaxDays => "day cap",
+        FrontlineEnding::Draw => "draw",
+    }
 }
 
 fn print_naval(log: &NavalLog) {

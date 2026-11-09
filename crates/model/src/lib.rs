@@ -371,7 +371,7 @@ impl Mode {
     pub fn is_supported(self) -> bool {
         matches!(
             self,
-            Mode::Skirmish | Mode::Battle | Mode::Dogfight | Mode::Naval
+            Mode::Skirmish | Mode::Battle | Mode::Dogfight | Mode::Naval | Mode::Frontlines
         )
     }
 
@@ -734,6 +734,168 @@ impl NavalInput {
     }
 }
 
+/// One side's strategic front: committed sector troops plus reserves.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FrontForce {
+    pub name: String,
+    /// Uncommitted replacements available to flow into sectors.
+    pub reserves: u32,
+    pub morale: Morale,
+    pub tech: Rating,
+    pub training: Rating,
+    pub experience: Rating,
+    pub logistics: Rating,
+    pub intel: Rating,
+}
+
+impl FrontForce {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        let name = self.name.trim();
+        if name.is_empty() {
+            return Err(ValidationError::EmptyName);
+        }
+        if name.chars().count() > MAX_NAME_LEN {
+            return Err(ValidationError::NameTooLong { max: MAX_NAME_LEN });
+        }
+        Ok(())
+    }
+}
+
+/// One sector of the front.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct SectorInput {
+    pub name: String,
+    pub attacker_troops: ForceCount,
+    pub defender_troops: ForceCount,
+    /// Defender fortification, 1–10.
+    pub fortification: Rating,
+    /// Whether capturing this sector counts toward a breakthrough.
+    pub objective: bool,
+}
+
+impl SectorInput {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        let name = self.name.trim();
+        if name.is_empty() {
+            return Err(ValidationError::EmptyName);
+        }
+        if name.chars().count() > MAX_NAME_LEN {
+            return Err(ValidationError::NameTooLong { max: MAX_NAME_LEN });
+        }
+        Ok(())
+    }
+}
+
+/// Tunable front-line parameters.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct FrontlineConfig {
+    /// Hard cap on days. Range: 1..=30.
+    pub max_days: u32,
+    /// Logistic scale for a sector’s strength difference. Range: 0.1..=20.0.
+    pub scale: f64,
+    /// Base casualty intensity per sector per day. Range: 0.0..=0.5.
+    pub casualty_rate: f64,
+    /// A side at or below this morale breaks. Range: 0..=100.
+    pub morale_rout_threshold: u8,
+    /// Fraction of daily losses replaced from reserves. Range: 0.0..=1.0.
+    pub replenish_rate: f64,
+}
+
+impl Default for FrontlineConfig {
+    fn default() -> Self {
+        Self {
+            max_days: 10,
+            scale: 2.5,
+            casualty_rate: 0.12,
+            morale_rout_threshold: 20,
+            replenish_rate: 0.25,
+        }
+    }
+}
+
+impl FrontlineConfig {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        if !(1..=30).contains(&self.max_days) {
+            return Err(ValidationError::InvalidConfig(
+                "max_days must be between 1 and 30",
+            ));
+        }
+        if !self.scale.is_finite() || !(0.1..=20.0).contains(&self.scale) {
+            return Err(ValidationError::InvalidConfig(
+                "scale must be finite and between 0.1 and 20.0",
+            ));
+        }
+        if !self.casualty_rate.is_finite() || !(0.0..=0.5).contains(&self.casualty_rate) {
+            return Err(ValidationError::InvalidConfig(
+                "casualty_rate must be finite and between 0.0 and 0.5",
+            ));
+        }
+        if self.morale_rout_threshold > 100 {
+            return Err(ValidationError::InvalidConfig(
+                "morale_rout_threshold must be between 0 and 100",
+            ));
+        }
+        if !self.replenish_rate.is_finite() || !(0.0..=1.0).contains(&self.replenish_rate) {
+            return Err(ValidationError::InvalidConfig(
+                "replenish_rate must be finite and between 0.0 and 1.0",
+            ));
+        }
+        Ok(())
+    }
+}
+
+fn frontlines_mode() -> Mode {
+    Mode::Frontlines
+}
+
+/// The complete, serializable input to one front-line battle.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct FrontlineInput {
+    #[serde(default = "frontlines_mode")]
+    pub mode: Mode,
+    pub attacker: FrontForce,
+    pub defender: FrontForce,
+    /// Three to five sectors. The GUI uses three; the engine supports up to five.
+    pub sectors: Vec<SectorInput>,
+    #[serde(default)]
+    pub config: FrontlineConfig,
+    pub seed: Seed,
+}
+
+impl FrontlineInput {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        if self.mode != Mode::Frontlines {
+            return Err(ValidationError::UnsupportedMode(self.mode));
+        }
+        self.attacker.validate()?;
+        self.defender.validate()?;
+        if !(3..=5).contains(&self.sectors.len()) {
+            return Err(ValidationError::InvalidConfig(
+                "frontlines need 3 to 5 sectors",
+            ));
+        }
+        if !self.sectors.iter().any(|sector| sector.objective) {
+            return Err(ValidationError::InvalidConfig(
+                "frontlines need at least one objective sector",
+            ));
+        }
+        for (index, sector) in self.sectors.iter().enumerate() {
+            sector.validate()?;
+            if self.sectors[..index]
+                .iter()
+                .any(|other| other.name.eq_ignore_ascii_case(&sector.name))
+            {
+                return Err(ValidationError::InvalidConfig(
+                    "sector names must be unique",
+                ));
+            }
+        }
+        self.config.validate()?;
+        Ok(())
+    }
+}
+
 /// Errors produced by model-level validation.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum ValidationError {
@@ -925,6 +1087,29 @@ mod tests {
         }
     }
 
+    fn front_force(name: &str) -> FrontForce {
+        FrontForce {
+            name: name.to_string(),
+            reserves: 5000,
+            morale: Morale::new(70).unwrap(),
+            tech: Rating::new(6).unwrap(),
+            training: Rating::new(6).unwrap(),
+            experience: Rating::new(6).unwrap(),
+            logistics: Rating::new(5).unwrap(),
+            intel: Rating::new(5).unwrap(),
+        }
+    }
+
+    fn sector(name: &str, objective: bool) -> SectorInput {
+        SectorInput {
+            name: name.to_string(),
+            attacker_troops: ForceCount::new(1000).unwrap(),
+            defender_troops: ForceCount::new(1000).unwrap(),
+            fortification: Rating::new(6).unwrap(),
+            objective,
+        }
+    }
+
     #[test]
     fn aircraft_count_rejects_zero_and_huge_counts() {
         assert!(AircraftCount::new(0).is_err());
@@ -984,6 +1169,27 @@ mod tests {
     }
 
     #[test]
+    fn frontline_input_round_trips() {
+        let input = FrontlineInput {
+            mode: Mode::Frontlines,
+            attacker: front_force("Red Front"),
+            defender: front_force("Blue Front"),
+            sectors: vec![
+                sector("North", false),
+                sector("Center", true),
+                sector("South", true),
+            ],
+            config: FrontlineConfig::default(),
+            seed: Seed::from_u64(19),
+        };
+        input.validate().unwrap();
+        let json = serde_json::to_string(&input).unwrap();
+        assert!(json.contains("\"mode\":\"frontlines\""));
+        let parsed: FrontlineInput = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, input);
+    }
+
+    #[test]
     fn mode_metadata_is_distinct() {
         assert_eq!(Mode::Skirmish.phase_label(), "Exchange");
         assert_eq!(Mode::Battle.phase_label(), "Phase");
@@ -993,6 +1199,7 @@ mod tests {
         assert!(Mode::Battle.is_supported());
         assert!(Mode::Dogfight.is_supported());
         assert!(Mode::Naval.is_supported());
+        assert!(Mode::Frontlines.is_supported());
     }
 
     #[test]

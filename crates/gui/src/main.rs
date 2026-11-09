@@ -6,6 +6,9 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
 use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
+use drumfire_core::frontline::{
+    classify_frontline, simulate_frontline, FrontlineEnding, FrontlineLog,
+};
 use drumfire_core::naval::{classify_naval, simulate_naval, NavalEnding, NavalLog};
 use drumfire_core::{
     classify, initial_win_probability, simulate, strength_breakdown, BattleLog, Ending, RoundLog,
@@ -13,12 +16,14 @@ use drumfire_core::{
 };
 use drumfire_model::{
     AirForce, AircraftCount, BattleConfig, BattleInput, DogfightConfig, DogfightInput, Fleet,
-    ForceCount, Mode, Morale, NavalConfig, NavalInput, Rating, Seed, ShipCount, TeamInput,
+    ForceCount, FrontForce, FrontlineConfig, FrontlineInput, Mode, Morale, NavalConfig, NavalInput,
+    Rating, SectorInput, Seed, ShipCount, TeamInput,
 };
 use drumfire_ns::{suggested_forces, NationSummary};
 use eframe::egui;
 
 fn main() -> eframe::Result<()> {
+    let demo_frontline = std::env::args().any(|arg| arg == "--demo-frontline");
     let demo_naval = std::env::args().any(|arg| arg == "--demo-naval");
     let demo_dogfight = std::env::args().any(|arg| arg == "--demo-dogfight");
     let demo =
@@ -36,7 +41,9 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(move |cc| {
             apply_theme(&cc.egui_ctx, Theme::Paper);
-            let app = if demo_naval {
+            let app = if demo_frontline {
+                DrumfireApp::demo_frontline()
+            } else if demo_naval {
                 DrumfireApp::demo_naval()
             } else if demo_dogfight {
                 DrumfireApp::demo_dogfight()
@@ -338,6 +345,102 @@ impl FleetForm {
     }
 }
 
+#[derive(Debug, Clone)]
+struct FrontForceForm {
+    name: String,
+    reserves: u32,
+    morale: i32,
+    tech: u8,
+    training: u8,
+    experience: u8,
+    logistics: u8,
+    intel: u8,
+}
+
+impl FrontForceForm {
+    fn blank(name: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            reserves: 5000,
+            morale: 70,
+            tech: 6,
+            training: 6,
+            experience: 6,
+            logistics: 5,
+            intel: 5,
+        }
+    }
+
+    fn from_force(force: &FrontForce) -> Self {
+        Self {
+            name: force.name.clone(),
+            reserves: force.reserves,
+            morale: force.morale.get() as i32,
+            tech: force.tech.get(),
+            training: force.training.get(),
+            experience: force.experience.get(),
+            logistics: force.logistics.get(),
+            intel: force.intel.get(),
+        }
+    }
+
+    fn to_force(&self) -> Result<FrontForce, String> {
+        Ok(FrontForce {
+            name: self.name.clone(),
+            reserves: self.reserves,
+            morale: Morale::new(self.morale.clamp(0, 100) as u8).map_err(|err| err.to_string())?,
+            tech: Rating::new(self.tech).map_err(|err| err.to_string())?,
+            training: Rating::new(self.training).map_err(|err| err.to_string())?,
+            experience: Rating::new(self.experience).map_err(|err| err.to_string())?,
+            logistics: Rating::new(self.logistics).map_err(|err| err.to_string())?,
+            intel: Rating::new(self.intel).map_err(|err| err.to_string())?,
+        })
+    }
+}
+
+#[derive(Debug, Clone)]
+struct SectorForm {
+    name: String,
+    attacker_troops: u32,
+    defender_troops: u32,
+    fortification: u8,
+    objective: bool,
+}
+
+impl SectorForm {
+    fn new(name: &str, attacker_troops: u32, defender_troops: u32, objective: bool) -> Self {
+        Self {
+            name: name.to_string(),
+            attacker_troops,
+            defender_troops,
+            fortification: 6,
+            objective,
+        }
+    }
+
+    fn from_input(sector: &SectorInput) -> Self {
+        Self {
+            name: sector.name.clone(),
+            attacker_troops: sector.attacker_troops.get(),
+            defender_troops: sector.defender_troops.get(),
+            fortification: sector.fortification.get(),
+            objective: sector.objective,
+        }
+    }
+
+    fn to_input(&self) -> Result<SectorInput, String> {
+        Ok(SectorInput {
+            name: self.name.clone(),
+            attacker_troops: ForceCount::new(self.attacker_troops)
+                .map_err(|err| err.to_string())?,
+            defender_troops: ForceCount::new(self.defender_troops)
+                .map_err(|err| err.to_string())?,
+            fortification: Rating::new(self.fortification).map_err(|err| err.to_string())?,
+            objective: self.objective,
+        })
+    }
+}
+
 struct DrumfireApp {
     theme: Theme,
     applied_theme: Option<Theme>,
@@ -355,6 +458,11 @@ struct DrumfireApp {
     naval_config: NavalConfig,
     naval_log: Option<NavalLog>,
     selected_salvo: Option<usize>,
+    frontline_attacker: FrontForceForm,
+    frontline_defender: FrontForceForm,
+    frontline_sectors: Vec<SectorForm>,
+    frontline_config: FrontlineConfig,
+    frontline_log: Option<FrontlineLog>,
     config: BattleConfig,
     seed_hex: String,
     home_side: HomeSide,
@@ -394,6 +502,13 @@ impl DrumfireApp {
         app
     }
 
+    fn demo_frontline() -> Self {
+        let mut app = Self::default();
+        app.load_frontline_example();
+        app.run_current();
+        app
+    }
+
     fn from_input(input: &BattleInput) -> Self {
         let home_side = if input.attacker.home {
             HomeSide::Attacker
@@ -404,6 +519,7 @@ impl DrumfireApp {
         };
         let air = example_dogfight();
         let naval = example_naval();
+        let frontline = example_frontline();
 
         Self {
             theme: Theme::Paper,
@@ -422,6 +538,15 @@ impl DrumfireApp {
             naval_config: naval.config,
             naval_log: None,
             selected_salvo: None,
+            frontline_attacker: FrontForceForm::from_force(&frontline.attacker),
+            frontline_defender: FrontForceForm::from_force(&frontline.defender),
+            frontline_sectors: frontline
+                .sectors
+                .iter()
+                .map(SectorForm::from_input)
+                .collect(),
+            frontline_config: frontline.config,
+            frontline_log: None,
             config: input.config.clone(),
             seed_hex: input.seed.to_hex(),
             home_side,
@@ -503,6 +628,33 @@ impl DrumfireApp {
         Ok(input)
     }
 
+    fn build_frontline(&self) -> Result<FrontlineInput, String> {
+        let attacker = self
+            .frontline_attacker
+            .to_force()
+            .map_err(|err| format!("Attacker: {err}"))?;
+        let defender = self
+            .frontline_defender
+            .to_force()
+            .map_err(|err| format!("Defender: {err}"))?;
+        let sectors = self
+            .frontline_sectors
+            .iter()
+            .map(SectorForm::to_input)
+            .collect::<Result<Vec<_>, _>>()?;
+        let seed = Seed::from_hex(&self.seed_hex).map_err(|err| format!("Seed: {err}"))?;
+        let input = FrontlineInput {
+            mode: Mode::Frontlines,
+            attacker,
+            defender,
+            sectors,
+            config: self.frontline_config.clone(),
+            seed,
+        };
+        input.validate().map_err(|err| err.to_string())?;
+        Ok(input)
+    }
+
     fn run_current(&mut self) {
         if self.mode == Mode::Dogfight {
             match self.build_dogfight() {
@@ -540,6 +692,23 @@ impl DrumfireApp {
                 Err(err) => {
                     self.error = Some(err);
                     self.naval_log = None;
+                }
+            }
+        } else if self.mode == Mode::Frontlines {
+            match self.build_frontline() {
+                Ok(input) => match simulate_frontline(&input) {
+                    Ok(log) => {
+                        self.frontline_log = Some(log);
+                        self.error = None;
+                    }
+                    Err(err) => {
+                        self.error = Some(err.to_string());
+                        self.frontline_log = None;
+                    }
+                },
+                Err(err) => {
+                    self.error = Some(err);
+                    self.frontline_log = None;
                 }
             }
         } else {
@@ -620,6 +789,18 @@ impl DrumfireApp {
         self.error = None;
     }
 
+    fn load_frontline_example(&mut self) {
+        let input = example_frontline();
+        self.mode = Mode::Frontlines;
+        self.frontline_attacker = FrontForceForm::from_force(&input.attacker);
+        self.frontline_defender = FrontForceForm::from_force(&input.defender);
+        self.frontline_sectors = input.sectors.iter().map(SectorForm::from_input).collect();
+        self.frontline_config = input.config;
+        self.seed_hex = input.seed.to_hex();
+        self.frontline_log = None;
+        self.error = None;
+    }
+
     fn reset(&mut self) {
         self.mode = Mode::Battle;
         self.attacker = TeamForm::blank("Attacker");
@@ -630,6 +811,14 @@ impl DrumfireApp {
         self.naval_attacker = FleetForm::blank("Red Fleet", 6);
         self.naval_defender = FleetForm::blank("Blue Fleet", 8);
         self.naval_config = NavalConfig::default();
+        self.frontline_attacker = FrontForceForm::blank("Red Front");
+        self.frontline_defender = FrontForceForm::blank("Blue Front");
+        self.frontline_sectors = vec![
+            SectorForm::new("North", 4000, 5000, false),
+            SectorForm::new("Center", 8000, 6000, true),
+            SectorForm::new("South", 5000, 5000, true),
+        ];
+        self.frontline_config = FrontlineConfig::default();
         self.config = BattleConfig::default();
         self.home_side = HomeSide::Neutral;
         self.seed_hex = String::new();
@@ -641,6 +830,7 @@ impl DrumfireApp {
         self.selected_pass = None;
         self.naval_log = None;
         self.selected_salvo = None;
+        self.frontline_log = None;
         self.import_status = None;
         self.import_error = None;
     }
@@ -778,6 +968,8 @@ impl eframe::App for DrumfireApp {
                                 "Dogfight setup"
                             } else if self.mode == Mode::Naval {
                                 "Naval setup"
+                            } else if self.mode == Mode::Frontlines {
+                                "Frontline setup"
                             } else {
                                 "Battle setup"
                             });
@@ -804,6 +996,12 @@ impl eframe::App for DrumfireApp {
                             self.naval_setup_ui(ui, &p);
                             ui.add_space(8.0);
                             self.naval_config_ui(ui);
+                            ui.add_space(8.0);
+                            self.actions_ui(ui, &p);
+                        } else if self.mode == Mode::Frontlines {
+                            self.frontline_setup_ui(ui, &p);
+                            ui.add_space(8.0);
+                            self.frontline_config_ui(ui);
                             ui.add_space(8.0);
                             self.actions_ui(ui, &p);
                         } else {
@@ -847,7 +1045,13 @@ impl DrumfireApp {
     fn mode_ui(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.label("Mode");
-            for mode in [Mode::Skirmish, Mode::Battle, Mode::Dogfight, Mode::Naval] {
+            for mode in [
+                Mode::Skirmish,
+                Mode::Battle,
+                Mode::Dogfight,
+                Mode::Naval,
+                Mode::Frontlines,
+            ] {
                 if ui
                     .selectable_label(self.mode == mode, mode.label())
                     .clicked()
@@ -856,6 +1060,7 @@ impl DrumfireApp {
                     self.log = None;
                     self.dogfight_log = None;
                     self.naval_log = None;
+                    self.frontline_log = None;
                     self.selected_phase = None;
                     self.selected_pass = None;
                     self.selected_salvo = None;
@@ -864,7 +1069,7 @@ impl DrumfireApp {
             }
         });
         ui.label(
-            egui::RichText::new("Frontlines and Campaign are planned; their schemas are reserved.")
+            egui::RichText::new("Campaign is planned; its schema is reserved.")
                 .small()
                 .weak(),
         );
@@ -978,6 +1183,73 @@ impl DrumfireApp {
                 ui.label(
                     egui::RichText::new(
                         "Salvos are detection-and-fire cycles; losses are whole ships.",
+                    )
+                    .small()
+                    .weak(),
+                );
+            });
+    }
+
+    fn frontline_setup_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        card(p).show(ui, |ui| {
+            front_force_ui(ui, "Attacker", &mut self.frontline_attacker, p);
+        });
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            front_force_ui(ui, "Defender", &mut self.frontline_defender, p);
+        });
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            ui.label(tiny("SECTORS", p));
+            egui::Grid::new("frontline_sectors")
+                .num_columns(5)
+                .spacing([6.0, 4.0])
+                .show(ui, |ui| {
+                    for header in ["Sector", "Attacker", "Defender", "Fort", "Obj"] {
+                        ui.label(egui::RichText::new(header).size(9.0).color(p.muted));
+                    }
+                    ui.end_row();
+                    for sector in &mut self.frontline_sectors {
+                        ui.add(egui::TextEdit::singleline(&mut sector.name).desired_width(95.0));
+                        ui.add(egui::DragValue::new(&mut sector.attacker_troops));
+                        ui.add(egui::DragValue::new(&mut sector.defender_troops));
+                        ui.add(egui::DragValue::new(&mut sector.fortification).range(1..=10));
+                        ui.checkbox(&mut sector.objective, "");
+                        ui.end_row();
+                    }
+                });
+        });
+    }
+
+    fn frontline_config_ui(&mut self, ui: &mut egui::Ui) {
+        egui::CollapsingHeader::new("Front-line rules")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.add(
+                    egui::Slider::new(&mut self.frontline_config.max_days, 1..=30).text("Max days"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.frontline_config.scale, 0.1..=20.0)
+                        .text("Scale")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.frontline_config.casualty_rate, 0.0..=0.5)
+                        .text("Casualty rate")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.frontline_config.replenish_rate, 0.0..=1.0)
+                        .text("Reserve replenishment")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.frontline_config.morale_rout_threshold, 0..=100)
+                        .text("Break morale"),
+                );
+                ui.label(
+                    egui::RichText::new(
+                        "Sectors resolve each day; reserves replace a share of losses.",
                     )
                     .small()
                     .weak(),
@@ -1102,6 +1374,11 @@ impl DrumfireApp {
 
         if self.mode == Mode::Naval {
             self.naval_output_ui(ui, p);
+            return;
+        }
+
+        if self.mode == Mode::Frontlines {
+            self.frontline_output_ui(ui, p);
             return;
         }
 
@@ -2249,6 +2526,273 @@ impl DrumfireApp {
             }
         });
     }
+
+    fn frontline_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(log) = self.frontline_log.clone() else {
+            self.frontline_empty_state(ui, p);
+            return;
+        };
+
+        let winner = frontline_winner_label(&log);
+        let outcome = classify_frontline(&log);
+
+        ui.horizontal(|ui| {
+            ui.label(tiny("FRONTLINE REPORT", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Copy log JSON").clicked() {
+                    if let Ok(json) = serde_json::to_string_pretty(&log) {
+                        ui.ctx().copy_text(json);
+                    }
+                }
+                ui.label(tiny("rules v1 · Frontlines", p));
+            });
+        });
+
+        ui.add_space(3.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.label(
+                egui::RichText::new(&log.input.attacker.name)
+                    .size(30.0)
+                    .strong()
+                    .color(p.sand),
+            );
+            ui.label(egui::RichText::new("vs").size(12.0).color(p.muted));
+            ui.label(
+                egui::RichText::new(&log.input.defender.name)
+                    .size(30.0)
+                    .strong()
+                    .color(p.blue),
+            );
+        });
+
+        ui.add_space(4.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.label(egui::RichText::new(winner).size(18.0).strong().color(p.ink));
+            badge(ui, p, format!("· {}", outcome.label()), p.sand_soft, p.sand);
+            ui.label(tiny(
+                format!(
+                    "{} days · {}",
+                    log.days.len(),
+                    frontline_ending_label(log.result.ending)
+                ),
+                p,
+            ));
+        });
+        ui.label(
+            egui::RichText::new(format!(
+                "seed {}   ·   hash {}",
+                log.input.seed.to_hex(),
+                log.input_hash
+            ))
+            .size(9.5)
+            .monospace()
+            .color(p.muted),
+        );
+
+        ui.add_space(12.0);
+        card(p).show(ui, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "objectives {} / {}",
+                        log.result.objectives_captured, log.result.objectives_total
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "reserves {} / {}",
+                        log.result.final_reserves.attacker, log.result.final_reserves.defender
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "morale {} / {}",
+                        log.result.final_morale.attacker, log.result.final_morale.defender
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                ui.label(tiny("attacker / defender", p));
+            });
+        });
+
+        ui.add_space(12.0);
+        ui.label(tiny("SECTOR BOARD", p));
+        ui.add_space(4.0);
+        let columns = log.result.sectors.len();
+        ui.columns(columns, |columns| {
+            for (column, sector) in columns.iter_mut().zip(&log.result.sectors) {
+                card(p).show(column, |ui| {
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            egui::RichText::new(&sector.name)
+                                .size(15.0)
+                                .strong()
+                                .color(p.ink),
+                        );
+                        if sector.captured {
+                            badge(ui, p, "captured", p.sand_soft, p.sand);
+                        } else if sector.objective {
+                            badge(ui, p, "objective", p.panel_alt, p.muted);
+                        }
+                    });
+                    ui.label(tiny(format!("fortification {}", sector.fortification), p));
+                    ui.add_space(4.0);
+                    let total = (sector.attacker_troops + sector.defender_troops).max(1) as f32;
+                    let share = sector.attacker_troops as f32 / total;
+                    let (rect, _) = ui.allocate_exact_size(
+                        egui::vec2(ui.available_width(), 9.0),
+                        egui::Sense::hover(),
+                    );
+                    let painter = ui.painter();
+                    painter.rect_filled(rect, egui::CornerRadius::same(4), p.blue);
+                    painter.rect_filled(
+                        egui::Rect::from_min_max(
+                            rect.min,
+                            egui::pos2(rect.left() + rect.width() * share, rect.max.y),
+                        ),
+                        egui::CornerRadius::same(4),
+                        p.sand,
+                    );
+                    ui.add_space(3.0);
+                    ui.label(tiny(
+                        format!(
+                            "{} / {} troops",
+                            sector.attacker_troops, sector.defender_troops
+                        ),
+                        p,
+                    ));
+                });
+            }
+        });
+
+        ui.add_space(8.0);
+        egui::CollapsingHeader::new("Daily front log")
+            .default_open(false)
+            .show(ui, |ui| {
+                egui::Grid::new("frontline_days")
+                    .striped(true)
+                    .num_columns(6)
+                    .spacing([10.0, 4.0])
+                    .show(ui, |ui| {
+                        for header in [
+                            "Day",
+                            "Sector",
+                            "Winner",
+                            "Losses A/D",
+                            "Troops A/D",
+                            "Status",
+                        ] {
+                            ui.strong(header);
+                        }
+                        ui.end_row();
+                        for day in &log.days {
+                            for sector in &day.sectors {
+                                ui.monospace(day.day.to_string());
+                                ui.label(&sector.sector);
+                                ui.label(match sector.sector_winner {
+                                    Side::Attacker => &log.input.attacker.name,
+                                    Side::Defender => &log.input.defender.name,
+                                });
+                                ui.monospace(format!(
+                                    "{} / {}",
+                                    sector.attacker_losses, sector.defender_losses
+                                ));
+                                ui.monospace(format!(
+                                    "{} / {}",
+                                    sector.attacker_troops_after, sector.defender_troops_after
+                                ));
+                                ui.label(if sector.captured {
+                                    "captured"
+                                } else {
+                                    "contested"
+                                });
+                                ui.end_row();
+                            }
+                        }
+                    });
+            });
+    }
+
+    fn frontline_empty_state(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            ui.label(tiny("FRONTLINE REPORT", p));
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new("No front has moved yet.")
+                    .size(30.0)
+                    .strong()
+                    .color(p.ink),
+            );
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new(
+                    "Set three sectors, give each side reserves, and run the days. The board will show which sectors are contested, held, or captured.",
+                )
+                .size(13.0)
+                .color(p.muted),
+            );
+            ui.add_space(12.0);
+            let run = egui::Button::new(
+                egui::RichText::new("Run the example front")
+                    .strong()
+                    .color(egui::Color32::from_rgb(34, 24, 13)),
+            )
+            .fill(p.sand);
+            if ui.add(run).clicked() {
+                self.load_frontline_example();
+                self.run_current();
+            }
+        });
+    }
+}
+
+fn front_force_ui(ui: &mut egui::Ui, label: &str, form: &mut FrontForceForm, p: &Palette) {
+    ui.heading(label);
+    egui::Grid::new(format!("{label}_front_identity"))
+        .num_columns(2)
+        .spacing([8.0, 4.0])
+        .show(ui, |ui| {
+            ui.label("Name");
+            ui.add(egui::TextEdit::singleline(&mut form.name).desired_width(220.0));
+            ui.end_row();
+
+            ui.label("Reserves");
+            ui.add(egui::DragValue::new(&mut form.reserves).speed(100.0));
+            ui.end_row();
+        });
+
+    ui.add(egui::Slider::new(&mut form.morale, 0..=100).text("Morale"));
+    ui.add_space(3.0);
+    egui::Grid::new(format!("{label}_front_ratings"))
+        .num_columns(5)
+        .spacing([6.0, 3.0])
+        .show(ui, |ui| {
+            for name in ["Tech", "Train", "Exp", "Log", "Intel"] {
+                ui.label(egui::RichText::new(name).size(9.0).color(p.muted));
+            }
+            ui.end_row();
+            for value in [
+                &mut form.tech,
+                &mut form.training,
+                &mut form.experience,
+                &mut form.logistics,
+                &mut form.intel,
+            ] {
+                ui.add(egui::DragValue::new(value).range(1..=10).speed(1.0));
+            }
+        });
 }
 
 fn fleet_ui(ui: &mut egui::Ui, label: &str, form: &mut FleetForm, p: &Palette) {
@@ -2534,6 +3078,24 @@ fn paint_sparkline(
     );
 }
 
+fn frontline_winner_label(log: &FrontlineLog) -> String {
+    match log.result.winner {
+        Winner::Attacker => format!("{} wins", log.input.attacker.name),
+        Winner::Defender => format!("{} wins", log.input.defender.name),
+        Winner::Draw => "Draw".to_string(),
+    }
+}
+
+fn frontline_ending_label(ending: FrontlineEnding) -> &'static str {
+    match ending {
+        FrontlineEnding::Breakthrough => "breakthrough",
+        FrontlineEnding::Exhaustion => "exhaustion",
+        FrontlineEnding::Withdrawal => "withdrawal",
+        FrontlineEnding::MaxDays => "day cap",
+        FrontlineEnding::Draw => "draw",
+    }
+}
+
 fn naval_winner_label(log: &NavalLog) -> String {
     match log.result.winner {
         Winner::Attacker => format!("{} wins", log.input.attacker.name),
@@ -2600,6 +3162,11 @@ fn example_naval() -> NavalInput {
         .expect("committed naval fixture must be valid")
 }
 
+fn example_frontline() -> FrontlineInput {
+    serde_json::from_str(include_str!("../../../fixtures/frontline.json"))
+        .expect("committed frontline fixture must be valid")
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -2657,5 +3224,16 @@ mod tests {
         app.run_current();
         assert!(app.error.is_none());
         assert!(app.naval_log.is_some());
+    }
+
+    #[test]
+    fn frontline_mode_runs() {
+        let mut app = DrumfireApp {
+            mode: Mode::Frontlines,
+            ..DrumfireApp::default()
+        };
+        app.run_current();
+        assert!(app.error.is_none());
+        assert!(app.frontline_log.is_some());
     }
 }
