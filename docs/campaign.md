@@ -1,8 +1,7 @@
 # Drumfire Campaign — design and implementation plan
 
-**Status:** Halcyon Sweep vertical slice implemented (CLI + war-room GUI, three
-operations, campaign replay). The full seven-node campaign remains the target
-plan below.
+**Status:** implemented in CLI and GUI: seven-node Halcyon Sweep, all five battle
+modes, five enemy intents, and exact campaign replay.
 
 **Goal:** make Campaign the capstone mode: a short, replayable, combined-arms
 campaign that uses Skirmish, Battle, Frontlines, Dogfight, and Naval as
@@ -10,24 +9,25 @@ interlocking parts of one war story — not a menu of unrelated minigames.
 
 ---
 
-## 0. What shipped first
+## 0. What shipped
 
-The **Halcyon Sweep** slice is playable now:
+The **Halcyon Sweep** is playable now:
 
-- 3 nodes: Vantage Ridge, Halcyon Airbase, Port Callas.
-- 3 formations: Old Ironsides (ground), Nightjars (air), Salt Watch (naval).
-- 3 operations: Frontlines, Dogfight, Naval.
+- 7 nodes: Vantage Ridge, Halcyon Airbase, Orne Bridge, Port Callas, Sable
+  Junction, Vesper Works, Meridian.
+- 5 formations: Old Ironsides, Ridgewalkers, Nightjars, Salt Watch, Reserve Corps.
+- 7 operations using all five modes: Frontlines, Skirmish, Battle, Dogfight, and
+  Naval.
 - 4 resources: political will, supply, intel, momentum.
-- 1 enemy intent: Hold.
-- Cross-mode effects: winning the air battle raises naval air cover; losing
-  ground strength reduces the next ground operation.
+- 5 enemy intents: Hold, Reinforce, Counterattack, Interdict, Withdraw.
+- Cross-mode effects: air superiority raises naval air cover; ground losses
+  persist; the four-node combined-arms gate opens Meridian.
 - Campaign log with every mode log embedded, plus exact campaign replay.
 - CLI: `campaign play`, `campaign demo`, `campaign replay`.
 - GUI war room: paper map, resource rail, formation rail, operation briefing,
   after-action report, and chronicle.
 
-The first playable path is deliberately three operations. If the handoffs are
-not fun at this scale, adding four more nodes will not fix it.
+A winning run uses all five modes and roughly seven operations:
 
 ```sh
 cargo run -p drumfire-cli -- campaign demo
@@ -40,9 +40,10 @@ cargo run -p drumfire-gui -- --demo-campaign
 
 ## 1. The one-sentence pitch
 
-**Command a coalition through a 10-operation theater: choose where to push, spend
-scarce reserves, win the air and sea before the ground, and watch named formations
-carry the scars into the next battle — then export the whole war as a chronicle.**
+**Command a coalition through a seven-operation theater: choose where to push,
+spend scarce reserves, win the air and sea before the ground, and watch named
+formations carry the scars into the next battle — then export the whole war as a
+chronicle.**
 
 ---
 
@@ -428,20 +429,19 @@ campaign. The campaign log is the save file and the audit trail.
 
 ## 13. What the MVP includes
 
-Do not build the full dream first. The first playable campaign should be:
+**Status:** shipped, except for the explicitly listed later work.
 
 - One theater: Kestrel Coast, 7 nodes.
 - 5 formations: 2 ground, 1 air, 1 naval, 1 reserve.
-- 8 operations maximum (a shorter campaign), 3 acts.
+- 8-turn cap, 7 operations, 3 acts.
 - 4 resources: will, supply, intel, momentum.
-- 3 stances.
 - 5 enemy intents.
 - All five battle modes wired through adapters.
-- 3 endings: decisive, pyrrhic, collapse.
+- Victory and defeat endings, with a persistent chronicle.
 - CLI campaign playthrough + campaign replay.
-- A basic war-room GUI with node cards, resource rail, formation rail, briefing,
+- A war-room GUI with node cards, resource rail, formation rail, briefing,
   aftermath, and chronicle.
-- No traits, weather, economy, diplomacy, or multiple theaters in MVP.
+- No traits, weather, economy, diplomacy, or multiple theaters yet.
 
 ### Explicit non-goals
 
@@ -562,11 +562,11 @@ The MVP is done when:
 
 ---
 
-## 17. The first vertical slice
+## 17. The first vertical slice (shipped, now superseded)
 
-**Status:** shipped as the CLI slice described in section 0.
-
-Build this before anything else:
+The initial three-operation slice proved the cross-mode handoffs. It has since
+been expanded to the seven-node campaign described in section 0; this section is
+kept as the build history and the test-first rationale.
 
 **“The Halcyon Sweep”** — 3 turns, 3 operations, CLI only:
 

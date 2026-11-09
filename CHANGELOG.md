@@ -10,7 +10,7 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - Mode framework with a `mode` field on `BattleInput`:
   - **Skirmish**, **Battle**, **Dogfight**, **Naval**, and **Frontlines**
     implemented.
-  - Campaign implemented as a meta-layer slice.
+  - Campaign implemented as a meta-layer with seven nodes and all five modes.
 - Mode-aware ground profiles: Skirmish changes strength weights, casualty
   intensity, and morale volatility; Battle keeps the original v1 coefficients.
 - Mode-aware terminology: Battle uses “Phase”/“Troops”; Skirmish uses
@@ -32,13 +32,12 @@ their own version in [`docs/rules.md`](docs/rules.md).
   `frontline run/replay` CLI commands, GUI sector board, and a committed
   fixture/replay test.
 - Campaign war-room GUI: paper map, resource and formation rails, operation
-  briefings, after-action reports, chronicle export, and a three-operation demo.
-- Campaign slice: **The Halcyon Sweep** with three nodes, three named formations,
-  persistent will/supply/intel/momentum, Frontlines/Dogfight/Naval operation
-  adapters, cross-mode air-cover bonus, campaign log, and exact replay.
+  briefings, after-action reports, chronicle export, and a seven-operation demo.
+- Campaign: **The Halcyon Sweep** with seven nodes, five named formations,
+  persistent will/supply/intel/momentum, all five mode adapters, five enemy
+  intents, the four-node combined-arms gate, campaign log, and exact replay.
 - CLI `campaign play`, `campaign demo`, and `campaign replay`.
-- [`docs/campaign.md`](docs/campaign.md) with the full campaign design and the
-  shipped slice.
+- [`docs/campaign.md`](docs/campaign.md) with the full campaign design.
 - Front-line `capture_threshold`: a sector falls when the defender drops to a
   fraction of its starting troops instead of requiring annihilation.
 - [`docs/frontlines.md`](docs/frontlines.md) documenting the sector model.

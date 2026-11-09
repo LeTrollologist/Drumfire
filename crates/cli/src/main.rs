@@ -526,7 +526,7 @@ fn play_campaign(seed: Seed) -> Result<()> {
             println!("That operation is not available.\n");
             continue;
         }
-        match campaign.play_operation(option.kind) {
+        match campaign.play_operation(option.id) {
             Ok(record) => print_operation(&record),
             Err(err) => println!("Operation failed: {err}\n"),
         }

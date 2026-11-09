@@ -1,12 +1,12 @@
 {
   "name": "The Halcyon Sweep",
   "seed": "0000000000000005000000000000000000000000000000000000000000000000",
-  "turn": 4,
-  "max_turns": 3,
-  "political_will": 85,
-  "supply": 77,
-  "intel": 55,
-  "momentum": 3,
+  "turn": 8,
+  "max_turns": 8,
+  "political_will": 100,
+  "supply": 87,
+  "intel": 72,
+  "momentum": 5,
   "enemy_intent": "hold",
   "nodes": [
     {
@@ -19,7 +19,7 @@
       "fortification": 6,
       "connections": [
         "halcyon",
-        "callas"
+        "orne"
       ]
     },
     {
@@ -30,6 +30,19 @@
       "objective": true,
       "enemy_garrison": 6000,
       "fortification": 7,
+      "connections": [
+        "vantage",
+        "sable"
+      ]
+    },
+    {
+      "id": "orne",
+      "name": "Orne Bridge",
+      "kind": "bridge",
+      "control": "player",
+      "objective": true,
+      "enemy_garrison": 4500,
+      "fortification": 5,
       "connections": [
         "vantage",
         "callas"
@@ -44,8 +57,49 @@
       "enemy_garrison": 10000,
       "fortification": 6,
       "connections": [
-        "vantage",
-        "halcyon"
+        "orne",
+        "vesper"
+      ]
+    },
+    {
+      "id": "sable",
+      "name": "Sable Junction",
+      "kind": "rail_hub",
+      "control": "player",
+      "objective": true,
+      "enemy_garrison": 6000,
+      "fortification": 7,
+      "connections": [
+        "halcyon",
+        "vesper",
+        "meridian"
+      ]
+    },
+    {
+      "id": "vesper",
+      "name": "Vesper Works",
+      "kind": "industrial",
+      "control": "player",
+      "objective": true,
+      "enemy_garrison": 3000,
+      "fortification": 8,
+      "connections": [
+        "callas",
+        "sable",
+        "meridian"
+      ]
+    },
+    {
+      "id": "meridian",
+      "name": "Meridian",
+      "kind": "capital",
+      "control": "player",
+      "objective": true,
+      "enemy_garrison": 500,
+      "fortification": 6,
+      "connections": [
+        "sable",
+        "vesper"
       ]
     }
   ],
@@ -54,16 +108,25 @@
       "id": "old-ironsides",
       "name": "1st Armored — Old Ironsides",
       "branch": "ground",
-      "strength": 65,
-      "morale": 78,
-      "supply": 75,
+      "strength": 35,
+      "morale": 81,
+      "supply": 70,
+      "experience": 2
+    },
+    {
+      "id": "ridgewalkers",
+      "name": "7th Rifles — The Ridgewalkers",
+      "branch": "ground",
+      "strength": 32,
+      "morale": 84,
+      "supply": 70,
       "experience": 2
     },
     {
       "id": "nightjars",
       "name": "4th Air Wing — Nightjars",
       "branch": "air",
-      "strength": 64,
+      "strength": 73,
       "morale": 83,
       "supply": 75,
       "experience": 2
@@ -72,15 +135,25 @@
       "id": "salt-watch",
       "name": "2nd Naval Group — Salt Watch",
       "branch": "naval",
-      "strength": 82,
+      "strength": 74,
       "morale": 78,
       "supply": 75,
       "experience": 2
+    },
+    {
+      "id": "reserve-corps",
+      "name": "Reserve Corps",
+      "branch": "reserve",
+      "strength": 65,
+      "morale": 75,
+      "supply": 70,
+      "experience": 1
     }
   ],
   "operations": [
     {
       "turn": 1,
+      "id": "iron_tide",
       "kind": "frontlines",
       "node_id": "vantage",
       "title": "Operation Iron Tide",
@@ -729,6 +802,190 @@
     },
     {
       "turn": 2,
+      "id": "swift_bridge",
+      "kind": "skirmish",
+      "node_id": "orne",
+      "title": "Operation Swift Bridge",
+      "log": {
+        "mode": "ground",
+        "log": {
+          "input": {
+            "mode": "skirmish",
+            "attacker": {
+              "name": "7th Rifles — The Ridgewalkers",
+              "forces": 3960,
+              "morale": 78,
+              "tech": 6,
+              "training": 5,
+              "experience": 6,
+              "logistics": 4,
+              "intel": 5,
+              "home": false
+            },
+            "defender": {
+              "name": "Orne Bridge Garrison",
+              "forces": 4500,
+              "morale": 65,
+              "tech": 5,
+              "training": 5,
+              "experience": 5,
+              "logistics": 5,
+              "intel": 5,
+              "home": true
+            },
+            "config": {
+              "max_rounds": 24,
+              "scale": 2.5,
+              "home_bonus": 0.35,
+              "casualty_rate": 0.18,
+              "morale_rout_threshold": 10
+            },
+            "seed": "edc7d70da0a4570df95edb7378a1dbe4b80b980e52d7eda1d50b845f666c2e96"
+          },
+          "input_hash": "5caa7c4d29482f79cbbeae48070ff9d6ac6eed9e6bd546a84e6b9cbcf0a7981e",
+          "rounds": [
+            {
+              "round": 1,
+              "attacker_strength": 8.47161402797863,
+              "defender_strength": 8.025246642298994,
+              "attacker_win_probability": 0.5445185341067629,
+              "roll": 0.8742970000163415,
+              "round_winner": "defender",
+              "attacker_casualties": 719,
+              "defender_casualties": 272,
+              "attacker_forces_after": 3241,
+              "defender_forces_after": 4228,
+              "attacker_morale_after": 65,
+              "defender_morale_after": 71
+            },
+            {
+              "round": 2,
+              "attacker_strength": 7.846353846951278,
+              "defender_strength": 8.182262711851616,
+              "attacker_win_probability": 0.46645955870438505,
+              "roll": 0.04562123762402259,
+              "round_winner": "attacker",
+              "attacker_casualties": 356,
+              "defender_casualties": 834,
+              "attacker_forces_after": 2885,
+              "defender_forces_after": 3394,
+              "attacker_morale_after": 71,
+              "defender_morale_after": 57
+            },
+            {
+              "round": 3,
+              "attacker_strength": 7.957482728433744,
+              "defender_strength": 7.505550183993876,
+              "attacker_win_probability": 0.5450705832111652,
+              "roll": 0.9343056132758402,
+              "round_winner": "defender",
+              "attacker_casualties": 421,
+              "defender_casualties": 209,
+              "attacker_forces_after": 2464,
+              "defender_forces_after": 3185,
+              "attacker_morale_after": 60,
+              "defender_morale_after": 63
+            },
+            {
+              "round": 4,
+              "attacker_strength": 7.438455023505272,
+              "defender_strength": 7.661543266899494,
+              "attacker_win_probability": 0.4777059675313172,
+              "roll": 0.20102552384684036,
+              "round_winner": "attacker",
+              "attacker_casualties": 158,
+              "defender_casualties": 681,
+              "attacker_forces_after": 2306,
+              "defender_forces_after": 2504,
+              "attacker_morale_after": 66,
+              "defender_morale_after": 48
+            },
+            {
+              "round": 5,
+              "attacker_strength": 7.592147769447691,
+              "defender_strength": 6.932137411491119,
+              "attacker_win_probability": 0.5656203428882493,
+              "roll": 0.35672223363808275,
+              "round_winner": "attacker",
+              "attacker_casualties": 227,
+              "defender_casualties": 471,
+              "attacker_forces_after": 2079,
+              "defender_forces_after": 2033,
+              "attacker_morale_after": 72,
+              "defender_morale_after": 34
+            },
+            {
+              "round": 6,
+              "attacker_strength": 7.7141046967910585,
+              "defender_strength": 6.265095640117229,
+              "attacker_win_probability": 0.640976194817299,
+              "roll": 0.16248444936016804,
+              "round_winner": "attacker",
+              "attacker_casualties": 128,
+              "defender_casualties": 384,
+              "attacker_forces_after": 1951,
+              "defender_forces_after": 1649,
+              "attacker_morale_after": 77,
+              "defender_morale_after": 20
+            },
+            {
+              "round": 7,
+              "attacker_strength": 7.835118301927082,
+              "defender_strength": 5.597250981860432,
+              "attacker_win_probability": 0.7099511747610737,
+              "roll": 0.9690068668175311,
+              "round_winner": "defender",
+              "attacker_casualties": 450,
+              "defender_casualties": 138,
+              "attacker_forces_after": 1501,
+              "defender_forces_after": 1511,
+              "attacker_morale_after": 61,
+              "defender_morale_after": 25
+            },
+            {
+              "round": 8,
+              "attacker_strength": 7.052369907475468,
+              "defender_strength": 5.698010273228555,
+              "attacker_win_probability": 0.6322179892231359,
+              "roll": 0.41908190599360196,
+              "round_winner": "attacker",
+              "attacker_casualties": 98,
+              "defender_casualties": 345,
+              "attacker_forces_after": 1403,
+              "defender_forces_after": 1166,
+              "attacker_morale_after": 66,
+              "defender_morale_after": 9
+            }
+          ],
+          "result": {
+            "winner": "attacker",
+            "ending": "rout",
+            "final_forces": {
+              "attacker": 1403,
+              "defender": 1166
+            },
+            "final_morale": {
+              "attacker": 66,
+              "defender": 9
+            }
+          }
+        }
+      },
+      "aftermath": {
+        "victory": true,
+        "summary": "objective taken · 65% losses · the bridge is open",
+        "formation_id": "ridgewalkers",
+        "strength_delta": -30,
+        "will_delta": 4,
+        "supply_delta": 5,
+        "intel_delta": 8,
+        "momentum_delta": 1,
+        "control": "orne"
+      }
+    },
+    {
+      "turn": 3,
+      "id": "bright_lance",
       "kind": "dogfight",
       "node_id": "halcyon",
       "title": "Operation Bright Lance",
@@ -739,9 +996,9 @@
             "mode": "dogfight",
             "attacker": {
               "name": "4th Air Wing — Nightjars",
-              "aircraft": 7,
+              "aircraft": 8,
               "pilot_skill": 6,
-              "aircraft_quality": 4,
+              "aircraft_quality": 5,
               "weapons": 6,
               "radar": 6,
               "support": 5,
@@ -749,13 +1006,13 @@
             },
             "defender": {
               "name": "Halcyon Interceptors",
-              "aircraft": 8,
-              "pilot_skill": 6,
-              "aircraft_quality": 6,
+              "aircraft": 6,
+              "pilot_skill": 5,
+              "aircraft_quality": 5,
               "weapons": 6,
               "radar": 5,
               "support": 5,
-              "cohesion": 70
+              "cohesion": 65
             },
             "config": {
               "max_passes": 8,
@@ -763,142 +1020,142 @@
               "kill_rate": 0.12,
               "cohesion_break": 20
             },
-            "seed": "edc7d70da0a4570df95edb7378a1dbe4b80b980e52d7eda1d50b845f666c2e96"
+            "seed": "2e1e92066a7e4318539799294c372ef8baad546ede1bb75865ee45787d1d8055"
           },
-          "input_hash": "5da6b60840b7e108419214224845322065a8bdbcd02a6a62c70d4eb9173e7773",
+          "input_hash": "7e17f9b8ca06b3619d63ed075a37cb578995463b81423c964bb0ee7c8b352a14",
           "passes": [
             {
               "pass": 1,
-              "attacker_strength": 3.079441541679836,
-              "defender_strength": 3.4472245773362196,
-              "attacker_win_probability": 0.45415623586335635,
-              "roll": 0.8742970000163415,
+              "attacker_strength": 3.49722457733622,
+              "defender_strength": 2.445910149055313,
+              "attacker_win_probability": 0.6284696578228267,
+              "roll": 0.7776948181645935,
               "pass_winner": "defender",
               "attacker_kills": 0,
               "defender_kills": 1,
-              "attacker_aircraft_after": 6,
-              "defender_aircraft_after": 8,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 6,
               "attacker_cohesion_after": 74,
-              "defender_cohesion_after": 74
-            },
-            {
-              "pass": 2,
-              "attacker_strength": 2.825910149055313,
-              "defender_strength": 3.5272245773362196,
-              "attacker_win_probability": 0.4132230574433562,
-              "roll": 0.04562123762402259,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 6,
-              "defender_aircraft_after": 7,
-              "attacker_cohesion_after": 78,
               "defender_cohesion_after": 68
             },
             {
+              "pass": 2,
+              "attacker_strength": 3.259441541679836,
+              "defender_strength": 2.505910149055313,
+              "attacker_win_probability": 0.59309279197882,
+              "roll": 0.44490420009567744,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 5,
+              "attacker_cohesion_after": 78,
+              "defender_cohesion_after": 62
+            },
+            {
               "pass": 3,
-              "attacker_strength": 2.905910149055313,
-              "defender_strength": 3.2894415416798357,
-              "attacker_win_probability": 0.45220495447461084,
-              "roll": 0.9343056132758402,
-              "pass_winner": "defender",
-              "attacker_kills": 0,
-              "defender_kills": 1,
-              "attacker_aircraft_after": 5,
-              "defender_aircraft_after": 7,
-              "attacker_cohesion_after": 72,
-              "defender_cohesion_after": 72
+              "attacker_strength": 3.339441541679836,
+              "defender_strength": 2.231759469228055,
+              "attacker_win_probability": 0.6350262807771558,
+              "roll": 0.3918680272379329,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 4,
+              "attacker_cohesion_after": 81,
+              "defender_cohesion_after": 55
             },
             {
               "pass": 4,
-              "attacker_strength": 2.631759469228055,
-              "defender_strength": 3.369441541679836,
-              "attacker_win_probability": 0.408821097730682,
-              "roll": 0.20102552384684036,
+              "attacker_strength": 3.399441541679836,
+              "defender_strength": 1.9094379124341003,
+              "attacker_win_probability": 0.6780886456556816,
+              "roll": 0.43248046135907636,
               "pass_winner": "attacker",
               "attacker_kills": 1,
               "defender_kills": 0,
-              "attacker_aircraft_after": 5,
-              "defender_aircraft_after": 6,
-              "attacker_cohesion_after": 76,
-              "defender_cohesion_after": 66
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 3,
+              "attacker_cohesion_after": 84,
+              "defender_cohesion_after": 47
             },
             {
               "pass": 5,
-              "attacker_strength": 2.711759469228055,
-              "defender_strength": 3.115910149055313,
-              "attacker_win_probability": 0.44965237496989385,
-              "roll": 0.35672223363808275,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 5,
-              "defender_aircraft_after": 5,
-              "attacker_cohesion_after": 80,
-              "defender_cohesion_after": 60
-            },
-            {
-              "pass": 6,
-              "attacker_strength": 2.791759469228055,
-              "defender_strength": 2.8417594692280552,
-              "attacker_win_probability": 0.49375032550048953,
-              "roll": 0.16248444936016804,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 5,
-              "defender_aircraft_after": 4,
-              "attacker_cohesion_after": 84,
-              "defender_cohesion_after": 53
-            },
-            {
-              "pass": 7,
-              "attacker_strength": 2.871759469228055,
-              "defender_strength": 2.5194379124341,
-              "attacker_win_probability": 0.5439266567059838,
-              "roll": 0.9690068668175311,
+              "attacker_strength": 3.459441541679836,
+              "defender_strength": 1.5262943611198905,
+              "attacker_win_probability": 0.7244360151158074,
+              "roll": 0.7269728687908154,
               "pass_winner": "defender",
               "attacker_kills": 0,
               "defender_kills": 1,
-              "attacker_aircraft_after": 4,
-              "defender_aircraft_after": 4,
-              "attacker_cohesion_after": 77,
-              "defender_cohesion_after": 57
+              "attacker_aircraft_after": 6,
+              "defender_aircraft_after": 3,
+              "attacker_cohesion_after": 78,
+              "defender_cohesion_after": 50
             },
             {
-              "pass": 8,
-              "attacker_strength": 2.5494379124341,
-              "defender_strength": 2.5994379124341003,
-              "attacker_win_probability": 0.49375032550048953,
-              "roll": 0.41908190599360196,
+              "pass": 6,
+              "attacker_strength": 3.2059101490553132,
+              "defender_strength": 1.5862943611198905,
+              "attacker_win_probability": 0.6920685661600733,
+              "roll": 0.20184625804061906,
               "pass_winner": "attacker",
               "attacker_kills": 1,
               "defender_kills": 0,
-              "attacker_aircraft_after": 4,
-              "defender_aircraft_after": 3,
+              "attacker_aircraft_after": 6,
+              "defender_aircraft_after": 2,
               "attacker_cohesion_after": 81,
-              "defender_cohesion_after": 49
+              "defender_cohesion_after": 41
+            },
+            {
+              "pass": 7,
+              "attacker_strength": 3.2659101490553133,
+              "defender_strength": 1.1186122886681098,
+              "attacker_win_probability": 0.7452902218961176,
+              "roll": 0.25539984649912917,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 6,
+              "defender_aircraft_after": 1,
+              "attacker_cohesion_after": 84,
+              "defender_cohesion_after": 30
+            },
+            {
+              "pass": 8,
+              "attacker_strength": 3.3259101490553133,
+              "defender_strength": 0.49314718055994533,
+              "attacker_win_probability": 0.8047705204647289,
+              "roll": 0.3271581010685073,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 6,
+              "defender_aircraft_after": 0,
+              "attacker_cohesion_after": 87,
+              "defender_cohesion_after": 11
             }
           ],
           "result": {
             "winner": "attacker",
-            "ending": "max_passes",
+            "ending": "splashed",
             "final_aircraft": {
-              "attacker": 4,
-              "defender": 3
+              "attacker": 6,
+              "defender": 0
             },
             "final_cohesion": {
-              "attacker": 81,
-              "defender": 49
+              "attacker": 87,
+              "defender": 11
             }
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "sweep won · 43% aircraft lost · air superiority 75",
+        "summary": "sweep won · 25% aircraft lost · air superiority 75",
         "formation_id": "nightjars",
-        "strength_delta": -21,
+        "strength_delta": -12,
         "will_delta": 3,
         "supply_delta": 0,
         "intel_delta": 12,
@@ -907,7 +1164,8 @@
       }
     },
     {
-      "turn": 3,
+      "turn": 4,
+      "id": "crimson_wake",
       "kind": "naval",
       "node_id": "callas",
       "title": "Operation Crimson Wake",
@@ -942,112 +1200,791 @@
               "hit_rate": 0.14,
               "readiness_break": 20
             },
-            "seed": "2e1e92066a7e4318539799294c372ef8baad546ede1bb75865ee45787d1d8055"
+            "seed": "6bca701544488d635ab5785da27759d62e76fac5d7bbc007dd31ccd18b568518"
           },
-          "input_hash": "6a1e35286da8e2249abc61e485806265c32eec2229c3abaf8590af1e21cc48cc",
+          "input_hash": "737f6b131b61d7fd74a3074837682b59ef1b730afacab2cbc3cc701f0813923e",
           "salvos": [
             {
               "salvo": 1,
               "attacker_strength": 3.445910149055313,
               "defender_strength": 2.7594379124341,
               "attacker_win_probability": 0.5849763999651689,
-              "roll": 0.7776948181645935,
+              "roll": 0.37532385884334074,
+              "salvo_winner": "attacker",
+              "attacker_sunk": 1,
+              "defender_sunk": 0,
+              "attacker_ships_after": 6,
+              "defender_ships_after": 3,
+              "attacker_readiness_after": 79,
+              "defender_readiness_after": 55
+            },
+            {
+              "salvo": 2,
+              "attacker_strength": 3.525910149055313,
+              "defender_strength": 2.3362943611198905,
+              "attacker_win_probability": 0.6444675378398619,
+              "roll": 0.29503473937773217,
+              "salvo_winner": "attacker",
+              "attacker_sunk": 1,
+              "defender_sunk": 0,
+              "attacker_ships_after": 6,
+              "defender_ships_after": 2,
+              "attacker_readiness_after": 82,
+              "defender_readiness_after": 43
+            },
+            {
+              "salvo": 3,
+              "attacker_strength": 3.585910149055313,
+              "defender_strength": 1.80861228866811,
+              "attacker_win_probability": 0.7086112805183554,
+              "roll": 0.982772324677276,
               "salvo_winner": "defender",
               "attacker_sunk": 0,
               "defender_sunk": 1,
               "attacker_ships_after": 5,
-              "defender_ships_after": 4,
-              "attacker_readiness_after": 67,
-              "defender_readiness_after": 69
-            },
-            {
-              "salvo": 2,
-              "attacker_strength": 3.1317594692280544,
-              "defender_strength": 2.8394379124341,
-              "attacker_win_probability": 0.5364752826672533,
-              "roll": 0.44490420009567744,
-              "salvo_winner": "attacker",
-              "attacker_sunk": 1,
-              "defender_sunk": 0,
-              "attacker_ships_after": 5,
-              "defender_ships_after": 3,
-              "attacker_readiness_after": 71,
-              "defender_readiness_after": 59
-            },
-            {
-              "salvo": 3,
-              "attacker_strength": 3.2117594692280544,
-              "defender_strength": 2.4162943611198906,
-              "attacker_win_probability": 0.5981427601603335,
-              "roll": 0.3918680272379329,
-              "salvo_winner": "attacker",
-              "attacker_sunk": 1,
-              "defender_sunk": 0,
-              "attacker_ships_after": 5,
               "defender_ships_after": 2,
-              "attacker_readiness_after": 75,
-              "defender_readiness_after": 47
+              "attacker_readiness_after": 74,
+              "defender_readiness_after": 46
             },
             {
               "salvo": 4,
-              "attacker_strength": 3.2917594692280545,
-              "defender_strength": 1.8886122886681098,
+              "attacker_strength": 3.2717594692280545,
+              "defender_strength": 1.8686122886681098,
               "attacker_win_probability": 0.6685365650075121,
-              "roll": 0.43248046135907636,
-              "salvo_winner": "attacker",
-              "attacker_sunk": 1,
-              "defender_sunk": 0,
-              "attacker_ships_after": 5,
-              "defender_ships_after": 1,
-              "attacker_readiness_after": 78,
-              "defender_readiness_after": 32
+              "roll": 0.6685720074661627,
+              "salvo_winner": "defender",
+              "attacker_sunk": 0,
+              "defender_sunk": 1,
+              "attacker_ships_after": 4,
+              "defender_ships_after": 2,
+              "attacker_readiness_after": 65,
+              "defender_readiness_after": 49
             },
             {
               "salvo": 5,
-              "attacker_strength": 3.3517594692280546,
-              "defender_strength": 1.1831471805599452,
-              "attacker_win_probability": 0.7473080158719205,
-              "roll": 0.7269728687908154,
+              "attacker_strength": 2.9094379124341,
+              "defender_strength": 1.9286122886681099,
+              "attacker_win_probability": 0.6202036754504522,
+              "roll": 0.5076669170339225,
               "salvo_winner": "attacker",
               "attacker_sunk": 1,
               "defender_sunk": 0,
-              "attacker_ships_after": 5,
+              "attacker_ships_after": 4,
+              "defender_ships_after": 1,
+              "attacker_readiness_after": 69,
+              "defender_readiness_after": 34
+            },
+            {
+              "salvo": 6,
+              "attacker_strength": 2.9894379124341,
+              "defender_strength": 1.2231471805599452,
+              "attacker_win_probability": 0.7074735939181854,
+              "roll": 0.08408014579375256,
+              "salvo_winner": "attacker",
+              "attacker_sunk": 1,
+              "defender_sunk": 0,
+              "attacker_ships_after": 4,
               "defender_ships_after": 0,
-              "attacker_readiness_after": 81,
-              "defender_readiness_after": 7
+              "attacker_readiness_after": 72,
+              "defender_readiness_after": 9
             }
           ],
           "result": {
             "winner": "attacker",
             "ending": "sunk",
             "final_ships": {
-              "attacker": 5,
+              "attacker": 4,
               "defender": 0
             },
             "final_readiness": {
-              "attacker": 81,
-              "defender": 7
+              "attacker": 72,
+              "defender": 9
             }
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "port opened · 17% ships lost · supply 77",
+        "summary": "port opened · 33% ships lost · supply 70",
         "formation_id": "salt-watch",
-        "strength_delta": -8,
+        "strength_delta": -16,
         "will_delta": 4,
         "supply_delta": 12,
         "intel_delta": 0,
         "momentum_delta": 1,
         "control": "callas"
       }
+    },
+    {
+      "turn": 5,
+      "id": "sable_hammer",
+      "kind": "battle",
+      "node_id": "sable",
+      "title": "Operation Sable Hammer",
+      "log": {
+        "mode": "ground",
+        "log": {
+          "input": {
+            "attacker": {
+              "name": "1st Armored — Old Ironsides",
+              "forces": 6500,
+              "morale": 78,
+              "tech": 6,
+              "training": 6,
+              "experience": 6,
+              "logistics": 3,
+              "intel": 6,
+              "home": false
+            },
+            "defender": {
+              "name": "Sable Junction Garrison",
+              "forces": 6000,
+              "morale": 65,
+              "tech": 5,
+              "training": 5,
+              "experience": 5,
+              "logistics": 5,
+              "intel": 5,
+              "home": true
+            },
+            "config": {
+              "max_rounds": 24,
+              "scale": 2.5,
+              "home_bonus": 0.35,
+              "casualty_rate": 0.18,
+              "morale_rout_threshold": 10
+            },
+            "seed": "0547e861d7df930ddc1450b6a05295ae7b49ca6c520b2dd2b2a0366f2ade9580"
+          },
+          "input_hash": "da80f04ecc0db54725e24c0181f7f057461171f9d0c9c1cb252609ae6d25a25c",
+          "rounds": [
+            {
+              "round": 1,
+              "attacker_strength": 9.979711290204468,
+              "defender_strength": 9.424681400989513,
+              "attacker_win_probability": 0.5552761316910361,
+              "roll": 0.6894508819460032,
+              "round_winner": "defender",
+              "attacker_casualties": 872,
+              "defender_casualties": 320,
+              "attacker_forces_after": 5628,
+              "defender_forces_after": 5680,
+              "attacker_morale_after": 70,
+              "defender_morale_after": 70
+            },
+            {
+              "round": 2,
+              "attacker_strength": 9.635687085464026,
+              "defender_strength": 9.494882552557126,
+              "attacker_win_probability": 0.5140767323658036,
+              "roll": 0.8901283461854258,
+              "round_winner": "defender",
+              "attacker_casualties": 791,
+              "defender_casualties": 375,
+              "attacker_forces_after": 4837,
+              "defender_forces_after": 5305,
+              "attacker_morale_after": 61,
+              "defender_morale_after": 75
+            },
+            {
+              "round": 3,
+              "attacker_strength": 9.259256691169973,
+              "defender_strength": 9.551593534697684,
+              "attacker_win_probability": 0.4707995812938288,
+              "roll": 0.35211122865191313,
+              "round_winner": "attacker",
+              "attacker_casualties": 266,
+              "defender_casualties": 868,
+              "attacker_forces_after": 4571,
+              "defender_forces_after": 4437,
+              "attacker_morale_after": 66,
+              "defender_morale_after": 65
+            },
+            {
+              "round": 4,
+              "attacker_strength": 9.327706024914702,
+              "defender_strength": 9.122959103492539,
+              "attacker_win_probability": 0.5204632554698755,
+              "roll": 0.28972203561296306,
+              "round_winner": "attacker",
+              "attacker_casualties": 208,
+              "defender_casualties": 756,
+              "attacker_forces_after": 4363,
+              "defender_forces_after": 3681,
+              "attacker_morale_after": 71,
+              "defender_morale_after": 55
+            },
+            {
+              "round": 5,
+              "attacker_strength": 9.406144346952962,
+              "defender_strength": 8.686211361793022,
+              "attacker_win_probability": 0.5714998650342609,
+              "roll": 0.42138348580919316,
+              "round_winner": "attacker",
+              "attacker_casualties": 202,
+              "defender_casualties": 572,
+              "attacker_forces_after": 4161,
+              "defender_forces_after": 3109,
+              "attacker_morale_after": 76,
+              "defender_morale_after": 46
+            },
+            {
+              "round": 6,
+              "attacker_strength": 9.48375100695358,
+              "defender_strength": 8.29237800517328,
+              "attacker_win_probability": 0.6169326883468986,
+              "roll": 0.23329411575533798,
+              "round_winner": "attacker",
+              "attacker_casualties": 318,
+              "defender_casualties": 505,
+              "attacker_forces_after": 3843,
+              "defender_forces_after": 2604,
+              "attacker_morale_after": 80,
+              "defender_morale_after": 37
+            },
+            {
+              "round": 7,
+              "attacker_strength": 9.504268770090183,
+              "defender_strength": 7.890187954187467,
+              "attacker_win_probability": 0.6560255435380948,
+              "roll": 0.043950708385933845,
+              "round_winner": "attacker",
+              "attacker_casualties": 127,
+              "defender_casualties": 370,
+              "attacker_forces_after": 3716,
+              "defender_forces_after": 2234,
+              "attacker_morale_after": 84,
+              "defender_morale_after": 28
+            },
+            {
+              "round": 8,
+              "attacker_strength": 9.570672170297252,
+              "defender_strength": 7.511996507047669,
+              "attacker_win_probability": 0.6949724841732574,
+              "roll": 0.7467349903995993,
+              "round_winner": "defender",
+              "attacker_casualties": 629,
+              "defender_casualties": 79,
+              "attacker_forces_after": 3087,
+              "defender_forces_after": 2155,
+              "attacker_morale_after": 74,
+              "defender_morale_after": 32
+            },
+            {
+              "round": 9,
+              "attacker_strength": 9.135278911144667,
+              "defender_strength": 7.576009932028887,
+              "attacker_win_probability": 0.6510613120678982,
+              "roll": 0.9918141317652373,
+              "round_winner": "defender",
+              "attacker_casualties": 400,
+              "defender_casualties": 108,
+              "attacker_forces_after": 2687,
+              "defender_forces_after": 2047,
+              "attacker_morale_after": 66,
+              "defender_morale_after": 36
+            },
+            {
+              "round": 10,
+              "attacker_strength": 8.79655270164304,
+              "defender_strength": 7.6246189861593985,
+              "attacker_win_probability": 0.6150934159697309,
+              "roll": 0.5642050287074196,
+              "round_winner": "attacker",
+              "attacker_casualties": 161,
+              "defender_casualties": 455,
+              "attacker_forces_after": 2526,
+              "defender_forces_after": 1592,
+              "attacker_morale_after": 70,
+              "defender_morale_after": 24
+            },
+            {
+              "round": 11,
+              "attacker_strength": 8.834788107388194,
+              "defender_strength": 7.073374309910048,
+              "attacker_win_probability": 0.6691992280838385,
+              "roll": 0.39075266202189274,
+              "round_winner": "attacker",
+              "attacker_casualties": 218,
+              "defender_casualties": 319,
+              "attacker_forces_after": 2308,
+              "defender_forces_after": 1273,
+              "attacker_morale_after": 74,
+              "defender_morale_after": 13
+            },
+            {
+              "round": 12,
+              "attacker_strength": 8.844569809354496,
+              "defender_strength": 6.574916836132108,
+              "attacker_win_probability": 0.7125622966155023,
+              "roll": 0.3392765893609615,
+              "round_winner": "attacker",
+              "attacker_casualties": 153,
+              "defender_casualties": 233,
+              "attacker_forces_after": 2155,
+              "defender_forces_after": 1040,
+              "attacker_morale_after": 78,
+              "defender_morale_after": 3
+            }
+          ],
+          "result": {
+            "winner": "attacker",
+            "ending": "rout",
+            "final_forces": {
+              "attacker": 2155,
+              "defender": 1040
+            },
+            "final_morale": {
+              "attacker": 78,
+              "defender": 3
+            }
+          }
+        }
+      },
+      "aftermath": {
+        "victory": true,
+        "summary": "objective taken · 67% losses · the rail hub is ours",
+        "formation_id": "old-ironsides",
+        "strength_delta": -30,
+        "will_delta": 9,
+        "supply_delta": 7,
+        "intel_delta": 5,
+        "momentum_delta": 2,
+        "control": "sable"
+      }
+    },
+    {
+      "turn": 6,
+      "id": "ashfall",
+      "kind": "battle",
+      "node_id": "vesper",
+      "title": "Operation Ashfall",
+      "log": {
+        "mode": "ground",
+        "log": {
+          "input": {
+            "attacker": {
+              "name": "7th Rifles — The Ridgewalkers",
+              "forces": 5800,
+              "morale": 81,
+              "tech": 6,
+              "training": 6,
+              "experience": 6,
+              "logistics": 3,
+              "intel": 6,
+              "home": false
+            },
+            "defender": {
+              "name": "Vesper Works Garrison",
+              "forces": 3000,
+              "morale": 65,
+              "tech": 5,
+              "training": 5,
+              "experience": 5,
+              "logistics": 5,
+              "intel": 5,
+              "home": true
+            },
+            "config": {
+              "max_rounds": 24,
+              "scale": 2.5,
+              "home_bonus": 0.35,
+              "casualty_rate": 0.18,
+              "morale_rout_threshold": 10
+            },
+            "seed": "85aec6fdc79387cc28eb5464617d3e497c6a181dba65bd6f9318290f9e1b0895"
+          },
+          "input_hash": "8678822e201640a91e826da5b910a27c19ed3106dedd60983b9aa23b471782fd",
+          "rounds": [
+            {
+              "round": 1,
+              "attacker_strength": 9.940785595466064,
+              "defender_strength": 8.731700845440367,
+              "attacker_win_probability": 0.6186055993892635,
+              "roll": 0.3617755250040213,
+              "round_winner": "attacker",
+              "attacker_casualties": 575,
+              "defender_casualties": 665,
+              "attacker_forces_after": 5225,
+              "defender_forces_after": 2335,
+              "attacker_morale_after": 85,
+              "defender_morale_after": 53
+            },
+            {
+              "round": 2,
+              "attacker_strength": 9.936401446080557,
+              "defender_strength": 8.181195343948119,
+              "attacker_win_probability": 0.6686493142953335,
+              "roll": 0.27484219296105517,
+              "round_winner": "attacker",
+              "attacker_casualties": 302,
+              "defender_casualties": 492,
+              "attacker_forces_after": 4923,
+              "defender_forces_after": 1843,
+              "attacker_morale_after": 89,
+              "defender_morale_after": 42
+            },
+            {
+              "round": 3,
+              "attacker_strength": 9.976876487304343,
+              "defender_strength": 7.669692404116539,
+              "attacker_win_probability": 0.7156272662841879,
+              "roll": 0.5836994792506289,
+              "round_winner": "attacker",
+              "attacker_casualties": 423,
+              "defender_casualties": 426,
+              "attacker_forces_after": 4500,
+              "defender_forces_after": 1417,
+              "attacker_morale_after": 93,
+              "defender_morale_after": 30
+            },
+            {
+              "round": 4,
+              "attacker_strength": 9.987054873292932,
+              "defender_strength": 7.1070027070920725,
+              "attacker_win_probability": 0.7598798428610114,
+              "roll": 0.6197567761444507,
+              "round_winner": "attacker",
+              "attacker_casualties": 439,
+              "defender_casualties": 316,
+              "attacker_forces_after": 4061,
+              "defender_forces_after": 1101,
+              "attacker_morale_after": 96,
+              "defender_morale_after": 18
+            },
+            {
+              "round": 5,
+              "attacker_strength": 9.95943074214033,
+              "defender_strength": 6.554881989712859,
+              "attacker_win_probability": 0.7960552551654514,
+              "roll": 0.9991141446768537,
+              "round_winner": "defender",
+              "attacker_casualties": 893,
+              "defender_casualties": 55,
+              "attacker_forces_after": 3168,
+              "defender_forces_after": 1046,
+              "attacker_morale_after": 84,
+              "defender_morale_after": 21
+            },
+            {
+              "round": 6,
+              "attacker_strength": 9.41117135969092,
+              "defender_strength": 6.578684210870536,
+              "attacker_win_probability": 0.7563911662513152,
+              "roll": 0.5402283547900859,
+              "round_winner": "attacker",
+              "attacker_casualties": 173,
+              "defender_casualties": 159,
+              "attacker_forces_after": 2995,
+              "defender_forces_after": 887,
+              "attacker_morale_after": 87,
+              "defender_morale_after": 12
+            },
+            {
+              "round": 7,
+              "attacker_strength": 9.430033344637112,
+              "defender_strength": 6.18897174299217,
+              "attacker_win_probability": 0.7852326409905561,
+              "roll": 0.3069145234284846,
+              "round_winner": "attacker",
+              "attacker_casualties": 251,
+              "defender_casualties": 192,
+              "attacker_forces_after": 2744,
+              "defender_forces_after": 695,
+              "attacker_morale_after": 90,
+              "defender_morale_after": 0
+            }
+          ],
+          "result": {
+            "winner": "attacker",
+            "ending": "rout",
+            "final_forces": {
+              "attacker": 2744,
+              "defender": 695
+            },
+            "final_morale": {
+              "attacker": 90,
+              "defender": 0
+            }
+          }
+        }
+      },
+      "aftermath": {
+        "victory": true,
+        "summary": "objective taken · 53% losses · the works are silent",
+        "formation_id": "ridgewalkers",
+        "strength_delta": -26,
+        "will_delta": 12,
+        "supply_delta": 4,
+        "intel_delta": 4,
+        "momentum_delta": 2,
+        "control": "vesper"
+      }
+    },
+    {
+      "turn": 7,
+      "id": "meridian",
+      "kind": "battle",
+      "node_id": "meridian",
+      "title": "Operation Meridian",
+      "log": {
+        "mode": "ground",
+        "log": {
+          "input": {
+            "attacker": {
+              "name": "Reserve Corps",
+              "forces": 9500,
+              "morale": 72,
+              "tech": 6,
+              "training": 5,
+              "experience": 5,
+              "logistics": 3,
+              "intel": 6,
+              "home": false
+            },
+            "defender": {
+              "name": "Meridian Garrison",
+              "forces": 500,
+              "morale": 65,
+              "tech": 5,
+              "training": 5,
+              "experience": 5,
+              "logistics": 5,
+              "intel": 5,
+              "home": true
+            },
+            "config": {
+              "max_rounds": 24,
+              "scale": 2.5,
+              "home_bonus": 0.35,
+              "casualty_rate": 0.18,
+              "morale_rout_threshold": 10
+            },
+            "seed": "321115b56958cbf75dec67fb9ad1ca70c920af098834d7331811837ce64fa3c2"
+          },
+          "input_hash": "f581e93eef0256db531e8b4bb2975d764e74fd7ba7b15c5ec073fd8ce6051055",
+          "rounds": [
+            {
+              "round": 1,
+              "attacker_strength": 9.759152335206752,
+              "defender_strength": 6.941606101084864,
+              "attacker_win_probability": 0.7552882530422277,
+              "roll": 0.49903959731279923,
+              "round_winner": "attacker",
+              "attacker_casualties": 606,
+              "defender_casualties": 100,
+              "attacker_forces_after": 8894,
+              "defender_forces_after": 400,
+              "attacker_morale_after": 75,
+              "defender_morale_after": 54
+            },
+            {
+              "round": 2,
+              "attacker_strength": 9.768244600099937,
+              "defender_strength": 6.443961427306569,
+              "attacker_win_probability": 0.7907932021817596,
+              "roll": 0.7693593399286629,
+              "round_winner": "attacker",
+              "attacker_casualties": 466,
+              "defender_casualties": 60,
+              "attacker_forces_after": 8428,
+              "defender_forces_after": 340,
+              "attacker_morale_after": 78,
+              "defender_morale_after": 45
+            },
+            {
+              "round": 3,
+              "attacker_strength": 9.789433419997483,
+              "defender_strength": 6.056882477283517,
+              "attacker_win_probability": 0.8165311819205023,
+              "roll": 0.15054858967565632,
+              "round_winner": "attacker",
+              "attacker_casualties": 784,
+              "defender_casualties": 97,
+              "attacker_forces_after": 7644,
+              "defender_forces_after": 243,
+              "attacker_morale_after": 81,
+              "defender_morale_after": 31
+            },
+            {
+              "round": 4,
+              "attacker_strength": 9.766807118363165,
+              "defender_strength": 5.372168225293202,
+              "attacker_win_probability": 0.8529408804088915,
+              "roll": 0.9837939927211269,
+              "round_winner": "defender",
+              "attacker_casualties": 2004,
+              "defender_casualties": 19,
+              "attacker_forces_after": 5640,
+              "defender_forces_after": 224,
+              "attacker_morale_after": 68,
+              "defender_morale_after": 34
+            },
+            {
+              "round": 5,
+              "attacker_strength": 9.137816633739977,
+              "defender_strength": 5.366100402204419,
+              "attacker_win_probability": 0.8188664635370121,
+              "roll": 0.0951285601152313,
+              "round_winner": "attacker",
+              "attacker_casualties": 216,
+              "defender_casualties": 34,
+              "attacker_forces_after": 5424,
+              "defender_forces_after": 190,
+              "attacker_morale_after": 71,
+              "defender_morale_after": 25
+            },
+            {
+              "round": 6,
+              "attacker_strength": 9.173773178408661,
+              "defender_strength": 4.9772734280466295,
+              "attacker_win_probability": 0.8427190457952072,
+              "roll": 0.839893421946626,
+              "round_winner": "attacker",
+              "attacker_casualties": 347,
+              "defender_casualties": 42,
+              "attacker_forces_after": 5077,
+              "defender_forces_after": 148,
+              "attacker_morale_after": 74,
+              "defender_morale_after": 13
+            },
+            {
+              "round": 7,
+              "attacker_strength": 9.182672762264625,
+              "defender_strength": 4.428946305945459,
+              "attacker_win_probability": 0.8700601371581053,
+              "roll": 0.9043873499125633,
+              "round_winner": "defender",
+              "attacker_casualties": 995,
+              "defender_casualties": 7,
+              "attacker_forces_after": 4082,
+              "defender_forces_after": 141,
+              "attacker_morale_after": 63,
+              "defender_morale_after": 16
+            },
+            {
+              "round": 8,
+              "attacker_strength": 8.689587291319576,
+              "defender_strength": 4.45582705760126,
+              "attacker_win_probability": 0.8446844266150408,
+              "roll": 0.884004333821833,
+              "round_winner": "defender",
+              "attacker_casualties": 597,
+              "defender_casualties": 8,
+              "attacker_forces_after": 3485,
+              "defender_forces_after": 133,
+              "attacker_morale_after": 54,
+              "defender_morale_after": 19
+            },
+            {
+              "round": 9,
+              "attacker_strength": 8.306510226079967,
+              "defender_strength": 4.47283979995091,
+              "attacker_win_probability": 0.8225131823739812,
+              "roll": 0.9037365128248028,
+              "round_winner": "defender",
+              "attacker_casualties": 536,
+              "defender_casualties": 7,
+              "attacker_forces_after": 2949,
+              "defender_forces_after": 126,
+              "attacker_morale_after": 45,
+              "defender_morale_after": 22
+            },
+            {
+              "round": 10,
+              "attacker_strength": 7.914560449333866,
+              "defender_strength": 4.494187086458591,
+              "attacker_win_probability": 0.7970809878762681,
+              "roll": 0.9509016439689676,
+              "round_winner": "defender",
+              "attacker_casualties": 540,
+              "defender_casualties": 9,
+              "attacker_forces_after": 2409,
+              "defender_forces_after": 117,
+              "attacker_morale_after": 35,
+              "defender_morale_after": 25
+            },
+            {
+              "round": 11,
+              "attacker_strength": 7.4623820264847005,
+              "defender_strength": 4.495684624465665,
+              "attacker_win_probability": 0.7661465729221616,
+              "roll": 0.2908810746227529,
+              "round_winner": "attacker",
+              "attacker_casualties": 118,
+              "defender_casualties": 29,
+              "attacker_forces_after": 2291,
+              "defender_forces_after": 88,
+              "attacker_morale_after": 38,
+              "defender_morale_after": 12
+            },
+            {
+              "round": 12,
+              "attacker_strength": 7.48718007783463,
+              "defender_strength": 3.8886363697321396,
+              "attacker_win_probability": 0.8083644291731555,
+              "roll": 0.8961979664117449,
+              "round_winner": "defender",
+              "attacker_casualties": 517,
+              "defender_casualties": 5,
+              "attacker_forces_after": 1774,
+              "defender_forces_after": 83,
+              "attacker_morale_after": 26,
+              "defender_morale_after": 15
+            },
+            {
+              "round": 13,
+              "attacker_strength": 6.931555701909516,
+              "defender_strength": 3.9058167988433135,
+              "attacker_win_probability": 0.7703512410222331,
+              "roll": 0.6687364062446917,
+              "round_winner": "attacker",
+              "attacker_casualties": 92,
+              "defender_casualties": 14,
+              "attacker_forces_after": 1682,
+              "defender_forces_after": 69,
+              "attacker_morale_after": 29,
+              "defender_morale_after": 5
+            }
+          ],
+          "result": {
+            "winner": "attacker",
+            "ending": "rout",
+            "final_forces": {
+              "attacker": 1682,
+              "defender": 69
+            },
+            "final_morale": {
+              "attacker": 29,
+              "defender": 5
+            }
+          }
+        }
+      },
+      "aftermath": {
+        "victory": true,
+        "summary": "objective taken · 82% losses · the capital is taken",
+        "formation_id": "reserve-corps",
+        "strength_delta": -30,
+        "will_delta": 20,
+        "supply_delta": 6,
+        "intel_delta": 8,
+        "momentum_delta": 3,
+        "control": "meridian"
+      }
     }
   ],
   "chronicle": [
     "Turn 1 · Operation Iron Tide · Vantage Ridge — ridge taken · 65% losses · the road inland is open",
-    "Turn 2 · Operation Bright Lance · Halcyon Airbase — sweep won · 43% aircraft lost · air superiority 75",
-    "Turn 3 · Operation Crimson Wake · Port Callas — port opened · 17% ships lost · supply 77",
+    "Turn 2 · Operation Swift Bridge · Orne Bridge — objective taken · 65% losses · the bridge is open",
+    "Enemy intent — interdicts the supply road",
+    "Turn 3 · Operation Bright Lance · Halcyon Airbase — sweep won · 25% aircraft lost · air superiority 75",
+    "Turn 4 · Operation Crimson Wake · Port Callas — port opened · 33% ships lost · supply 70",
+    "Enemy intent — interdicts the supply road",
+    "Turn 5 · Operation Sable Hammer · Sable Junction — objective taken · 67% losses · the rail hub is ours",
+    "Enemy intent — withdraws from Vesper Works",
+    "Turn 6 · Operation Ashfall · Vesper Works — objective taken · 53% losses · the works are silent",
+    "Turn 7 · Operation Meridian · Meridian — objective taken · 82% losses · the capital is taken",
     "The Halcyon Sweep succeeds."
   ],
   "finished": true,

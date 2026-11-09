@@ -6,7 +6,7 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
 use drumfire_campaign::{
-    Branch, Campaign, CampaignResult, Control, Formation, NodeKind, OperationKind, OperationLog,
+    Branch, Campaign, CampaignResult, Control, Formation, NodeKind, OperationId, OperationLog,
     OperationRecord,
 };
 use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
@@ -454,7 +454,7 @@ impl SectorForm {
 #[derive(Debug, Clone)]
 enum CampaignScreen {
     WarRoom,
-    Briefing(OperationKind),
+    Briefing(OperationId),
     Aftermath(Box<OperationRecord>),
     Chronicle,
 }
@@ -534,8 +534,8 @@ impl DrumfireApp {
         let mut app = Self::default();
         app.open_campaign();
         if let Some(campaign) = &mut app.campaign {
-            let _ = campaign.play_operation(OperationKind::Frontlines);
-            let _ = campaign.play_operation(OperationKind::Dogfight);
+            let _ = campaign.play_operation(OperationId::IronTide);
+            let _ = campaign.play_operation(OperationId::BrightLance);
         }
         app.campaign_screen = CampaignScreen::WarRoom;
         app
@@ -545,7 +545,7 @@ impl DrumfireApp {
         let mut app = Self::default();
         app.open_campaign();
         if let Some(campaign) = &mut app.campaign {
-            if let Ok(record) = campaign.play_operation(OperationKind::Naval) {
+            if let Ok(record) = campaign.play_operation(OperationId::IronTide) {
                 app.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
             }
         }
@@ -567,11 +567,11 @@ impl DrumfireApp {
         self.error = None;
     }
 
-    fn launch_campaign_operation(&mut self, kind: OperationKind) {
+    fn launch_campaign_operation(&mut self, id: OperationId) {
         let Some(campaign) = &mut self.campaign else {
             return;
         };
-        match campaign.play_operation(kind) {
+        match campaign.play_operation(id) {
             Ok(record) => {
                 self.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
                 self.error = None;
@@ -2117,54 +2117,76 @@ impl DrumfireApp {
         ui.label(tiny("OPERATIONS", p));
         ui.add_space(4.0);
         let options = campaign.options();
-        ui.columns(3, |columns| {
-            for (column, option) in columns.iter_mut().zip(&options) {
-                card(p).show(column, |ui| {
-                    ui.label(tiny(option.kind.label().to_uppercase(), p));
-                    ui.label(
-                        egui::RichText::new(&option.title)
-                            .size(15.0)
-                            .strong()
-                            .color(p.ink),
+        for chunk in options.chunks(3) {
+            ui.horizontal(|ui| {
+                for option in chunk {
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(236.0, 112.0),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| {
+                            card(p).show(ui, |ui| {
+                                ui.label(tiny(option.kind.label().to_uppercase(), p));
+                                ui.label(
+                                    egui::RichText::new(&option.title)
+                                        .size(14.0)
+                                        .strong()
+                                        .color(p.ink),
+                                );
+                                ui.label(
+                                    egui::RichText::new(
+                                        campaign
+                                            .node(&option.node_id)
+                                            .map(|node| node.name.as_str())
+                                            .unwrap_or("Unknown"),
+                                    )
+                                    .size(10.5)
+                                    .color(p.muted),
+                                );
+                                ui.add_space(3.0);
+                                if option.available {
+                                    let button = egui::Button::new(
+                                        egui::RichText::new("Brief")
+                                            .strong()
+                                            .color(egui::Color32::from_rgb(34, 24, 13)),
+                                    )
+                                    .fill(p.sand);
+                                    if ui.add(button).clicked() {
+                                        self.campaign_screen = CampaignScreen::Briefing(option.id);
+                                    }
+                                } else {
+                                    ui.label(
+                                        egui::RichText::new(&option.reason)
+                                            .size(9.0)
+                                            .color(p.muted),
+                                    );
+                                }
+                            });
+                        },
                     );
-                    ui.label(
-                        egui::RichText::new(
-                            campaign
-                                .node(&option.node_id)
-                                .map(|node| node.name.as_str())
-                                .unwrap_or("Unknown"),
-                        )
-                        .size(11.0)
-                        .color(p.muted),
-                    );
-                    ui.add_space(4.0);
-                    if option.available {
-                        let button = egui::Button::new(
-                            egui::RichText::new("Brief operation")
-                                .strong()
-                                .color(egui::Color32::from_rgb(34, 24, 13)),
-                        )
-                        .fill(p.sand);
-                        if ui.add(button).clicked() {
-                            self.campaign_screen = CampaignScreen::Briefing(option.kind);
-                        }
-                    } else {
-                        ui.label(tiny(&option.reason, p));
-                    }
-                });
-            }
-        });
+                }
+            });
+            ui.add_space(6.0);
+        }
 
-        ui.add_space(12.0);
+        ui.add_space(6.0);
         ui.label(tiny("FORMATIONS", p));
         ui.add_space(4.0);
-        ui.columns(campaign.formations.len(), |columns| {
-            for (column, formation) in columns.iter_mut().zip(&campaign.formations) {
-                card(p).show(column, |ui| {
-                    formation_card(ui, p, formation);
-                });
-            }
-        });
+        for chunk in campaign.formations.chunks(3) {
+            ui.horizontal(|ui| {
+                for formation in chunk {
+                    ui.allocate_ui_with_layout(
+                        egui::vec2(236.0, 104.0),
+                        egui::Layout::top_down(egui::Align::Min),
+                        |ui| {
+                            card(p).show(ui, |ui| {
+                                formation_card(ui, p, formation);
+                            });
+                        },
+                    );
+                }
+            });
+            ui.add_space(6.0);
+        }
     }
 
     fn campaign_briefing_ui(
@@ -2172,18 +2194,18 @@ impl DrumfireApp {
         ui: &mut egui::Ui,
         p: &Palette,
         campaign: &Campaign,
-        kind: OperationKind,
+        id: OperationId,
     ) {
         let Some(option) = campaign
             .options()
             .into_iter()
-            .find(|option| option.kind == kind)
+            .find(|option| option.id == id)
         else {
             self.campaign_screen = CampaignScreen::WarRoom;
             return;
         };
         let node = campaign.node(&option.node_id);
-        let formation = formation_for(campaign, kind);
+        let formation = campaign.formation_for(id);
 
         ui.horizontal(|ui| {
             ui.label(tiny("CAMPAIGN · BRIEFING", p));
@@ -2214,11 +2236,7 @@ impl DrumfireApp {
         ui.add_space(10.0);
         card(p).show(ui, |ui| {
             ui.label(tiny("WHAT IS AT STAKE", p));
-            ui.label(
-                egui::RichText::new(stakes_for(kind))
-                    .size(14.0)
-                    .color(p.ink),
-            );
+            ui.label(egui::RichText::new(stakes_for(id)).size(14.0).color(p.ink));
             ui.add_space(8.0);
             ui.label(tiny("COMMITTED", p));
             ui.label(
@@ -2243,7 +2261,7 @@ impl DrumfireApp {
             ui.add_space(8.0);
             ui.label(tiny("CROSS-MODE EFFECT", p));
             ui.label(
-                egui::RichText::new(cross_mode_text(campaign, kind))
+                egui::RichText::new(cross_mode_text(campaign, id))
                     .size(12.5)
                     .color(p.muted),
             );
@@ -2258,7 +2276,7 @@ impl DrumfireApp {
             )
             .fill(p.sand);
             if ui.add_enabled(option.available, launch).clicked() {
-                self.launch_campaign_operation(kind);
+                self.launch_campaign_operation(id);
             }
             if !option.available {
                 ui.label(tiny(&option.reason, p));
@@ -3337,18 +3355,6 @@ impl DrumfireApp {
     }
 }
 
-fn formation_for(campaign: &Campaign, kind: OperationKind) -> Option<&Formation> {
-    let branch = match kind {
-        OperationKind::Frontlines => Branch::Ground,
-        OperationKind::Dogfight => Branch::Air,
-        OperationKind::Naval => Branch::Naval,
-    };
-    campaign
-        .formations
-        .iter()
-        .find(|formation| formation.branch == branch)
-}
-
 fn formation_card(ui: &mut egui::Ui, p: &Palette, formation: &Formation) {
     ui.label(tiny(branch_label(formation.branch).to_uppercase(), p));
     ui.label(
@@ -3401,7 +3407,11 @@ fn node_kind_label(kind: NodeKind) -> &'static str {
     match kind {
         NodeKind::Ridge => "ridge",
         NodeKind::Airbase => "airbase",
+        NodeKind::Bridge => "bridge",
         NodeKind::Port => "port",
+        NodeKind::RailHub => "rail hub",
+        NodeKind::Industrial => "industry",
+        NodeKind::Capital => "capital",
     }
 }
 
@@ -3423,7 +3433,7 @@ fn control_color(control: Control, p: &Palette) -> egui::Color32 {
 
 fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
     let (rect, _) = ui.allocate_exact_size(
-        egui::vec2(ui.available_width().max(320.0), 320.0),
+        egui::vec2(ui.available_width().max(320.0), 480.0),
         egui::Sense::hover(),
     );
     let painter = ui.painter();
@@ -3446,9 +3456,13 @@ fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
 
     let position = |id: &str| -> egui::Pos2 {
         let (x, y) = match id {
-            "vantage" => (0.18, 0.60),
-            "halcyon" => (0.53, 0.22),
-            "callas" => (0.53, 0.79),
+            "vantage" => (0.12, 0.60),
+            "halcyon" => (0.34, 0.22),
+            "orne" => (0.34, 0.60),
+            "callas" => (0.34, 0.90),
+            "sable" => (0.58, 0.32),
+            "vesper" => (0.58, 0.66),
+            "meridian" => (0.85, 0.50),
             _ => (0.5, 0.5),
         };
         egui::pos2(
@@ -3469,38 +3483,38 @@ fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
 
     for node in &campaign.nodes {
         let center = position(&node.id);
-        let card = egui::Rect::from_center_size(center, egui::vec2(182.0, 78.0));
+        let card = egui::Rect::from_center_size(center, egui::vec2(145.0, 60.0));
         let tone = control_color(node.control, p);
-        painter.rect_filled(card.expand(2.0), egui::CornerRadius::same(10), tone);
-        painter.rect_filled(card, egui::CornerRadius::same(9), p.panel);
-        painter.circle_filled(egui::pos2(card.left() + 13.0, card.top() + 15.0), 3.5, tone);
+        painter.rect_filled(card.expand(2.0), egui::CornerRadius::same(9), tone);
+        painter.rect_filled(card, egui::CornerRadius::same(8), p.panel);
+        painter.circle_filled(egui::pos2(card.left() + 11.0, card.top() + 13.0), 3.0, tone);
         painter.text(
-            egui::pos2(card.left() + 23.0, card.top() + 9.0),
+            egui::pos2(card.left() + 20.0, card.top() + 6.0),
             egui::Align2::LEFT_TOP,
             &node.name,
-            egui::FontId::proportional(13.0),
+            egui::FontId::proportional(11.0),
             p.ink,
         );
         painter.text(
-            egui::pos2(card.left() + 12.0, card.top() + 32.0),
+            egui::pos2(card.left() + 10.0, card.top() + 27.0),
             egui::Align2::LEFT_TOP,
             format!(
                 "{} · {}",
                 node_kind_label(node.kind),
                 control_label(node.control)
             ),
-            egui::FontId::proportional(9.0),
+            egui::FontId::proportional(8.0),
             p.muted,
         );
         painter.text(
-            egui::pos2(card.left() + 12.0, card.top() + 50.0),
+            egui::pos2(card.left() + 10.0, card.top() + 44.0),
             egui::Align2::LEFT_TOP,
             if node.objective {
                 "OBJECTIVE"
             } else {
                 "sector"
             },
-            egui::FontId::monospace(8.0),
+            egui::FontId::monospace(7.5),
             if node.objective { tone } else { p.muted },
         );
     }
@@ -3514,30 +3528,47 @@ fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
     );
 }
 
-fn stakes_for(kind: OperationKind) -> &'static str {
-    match kind {
-        OperationKind::Frontlines => {
+fn stakes_for(id: OperationId) -> &'static str {
+    match id {
+        OperationId::IronTide => {
             "Break the Vantage Ridge line. The road inland opens only if the ridge falls."
         }
-        OperationKind::Dogfight => {
+        OperationId::SwiftBridge => {
+            "Seize the Orne Bridge before dawn. It opens the supply road to Port Callas."
+        }
+        OperationId::BrightLance => {
             "Sweep Halcyon's skies. Air superiority makes every later ground and naval operation safer."
         }
-        OperationKind::Naval => {
+        OperationId::CrimsonWake => {
             "Open Port Callas. The port restores supply and gives the coalition a sea route for the next push."
+        }
+        OperationId::SableHammer => {
+            "Take Sable Junction. The rail hub shortens enemy reinforcement and opens the road to Meridian."
+        }
+        OperationId::Ashfall => {
+            "Break Vesper Works. The industrial city is the enemy's will to keep fighting."
+        }
+        OperationId::Meridian => {
+            "Take the capital. Every arm of the coalition has to be ready for this one."
         }
     }
 }
 
-fn cross_mode_text(campaign: &Campaign, kind: OperationKind) -> String {
-    match kind {
-        OperationKind::Frontlines => {
-            "A win takes Vantage Ridge and opens the road to Halcyon and Callas. Losses stay with Old Ironsides.".to_string()
+fn cross_mode_text(campaign: &Campaign, id: OperationId) -> String {
+    match id {
+        OperationId::IronTide => {
+            "A win takes Vantage Ridge and opens the road inland. Losses stay with Old Ironsides."
+                .to_string()
         }
-        OperationKind::Dogfight => format!(
+        OperationId::SwiftBridge => {
+            "The Ridgewalkers raid the bridge. A win opens Orne and raises intel for the coastal push."
+                .to_string()
+        }
+        OperationId::BrightLance => format!(
             "Air superiority is {}. A win raises it and adds +2 air cover to Salt Watch's naval operation.",
             campaign.air_superiority()
         ),
-        OperationKind::Naval => {
+        OperationId::CrimsonWake => {
             if campaign.air_superiority() >= 60 {
                 format!(
                     "Air superiority at {} grants +2 air cover to the fleet. A win restores supply and secures the port.",
@@ -3548,6 +3579,19 @@ fn cross_mode_text(campaign: &Campaign, kind: OperationKind) -> String {
                     .to_string()
             }
         }
+        OperationId::SableHammer => {
+            "A set-piece battle for the rail hub. Taking it is one of the four keys to Meridian."
+                .to_string()
+        }
+        OperationId::Ashfall => {
+            "A second set-piece battle. Vesper Works is the industrial key to the capital."
+                .to_string()
+        }
+        OperationId::Meridian => format!(
+            "The combined-arms gate is met. Air superiority {}, naval control {}, and the rail/industrial corridor are yours.",
+            campaign.air_superiority(),
+            campaign.naval_control()
+        ),
     }
 }
 
@@ -3583,6 +3627,13 @@ fn operation_synopsis(record: &OperationRecord) -> String {
             log.salvos.len(),
             log.result.final_ships.attacker,
             log.result.final_ships.defender
+        ),
+        OperationLog::Ground(log) => format!(
+            "{} rounds · forces remaining {} / {} · {:?}",
+            log.rounds.len(),
+            log.result.final_forces.attacker,
+            log.result.final_forces.defender,
+            log.result.ending
         ),
     }
 }
@@ -4078,7 +4129,7 @@ mod tests {
     fn campaign_launch_shows_aftermath() {
         let mut app = DrumfireApp::default();
         app.open_campaign();
-        app.launch_campaign_operation(OperationKind::Naval);
+        app.launch_campaign_operation(OperationId::IronTide);
         assert!(app.error.is_none());
         assert!(matches!(app.campaign_screen, CampaignScreen::Aftermath(_)));
     }

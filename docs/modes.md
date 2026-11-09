@@ -1,8 +1,8 @@
 # Drumfire modes — design proposal
 
 **Status:** framework implemented; **Skirmish**, **Battle**, **Dogfight**,
-**Naval**, and **Frontlines** are playable, plus the **Halcyon Sweep** campaign
-slice. This document defines the mode model before the engine grows incompatible
+**Naval**, and **Frontlines** are playable, plus the full **Halcyon Sweep**
+campaign. This document defines the mode model before the engine grows incompatible
 input schemas.
 
 ## 1. The core distinction
@@ -17,7 +17,7 @@ battle. The requested modes are not variations of that model:
 | **Frontlines** | Ground, spatial | Battalions/sectors | Days; sector pressure | Break the line, take objectives, collapse the front | **Implemented** |
 | **Dogfight** | Air | Aircraft/sorties | Minutes; a pass or missile exchange | Kills, drive-off, or protect the mission package | **Implemented** |
 | **Naval** | Sea | Ships/tonnage | Hours; detection and salvos | Sink/cripple, drive off, or protect the convoy | **Implemented** |
-| **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | **Implemented slice** |
+| **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | **Implemented** |
 
 A single `forces: int` field cannot represent troops, aircraft, ships, and
 sectors. The input schema has to branch by mode.
@@ -169,9 +169,8 @@ mode together:
 - a strategic map/timeline.
 
 “All of them” means a campaign can contain skirmishes, battles, frontlines,
-dogfights, and naval actions. The shipped Halcyon Sweep slice strings Frontlines,
-Dogfight, and Naval together; the full seven-node campaign adds Battle and
-Skirmish operations later.
+dogfights, and naval actions. The Halcyon Sweep strings all five together across
+seven nodes and seven operations.
 
 ## 4. What changes in the UI
 
@@ -202,9 +201,9 @@ Do not build six shallow modes at once. Build vertical slices:
    readiness, CLI `naval run/replay`, GUI screen.
 4. **Frontlines** — ✅ done. Sectors, reserves, fortifications, objective
    capture, CLI `frontline run/replay`, GUI sector board.
-5. **Campaign** — ✅ slice done in CLI and GUI: three nodes, three formations,
-   Frontlines → Dogfight → Naval, persistent resources, campaign replay, war
-   room and chronicle. The full seven-node theater is planned.
+5. **Campaign** — ✅ full Halcyon Sweep implemented in CLI and GUI: seven nodes,
+   five formations, all five battle modes, five enemy intents, persistent
+   resources, campaign replay, war room, and chronicle.
 
 Rough effort, part-time:
 
@@ -215,9 +214,9 @@ Rough effort, part-time:
 | Dogfight | 1–2 weeks | done |
 | Naval | 1–2 weeks | done |
 | Frontlines | 2–3 weeks | done |
-| Campaign | 2–3 weeks | slice done; full theater planned |
+| Campaign | 2–3 weeks | done |
 
-Implemented in this slice:
+Implemented:
 
 - `mode` on `BattleInput`; `battle` is the default and omitted from serialized
   Battle inputs to preserve existing hashes.
@@ -271,10 +270,9 @@ The mode-specific card supplies the nouns: troops, hulls, aircraft, sectors.
 
 ## 8. Recommendation
 
-Build the mode framework and the **Skirmish + Battle** vertical slice first. It
-reuses the existing engine, proves the mode picker and schema, and gives the UI a
-real shape. Then add Dogfight and Naval as genuinely different boards. Frontlines
-and Campaign come last because they need the most new machinery.
+The project built the mode framework and the **Skirmish + Battle** slice first,
+then Dogfight, Naval, Frontlines, and Campaign. All six are now playable; Campaign
+is the capstone because it strings the other five together.
 
 The alternative — six modes with one generic form and one table — would look like
 six skins and satisfy none of them.

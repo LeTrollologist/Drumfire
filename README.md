@@ -69,9 +69,10 @@
 
 </div>
 
-**Status:** Phase 9 — all five battle modes plus the **Halcyon Sweep** campaign
-with its war-room GUI: deterministic core, CLI, egui desktop UI, and read-only
-NationStates import. No account login, no write actions, no credentials.
+**Status:** Phase 10 — all five battle modes plus the full seven-node **Halcyon
+Sweep** campaign with its war-room GUI: deterministic core, CLI, egui desktop UI,
+and read-only NationStates import. No account login, no write actions, no
+credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -194,10 +195,10 @@ cargo run -p drumfire-cli -- campaign play
 cargo run -p drumfire-cli -- campaign replay fixtures/campaign.log.json
 ```
 
-The first campaign slice is **The Halcyon Sweep**: three nodes, three named
-formations, and Frontlines → Dogfight → Naval. Air superiority earned in the
-dogfight raises naval air cover, and losses persist into the next operation.
-Full design: [`docs/campaign.md`](docs/campaign.md).
+The campaign is **The Halcyon Sweep**: seven nodes, five named formations, and
+seven operations using all five battle modes. Winning Halcyon raises naval air
+cover, ground losses persist, and the four-node combined-arms gate opens
+Meridian. Full design: [`docs/campaign.md`](docs/campaign.md).
 
 <div align="center">
   <img src="docs/campaign.png" alt="Drumfire campaign war room" width="92%" />
