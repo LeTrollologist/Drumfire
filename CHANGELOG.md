@@ -22,6 +22,10 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - Visual redesign: warm Paper theme by default (Night toggle), report hierarchy,
   momentum bar, probability sparkline, clickable phase cards, selected-phase
   detail, factor bars, and a compact stat grid instead of a wall of sliders.
+- Dogfight mode: individual aircraft, pilot/airframe/weapons/radar/support
+  ratings, cohesion, passes, kills, break-off, `air run/replay` CLI commands,
+  GUI screen, and a committed fixture/replay test.
+- [`docs/dogfight.md`](docs/dogfight.md) documenting the air model.
 - Skirmish fixture and committed replay log; Battle logs and hashes remain
   backward-compatible.
 - [`docs/modes.md`](docs/modes.md) describing all planned modes and the campaign

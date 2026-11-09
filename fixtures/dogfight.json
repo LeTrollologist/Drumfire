@@ -1,0 +1,30 @@
+{
+  "mode": "dogfight",
+  "attacker": {
+    "name": "Red Flight",
+    "aircraft": 6,
+    "pilot_skill": 7,
+    "aircraft_quality": 6,
+    "weapons": 6,
+    "radar": 5,
+    "support": 5,
+    "cohesion": 70
+  },
+  "defender": {
+    "name": "Blue Flight",
+    "aircraft": 8,
+    "pilot_skill": 6,
+    "aircraft_quality": 7,
+    "weapons": 6,
+    "radar": 6,
+    "support": 5,
+    "cohesion": 72
+  },
+  "config": {
+    "max_passes": 8,
+    "scale": 2.0,
+    "kill_rate": 0.12,
+    "cohesion_break": 20
+  },
+  "seed": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+}

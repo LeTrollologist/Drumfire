@@ -4,11 +4,14 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use drumfire_core::dogfight::{
+    classify_dogfight, replay_dogfight, simulate_dogfight, DogfightEnding, DogfightLog,
+};
 use drumfire_core::{
     classify, initial_win_probability, replay, simulate, strength_breakdown, BattleLog, Ending,
     Side, Winner,
 };
-use drumfire_model::{BattleInput, Mode, Seed};
+use drumfire_model::{BattleInput, DogfightInput, Mode, Seed};
 use serde::de::DeserializeOwned;
 
 #[derive(Debug, Parser)]
@@ -63,6 +66,37 @@ enum Command {
         /// Nation name, e.g. "Testlandia" or "The Grendels".
         name: String,
         /// Print the result as JSON.
+        #[arg(long)]
+        json: bool,
+    },
+    /// Run or verify a dogfight.
+    Air {
+        #[command(subcommand)]
+        command: AirCommand,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum AirCommand {
+    /// Resolve a dogfight from a JSON input file.
+    Run {
+        /// Path to the dogfight input JSON.
+        input: PathBuf,
+        /// Override the input seed with 64 hex characters, or `random`.
+        #[arg(long)]
+        seed: Option<String>,
+        /// Print the full dogfight log as JSON.
+        #[arg(long)]
+        json: bool,
+        /// Also write the full dogfight log to this path.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Verify a saved dogfight log by re-simulating it.
+    Replay {
+        /// Path to a dogfight log JSON produced by `air run --out`.
+        log: PathBuf,
+        /// Print the verified log as JSON.
         #[arg(long)]
         json: bool,
     },
@@ -123,6 +157,39 @@ fn main() -> Result<()> {
                 print_nation(&nation);
             }
         }
+        Command::Air { command } => match command {
+            AirCommand::Run {
+                input,
+                seed,
+                json,
+                out,
+            } => {
+                let mut input: DogfightInput = read_json(&input)?;
+                if let Some(seed) = seed {
+                    input.seed = parse_seed(&seed)?;
+                }
+                let log = simulate_dogfight(&input)?;
+                if let Some(path) = out {
+                    write_json(&path, &log)?;
+                }
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&log)?);
+                } else {
+                    print_dogfight(&log);
+                }
+            }
+            AirCommand::Replay { log, json } => {
+                let log: DogfightLog = read_json(&log)?;
+                let verified = replay_dogfight(&log)?;
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&verified)?);
+                } else {
+                    println!("Dogfight replay verified.");
+                    println!();
+                    print_dogfight(&verified);
+                }
+            }
+        },
     }
     Ok(())
 }
@@ -231,6 +298,74 @@ fn print_narrative(log: &BattleLog) {
         "Final morale: {} / {}",
         log.result.final_morale.attacker, log.result.final_morale.defender
     );
+}
+
+fn print_dogfight(log: &DogfightLog) {
+    let a = &log.input.attacker.name;
+    let d = &log.input.defender.name;
+
+    println!("Dogfight: {a} (attacker) vs {d} (defender)");
+    println!("Seed: {}", log.input.seed.to_hex());
+    println!("Input hash: {}", log.input_hash);
+    println!();
+
+    for p in &log.passes {
+        println!(
+            "Pass {:>2}: {:<8} p={:5.1}% roll={:.3}  kills {:>2}/{:<2}  aircraft {:>2}/{:<2}  cohesion {:>3}/{:<3}",
+            p.pass,
+            side_name(p.pass_winner),
+            p.attacker_win_probability * 100.0,
+            p.roll,
+            p.attacker_kills,
+            p.defender_kills,
+            p.attacker_aircraft_after,
+            p.defender_aircraft_after,
+            p.attacker_cohesion_after,
+            p.defender_cohesion_after
+        );
+    }
+
+    println!();
+    let outcome = classify_dogfight(log);
+    match log.result.winner {
+        Winner::Draw => println!(
+            "Result: draw — {} after {} passes.",
+            outcome.label(),
+            log.passes.len()
+        ),
+        winner => println!(
+            "Result: {} — {} after {} passes.",
+            dogfight_winner(winner, log),
+            outcome.label(),
+            log.passes.len()
+        ),
+    }
+    println!("Ending: {}.", dogfight_ending(log.result.ending));
+    println!(
+        "Final aircraft: {} / {}",
+        log.result.final_aircraft.attacker, log.result.final_aircraft.defender
+    );
+    println!(
+        "Final cohesion: {} / {}",
+        log.result.final_cohesion.attacker, log.result.final_cohesion.defender
+    );
+}
+
+fn dogfight_winner(winner: Winner, log: &DogfightLog) -> &str {
+    match winner {
+        Winner::Attacker => &log.input.attacker.name,
+        Winner::Defender => &log.input.defender.name,
+        Winner::Draw => "Draw",
+    }
+}
+
+fn dogfight_ending(ending: DogfightEnding) -> &'static str {
+    match ending {
+        DogfightEnding::Splashed => "splashed",
+        DogfightEnding::BreakOff => "break-off",
+        DogfightEnding::MaxPasses => "pass cap",
+        DogfightEnding::Draw => "draw",
+    }
 }
 
 fn print_nation(nation: &drumfire_ns::NationSummary) {

@@ -369,6 +369,11 @@ impl Mode {
 
     /// Whether this build can simulate the mode.
     pub fn is_supported(self) -> bool {
+        matches!(self, Mode::Skirmish | Mode::Battle | Mode::Dogfight)
+    }
+
+    /// Whether the mode uses the shared ground order of battle.
+    pub fn is_ground(self) -> bool {
         matches!(self, Mode::Skirmish | Mode::Battle)
     }
 
@@ -411,7 +416,7 @@ pub struct BattleInput {
 impl BattleInput {
     /// Validate names, mode support, home-side exclusivity, and configuration.
     pub fn validate(&self) -> Result<(), ValidationError> {
-        if !self.mode.is_supported() {
+        if !self.mode.is_ground() {
             return Err(ValidationError::UnsupportedMode(self.mode));
         }
         self.attacker.validate()?;
@@ -419,6 +424,157 @@ impl BattleInput {
         if self.attacker.home && self.defender.home {
             return Err(ValidationError::BothHome);
         }
+        self.config.validate()?;
+        Ok(())
+    }
+}
+
+/// Error returned when constructing an [`AircraftCount`].
+#[derive(Debug, Error, PartialEq, Eq)]
+#[error("aircraft count must be between 1 and 64, got {0}")]
+pub struct AircraftCountError(pub u8);
+
+/// A validated number of aircraft committed to a dogfight.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(try_from = "u8", into = "u8")]
+pub struct AircraftCount(u8);
+
+impl AircraftCount {
+    pub const MAX: u8 = 64;
+
+    pub fn new(value: u8) -> Result<Self, AircraftCountError> {
+        if (1..=Self::MAX).contains(&value) {
+            Ok(Self(value))
+        } else {
+            Err(AircraftCountError(value))
+        }
+    }
+
+    pub fn get(self) -> u8 {
+        self.0
+    }
+}
+
+impl TryFrom<u8> for AircraftCount {
+    type Error = AircraftCountError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl From<AircraftCount> for u8 {
+    fn from(value: AircraftCount) -> Self {
+        value.0
+    }
+}
+
+/// One side's air order of battle.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AirForce {
+    pub name: String,
+    pub aircraft: AircraftCount,
+    /// Pilot skill and training.
+    pub pilot_skill: Rating,
+    /// Aircraft performance: speed, climb, turn, sensors.
+    pub aircraft_quality: Rating,
+    /// Missiles, guns, and fire-control quality.
+    pub weapons: Rating,
+    /// Radar, electronic warfare, and detection.
+    pub radar: Rating,
+    /// Ground-controlled intercept, AWACS, tankers, and sustainment.
+    pub support: Rating,
+    /// Formation discipline and situational awareness.
+    pub cohesion: Morale,
+}
+
+impl AirForce {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        let name = self.name.trim();
+        if name.is_empty() {
+            return Err(ValidationError::EmptyName);
+        }
+        if name.chars().count() > MAX_NAME_LEN {
+            return Err(ValidationError::NameTooLong { max: MAX_NAME_LEN });
+        }
+        Ok(())
+    }
+}
+
+/// Tunable dogfight parameters.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct DogfightConfig {
+    /// Hard cap on passes. Range: 1..=30.
+    pub max_passes: u32,
+    /// Logistic scale for the strength difference. Range: 0.1..=20.0.
+    pub scale: f64,
+    /// Base kill intensity per pass. Range: 0.0..=0.5.
+    pub kill_rate: f64,
+    /// A side at or below this cohesion breaks off. Range: 0..=100.
+    pub cohesion_break: u8,
+}
+
+impl Default for DogfightConfig {
+    fn default() -> Self {
+        Self {
+            max_passes: 8,
+            scale: 2.0,
+            kill_rate: 0.12,
+            cohesion_break: 20,
+        }
+    }
+}
+
+impl DogfightConfig {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        if !(1..=30).contains(&self.max_passes) {
+            return Err(ValidationError::InvalidConfig(
+                "max_passes must be between 1 and 30",
+            ));
+        }
+        if !self.scale.is_finite() || !(0.1..=20.0).contains(&self.scale) {
+            return Err(ValidationError::InvalidConfig(
+                "scale must be finite and between 0.1 and 20.0",
+            ));
+        }
+        if !self.kill_rate.is_finite() || !(0.0..=0.5).contains(&self.kill_rate) {
+            return Err(ValidationError::InvalidConfig(
+                "kill_rate must be finite and between 0.0 and 0.5",
+            ));
+        }
+        if self.cohesion_break > 100 {
+            return Err(ValidationError::InvalidConfig(
+                "cohesion_break must be between 0 and 100",
+            ));
+        }
+        Ok(())
+    }
+}
+
+fn dogfight_mode() -> Mode {
+    Mode::Dogfight
+}
+
+/// The complete, serializable input to one dogfight.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct DogfightInput {
+    #[serde(default = "dogfight_mode")]
+    pub mode: Mode,
+    pub attacker: AirForce,
+    pub defender: AirForce,
+    #[serde(default)]
+    pub config: DogfightConfig,
+    pub seed: Seed,
+}
+
+impl DogfightInput {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        if self.mode != Mode::Dogfight {
+            return Err(ValidationError::UnsupportedMode(self.mode));
+        }
+        self.attacker.validate()?;
+        self.defender.validate()?;
         self.config.validate()?;
         Ok(())
     }
@@ -435,7 +591,7 @@ pub enum ValidationError {
     BothHome,
     #[error("invalid configuration: {0}")]
     InvalidConfig(&'static str),
-    #[error("mode {0:?} is not implemented yet; available: skirmish, battle")]
+    #[error("mode {0:?} is not available for this input")]
     UnsupportedMode(Mode),
 }
 
@@ -582,6 +738,53 @@ mod tests {
     #[test]
     fn planned_modes_are_rejected_by_validation() {
         let mut input = input();
+        input.mode = Mode::Frontlines;
+        assert_eq!(
+            input.validate(),
+            Err(ValidationError::UnsupportedMode(Mode::Frontlines))
+        );
+    }
+
+    fn air_force(name: &str, aircraft: u8) -> AirForce {
+        AirForce {
+            name: name.to_string(),
+            aircraft: AircraftCount::new(aircraft).unwrap(),
+            pilot_skill: Rating::new(6).unwrap(),
+            aircraft_quality: Rating::new(6).unwrap(),
+            weapons: Rating::new(6).unwrap(),
+            radar: Rating::new(5).unwrap(),
+            support: Rating::new(5).unwrap(),
+            cohesion: Morale::new(70).unwrap(),
+        }
+    }
+
+    #[test]
+    fn aircraft_count_rejects_zero_and_huge_counts() {
+        assert!(AircraftCount::new(0).is_err());
+        assert!(AircraftCount::new(65).is_err());
+        assert_eq!(AircraftCount::new(1).unwrap().get(), 1);
+        assert_eq!(AircraftCount::new(64).unwrap().get(), 64);
+    }
+
+    #[test]
+    fn dogfight_input_round_trips() {
+        let input = DogfightInput {
+            mode: Mode::Dogfight,
+            attacker: air_force("Red", 6),
+            defender: air_force("Blue", 8),
+            config: DogfightConfig::default(),
+            seed: Seed::from_u64(9),
+        };
+        input.validate().unwrap();
+        let json = serde_json::to_string(&input).unwrap();
+        assert!(json.contains("\"mode\":\"dogfight\""));
+        let parsed: DogfightInput = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, input);
+    }
+
+    #[test]
+    fn ground_input_rejects_air_mode() {
+        let mut input = input();
         input.mode = Mode::Dogfight;
         assert_eq!(
             input.validate(),
@@ -597,6 +800,7 @@ mod tests {
         assert_eq!(Mode::Battle.force_label(), "Troops");
         assert!(Mode::Skirmish.is_supported());
         assert!(Mode::Battle.is_supported());
+        assert!(Mode::Dogfight.is_supported());
         assert!(!Mode::Naval.is_supported());
     }
 

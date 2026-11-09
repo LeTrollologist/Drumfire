@@ -7,6 +7,9 @@ The model is intentionally simple and legible. It is not a physics simulation,
 and it does not claim to predict real warfare. It exists to give roleplayers a
 consistent, explainable answer to “who wins this battle?”.
 
+This document covers the **ground** modes (Skirmish and Battle). Dogfight uses a
+separate air-combat model documented in [`dogfight.md`](dogfight.md).
+
 ---
 
 ## 1. Inputs

@@ -1,8 +1,8 @@
 # Drumfire modes — design proposal
 
-**Status:** framework implemented; **Skirmish** and **Battle** are playable.
-**Frontlines**, **Dogfight**, **Naval**, and **Campaign** are reserved/planned.
-This document defines the mode model before the engine grows incompatible input
+**Status:** framework implemented; **Skirmish**, **Battle**, and **Dogfight** are
+playable. **Frontlines**, **Naval**, and **Campaign** are reserved/planned. This
+document defines the mode model before the engine grows incompatible input
 schemas.
 
 ## 1. The core distinction
@@ -15,7 +15,7 @@ battle. The requested modes are not variations of that model:
 | **Skirmish** | Ground, small | Fireteams / individual combatants | Minutes; a short exchange | Take/hold the objective, or rout the other side | **Implemented** |
 | **Battle** | Ground, large | Troops | Hours; a general engagement | Annihilation, rout, objective, or exhaustion | **Implemented** |
 | **Frontlines** | Ground, spatial | Battalions/sectors | Days; sector pressure | Break the line, take objectives, collapse the front | Planned |
-| **Dogfight** | Air | Aircraft/sorties | Minutes; a pass or missile exchange | Kills, drive-off, or protect the mission package | Planned |
+| **Dogfight** | Air | Aircraft/sorties | Minutes; a pass or missile exchange | Kills, drive-off, or protect the mission package | **Implemented** |
 | **Naval** | Sea | Ships/tonnage | Hours; detection and salvos | Sink/cripple, drive off, or protect the convoy | Planned |
 | **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | Planned |
 
@@ -195,7 +195,8 @@ Do not build six shallow modes at once. Build vertical slices:
 
 1. **Mode framework + Skirmish/Battle** — ✅ done. Tagged `Mode`, ground
    profiles, mode picker, CLI `--mode`, mode-aware labels, replay tests.
-2. **Dogfight** — individual aircraft, energy, missiles; highest visual payoff.
+2. **Dogfight** — ✅ done. Individual aircraft, cohesion, pilot/airframe/
+   weapons/radar/support factors, pass log, CLI `air run/replay`, GUI screen.
 3. **Naval** — individual ships, detection, salvos, damage.
 4. **Frontlines** — sectors, reserves, breakthroughs; the biggest model change.
 5. **Campaign** — persistent state over the modes that exist.
@@ -205,8 +206,8 @@ Rough effort, part-time:
 | Slice | Effort | Status |
 |---|---|---|
 | Framework + ground refactor | 2–3 days | done |
-| Skirmish + Battle polish | ~1 week | in progress |
-| Dogfight | 1–2 weeks | planned |
+| Skirmish + Battle polish | ~1 week | done |
+| Dogfight | 1–2 weeks | done |
 | Naval | 1–2 weeks | planned |
 | Frontlines | 2–3 weeks | planned |
 | Campaign | 2–3 weeks | planned |
@@ -220,6 +221,8 @@ Implemented in this slice:
 - Mode-aware phase labels, force labels, outcome classification, and CLI/GUI
   selection.
 - Committed Battle and Skirmish logs with replay tests.
+- Dogfight engine with aircraft, cohesion, pilot/airframe/weapons/radar/support,
+  pass logs, `air run/replay` CLI commands, GUI screen, and a committed fixture.
 - Planned modes are rejected by validation with a clear error rather than being
   silently simulated as Battle.
 

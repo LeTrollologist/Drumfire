@@ -17,7 +17,7 @@
     <img src="https://img.shields.io/badge/Engine-Rust-E8963F?style=for-the-badge&logo=rust&logoColor=1A120B&labelColor=1A120B" alt="Engine: Rust" />
   </a>
   <a href="docs/modes.md">
-    <img src="https://img.shields.io/badge/Modes-Skirmish_%2B_Battle-77A9C9?style=for-the-badge&labelColor=1A120B" alt="Modes: Skirmish and Battle" />
+    <img src="https://img.shields.io/badge/Modes-3_Playable-77A9C9?style=for-the-badge&labelColor=1A120B" alt="Modes: Skirmish, Battle, and Dogfight" />
   </a>
   <a href="crates/core/">
     <img src="https://img.shields.io/badge/Replay-Seeded_%26_Exact-3FA796?style=for-the-badge&labelColor=1A120B" alt="Replay: seeded and exact" />
@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-42_passing-3FA796?style=flat-square&labelColor=1A120B" alt="42 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-52_passing-3FA796?style=flat-square&labelColor=1A120B" alt="52 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,10 +69,10 @@
 
 </div>
 
-**Status:** Phase 4 — mode framework with **Skirmish** and **Battle** playable,
+**Status:** Phase 5 — **Skirmish**, **Battle**, and **Dogfight** playable,
 deterministic core, CLI, egui desktop UI, and read-only NationStates import.
-Frontlines, Dogfight, Naval, and Campaign are planned. No account login, no write
-actions, no credentials.
+Frontlines, Naval, and Campaign are planned. No account login, no write actions,
+no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -154,6 +154,17 @@ Skirmish mode uses the same ground family with a smaller-unit profile:
 cargo run -p drumfire-cli -- run fixtures/skirmish.json
 ```
 
+Dogfight mode uses its own air-combat schema:
+
+```sh
+cargo run -p drumfire-cli -- air run fixtures/dogfight.json
+cargo run -p drumfire-cli -- air replay fixtures/dogfight.log.json
+```
+
+<div align="center">
+  <img src="docs/dogfight.png" alt="Drumfire dogfight UI" width="92%" />
+</div>
+
 Override the mode on any input:
 
 ```sh
@@ -224,6 +235,8 @@ DRUMFIRE_CONTACT="https://example.com/drumfire" cargo run -p drumfire-cli -- nat
 | `drumfire run <input> --out <log>` | Write the full log as pretty JSON. |
 | `drumfire run <input> --json` | Print the full log as pretty JSON. |
 | `drumfire replay <log>` | Re-simulate a saved log and verify it matches exactly. |
+| `drumfire air run <input>` | Resolve a dogfight from an air-combat input. |
+| `drumfire air replay <log>` | Verify a saved dogfight log exactly. |
 | `drumfire explain <input> [--mode]` | Show each side’s strength components and opening probability. |
 | `drumfire nation <name>` | Fetch one nation from the public NationStates API. |
 | `drumfire nation <name> --json` | Same, as JSON. |
@@ -276,7 +289,8 @@ factors; `config` and `home` are optional.
 |---|---|---|---|
 | `battle` | implemented (default) | Phase | Troops |
 | `skirmish` | implemented | Exchange | Combatants |
-| `frontlines`, `dogfight`, `naval` | planned; rejected by validation | — | — |
+| `dogfight` | implemented, separate air schema | Pass | Aircraft |
+| `frontlines`, `naval` | planned; rejected by validation | — | — |
 
 A serialized Battle input omits `mode` so existing logs and hashes remain stable.
 A Skirmish input includes it.
@@ -383,12 +397,15 @@ drumfire/
   docs/
     rules.md
     modes.md
+    dogfight.md
     nationstates.md
   fixtures/
     example.json
     example.log.json
     skirmish.json
     skirmish.log.json
+    dogfight.json
+    dogfight.log.json
 ```
 
 ## Provenance and license

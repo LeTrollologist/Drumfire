@@ -5,17 +5,20 @@
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
+use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
 use drumfire_core::{
     classify, initial_win_probability, simulate, strength_breakdown, BattleLog, Ending, RoundLog,
     Side, Winner,
 };
 use drumfire_model::{
-    BattleConfig, BattleInput, ForceCount, Mode, Morale, Rating, Seed, TeamInput,
+    AirForce, AircraftCount, BattleConfig, BattleInput, DogfightConfig, DogfightInput, ForceCount,
+    Mode, Morale, Rating, Seed, TeamInput,
 };
 use drumfire_ns::{suggested_forces, NationSummary};
 use eframe::egui;
 
 fn main() -> eframe::Result<()> {
+    let demo_dogfight = std::env::args().any(|arg| arg == "--demo-dogfight");
     let demo =
         std::env::args().any(|arg| arg == "--demo") || std::env::var_os("DRUMFIRE_DEMO").is_some();
 
@@ -31,7 +34,9 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(move |cc| {
             apply_theme(&cc.egui_ctx, Theme::Paper);
-            let app = if demo {
+            let app = if demo_dogfight {
+                DrumfireApp::demo_dogfight()
+            } else if demo {
                 DrumfireApp::demo()
             } else {
                 DrumfireApp::default()
@@ -217,6 +222,62 @@ impl TeamForm {
     }
 }
 
+#[derive(Debug, Clone)]
+struct AirForceForm {
+    name: String,
+    aircraft: u8,
+    pilot_skill: u8,
+    aircraft_quality: u8,
+    weapons: u8,
+    radar: u8,
+    support: u8,
+    cohesion: i32,
+}
+
+impl AirForceForm {
+    fn blank(name: &str, aircraft: u8) -> Self {
+        Self {
+            name: name.to_string(),
+            aircraft,
+            pilot_skill: 6,
+            aircraft_quality: 6,
+            weapons: 6,
+            radar: 5,
+            support: 5,
+            cohesion: 70,
+        }
+    }
+
+    fn from_force(force: &AirForce) -> Self {
+        Self {
+            name: force.name.clone(),
+            aircraft: force.aircraft.get(),
+            pilot_skill: force.pilot_skill.get(),
+            aircraft_quality: force.aircraft_quality.get(),
+            weapons: force.weapons.get(),
+            radar: force.radar.get(),
+            support: force.support.get(),
+            cohesion: force.cohesion.get() as i32,
+        }
+    }
+
+    fn to_force(&self) -> Result<AirForce, String> {
+        let force = AirForce {
+            name: self.name.clone(),
+            aircraft: AircraftCount::new(self.aircraft).map_err(|err| err.to_string())?,
+            pilot_skill: Rating::new(self.pilot_skill).map_err(|err| err.to_string())?,
+            aircraft_quality: Rating::new(self.aircraft_quality).map_err(|err| err.to_string())?,
+            weapons: Rating::new(self.weapons).map_err(|err| err.to_string())?,
+            radar: Rating::new(self.radar).map_err(|err| err.to_string())?,
+            support: Rating::new(self.support).map_err(|err| err.to_string())?,
+            cohesion: Morale::new(self.cohesion.clamp(0, 100) as u8)
+                .map_err(|err| err.to_string())?,
+        };
+        force.validate().map_err(|err| err.to_string())?;
+        Ok(force)
+    }
+}
+
 struct DrumfireApp {
     theme: Theme,
     applied_theme: Option<Theme>,
@@ -224,6 +285,11 @@ struct DrumfireApp {
     mode: Mode,
     attacker: TeamForm,
     defender: TeamForm,
+    dogfight_attacker: AirForceForm,
+    dogfight_defender: AirForceForm,
+    dogfight_config: DogfightConfig,
+    dogfight_log: Option<DogfightLog>,
+    selected_pass: Option<usize>,
     config: BattleConfig,
     seed_hex: String,
     home_side: HomeSide,
@@ -249,6 +315,13 @@ impl DrumfireApp {
         app
     }
 
+    fn demo_dogfight() -> Self {
+        let mut app = Self::default();
+        app.load_dogfight_example();
+        app.run_current();
+        app
+    }
+
     fn from_input(input: &BattleInput) -> Self {
         let home_side = if input.attacker.home {
             HomeSide::Attacker
@@ -257,6 +330,7 @@ impl DrumfireApp {
         } else {
             HomeSide::Neutral
         };
+        let air = example_dogfight();
 
         Self {
             theme: Theme::Paper,
@@ -265,6 +339,11 @@ impl DrumfireApp {
             mode: input.mode,
             attacker: TeamForm::from_team(&input.attacker),
             defender: TeamForm::from_team(&input.defender),
+            dogfight_attacker: AirForceForm::from_force(&air.attacker),
+            dogfight_defender: AirForceForm::from_force(&air.defender),
+            dogfight_config: air.config,
+            dogfight_log: None,
+            selected_pass: None,
             config: input.config.clone(),
             seed_hex: input.seed.to_hex(),
             home_side,
@@ -302,6 +381,52 @@ impl DrumfireApp {
         };
         input.validate().map_err(|err| err.to_string())?;
         Ok(input)
+    }
+
+    fn build_dogfight(&self) -> Result<DogfightInput, String> {
+        let attacker = self
+            .dogfight_attacker
+            .to_force()
+            .map_err(|err| format!("Attacker: {err}"))?;
+        let defender = self
+            .dogfight_defender
+            .to_force()
+            .map_err(|err| format!("Defender: {err}"))?;
+        let seed = Seed::from_hex(&self.seed_hex).map_err(|err| format!("Seed: {err}"))?;
+        let input = DogfightInput {
+            mode: Mode::Dogfight,
+            attacker,
+            defender,
+            config: self.dogfight_config.clone(),
+            seed,
+        };
+        input.validate().map_err(|err| err.to_string())?;
+        Ok(input)
+    }
+
+    fn run_current(&mut self) {
+        if self.mode == Mode::Dogfight {
+            match self.build_dogfight() {
+                Ok(input) => match simulate_dogfight(&input) {
+                    Ok(log) => {
+                        let middle = log.passes.len() / 2;
+                        self.selected_pass = Some(middle);
+                        self.dogfight_log = Some(log);
+                        self.error = None;
+                    }
+                    Err(err) => {
+                        self.error = Some(err.to_string());
+                        self.dogfight_log = None;
+                    }
+                },
+                Err(err) => {
+                    self.error = Some(err);
+                    self.dogfight_log = None;
+                }
+            }
+        } else {
+            self.run_battle();
+        }
     }
 
     fn run_battle(&mut self) {
@@ -349,12 +474,29 @@ impl DrumfireApp {
         self.log = None;
         self.error = None;
         self.selected_phase = None;
+        self.dogfight_log = None;
+        self.selected_pass = None;
+    }
+
+    fn load_dogfight_example(&mut self) {
+        let input = example_dogfight();
+        self.mode = Mode::Dogfight;
+        self.dogfight_attacker = AirForceForm::from_force(&input.attacker);
+        self.dogfight_defender = AirForceForm::from_force(&input.defender);
+        self.dogfight_config = input.config;
+        self.seed_hex = input.seed.to_hex();
+        self.dogfight_log = None;
+        self.selected_pass = None;
+        self.error = None;
     }
 
     fn reset(&mut self) {
         self.mode = Mode::Battle;
         self.attacker = TeamForm::blank("Attacker");
         self.defender = TeamForm::blank("Defender");
+        self.dogfight_attacker = AirForceForm::blank("Red Flight", 6);
+        self.dogfight_defender = AirForceForm::blank("Blue Flight", 8);
+        self.dogfight_config = DogfightConfig::default();
         self.config = BattleConfig::default();
         self.home_side = HomeSide::Neutral;
         self.seed_hex = String::new();
@@ -362,6 +504,8 @@ impl DrumfireApp {
         self.log = None;
         self.error = None;
         self.selected_phase = None;
+        self.dogfight_log = None;
+        self.selected_pass = None;
         self.import_status = None;
         self.import_error = None;
     }
@@ -495,7 +639,11 @@ impl eframe::App for DrumfireApp {
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
                         ui.horizontal(|ui| {
-                            ui.heading("Battle setup");
+                            ui.heading(if self.mode == Mode::Dogfight {
+                                "Dogfight setup"
+                            } else {
+                                "Battle setup"
+                            });
                             ui.with_layout(
                                 egui::Layout::right_to_left(egui::Align::Center),
                                 |ui| {
@@ -508,21 +656,30 @@ impl eframe::App for DrumfireApp {
                         ui.add_space(8.0);
                         self.seed_ui(ui);
                         ui.add_space(6.0);
-                        self.home_ui(ui);
-                        ui.add_space(10.0);
-                        card(&p).show(ui, |ui| {
-                            team_ui(ui, "Attacker", &mut self.attacker, self.mode, &p);
-                        });
-                        ui.add_space(8.0);
-                        card(&p).show(ui, |ui| {
-                            team_ui(ui, "Defender", &mut self.defender, self.mode, &p);
-                        });
-                        ui.add_space(8.0);
-                        self.config_ui(ui);
-                        ui.add_space(8.0);
-                        self.actions_ui(ui, &p);
-                        ui.add_space(8.0);
-                        self.import_ui(ui);
+
+                        if self.mode == Mode::Dogfight {
+                            self.dogfight_setup_ui(ui, &p);
+                            ui.add_space(8.0);
+                            self.dogfight_config_ui(ui);
+                            ui.add_space(8.0);
+                            self.actions_ui(ui, &p);
+                        } else {
+                            self.home_ui(ui);
+                            ui.add_space(10.0);
+                            card(&p).show(ui, |ui| {
+                                team_ui(ui, "Attacker", &mut self.attacker, self.mode, &p);
+                            });
+                            ui.add_space(8.0);
+                            card(&p).show(ui, |ui| {
+                                team_ui(ui, "Defender", &mut self.defender, self.mode, &p);
+                            });
+                            ui.add_space(8.0);
+                            self.config_ui(ui);
+                            ui.add_space(8.0);
+                            self.actions_ui(ui, &p);
+                            ui.add_space(8.0);
+                            self.import_ui(ui);
+                        }
                         ui.add_space(14.0);
                     });
             });
@@ -547,20 +704,23 @@ impl DrumfireApp {
     fn mode_ui(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.label("Mode");
-            for mode in [Mode::Skirmish, Mode::Battle] {
+            for mode in [Mode::Skirmish, Mode::Battle, Mode::Dogfight] {
                 if ui
                     .selectable_label(self.mode == mode, mode.label())
                     .clicked()
                 {
                     self.mode = mode;
                     self.log = None;
+                    self.dogfight_log = None;
+                    self.selected_phase = None;
+                    self.selected_pass = None;
                     self.error = None;
                 }
             }
         });
         ui.label(
             egui::RichText::new(
-                "Dogfight, Naval, Frontlines, and Campaign are planned; their schemas are reserved.",
+                "Frontlines, Naval, and Campaign are planned; their schemas are reserved.",
             )
             .small()
             .weak(),
@@ -597,6 +757,48 @@ impl DrumfireApp {
             ui.selectable_value(&mut self.home_side, HomeSide::Attacker, "Attacker");
             ui.selectable_value(&mut self.home_side, HomeSide::Defender, "Defender");
         });
+    }
+
+    fn dogfight_setup_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        card(p).show(ui, |ui| {
+            air_force_ui(ui, "Attacker", &mut self.dogfight_attacker, p);
+        });
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            air_force_ui(ui, "Defender", &mut self.dogfight_defender, p);
+        });
+    }
+
+    fn dogfight_config_ui(&mut self, ui: &mut egui::Ui) {
+        egui::CollapsingHeader::new("Air rules")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.add(
+                    egui::Slider::new(&mut self.dogfight_config.max_passes, 1..=30)
+                        .text("Max passes"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.dogfight_config.scale, 0.1..=20.0)
+                        .text("Scale")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.dogfight_config.kill_rate, 0.0..=0.5)
+                        .text("Kill rate")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.dogfight_config.cohesion_break, 0..=100)
+                        .text("Break-off cohesion"),
+                );
+                ui.label(
+                    egui::RichText::new(
+                        "Passes are minutes of maneuvering; kills are whole aircraft.",
+                    )
+                    .small()
+                    .weak(),
+                );
+            });
     }
 
     fn config_ui(&mut self, ui: &mut egui::Ui) {
@@ -642,7 +844,7 @@ impl DrumfireApp {
             )
             .fill(p.sand);
             if ui.add(run).clicked() {
-                self.run_battle();
+                self.run_current();
             }
             if ui.button("Example").clicked() {
                 self.load_example();
@@ -707,6 +909,11 @@ impl DrumfireApp {
         if let Some(error) = &self.error {
             ui.colored_label(p.red, error);
             ui.add_space(8.0);
+        }
+
+        if self.mode == Mode::Dogfight {
+            self.dogfight_output_ui(ui, p);
+            return;
         }
 
         let Some(log) = self.log.clone() else {
@@ -1192,6 +1399,372 @@ impl DrumfireApp {
                     });
             });
     }
+
+    fn dogfight_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(log) = self.dogfight_log.clone() else {
+            self.dogfight_empty_state(ui, p);
+            return;
+        };
+
+        if self
+            .selected_pass
+            .is_none_or(|index| index >= log.passes.len())
+        {
+            self.selected_pass = Some(log.passes.len() / 2);
+        }
+
+        let winner = dogfight_winner_label(&log);
+        let outcome = classify_dogfight(&log);
+        let total_a_kills: u32 = log.passes.iter().map(|p| p.attacker_kills as u32).sum();
+        let total_d_kills: u32 = log.passes.iter().map(|p| p.defender_kills as u32).sum();
+
+        ui.horizontal(|ui| {
+            ui.label(tiny("DOGFIGHT REPORT", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Copy log JSON").clicked() {
+                    if let Ok(json) = serde_json::to_string_pretty(&log) {
+                        ui.ctx().copy_text(json);
+                    }
+                }
+                ui.label(tiny("rules v1 · Dogfight", p));
+            });
+        });
+
+        ui.add_space(3.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.label(
+                egui::RichText::new(&log.input.attacker.name)
+                    .size(30.0)
+                    .strong()
+                    .color(p.sand),
+            );
+            ui.label(egui::RichText::new("vs").size(12.0).color(p.muted));
+            ui.label(
+                egui::RichText::new(&log.input.defender.name)
+                    .size(30.0)
+                    .strong()
+                    .color(p.blue),
+            );
+        });
+
+        ui.add_space(4.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.label(egui::RichText::new(winner).size(18.0).strong().color(p.ink));
+            badge(ui, p, format!("· {}", outcome.label()), p.sand_soft, p.sand);
+            ui.label(tiny(
+                format!(
+                    "{} passes · {}",
+                    log.passes.len(),
+                    dogfight_ending_label(log.result.ending)
+                ),
+                p,
+            ));
+        });
+        ui.label(
+            egui::RichText::new(format!(
+                "seed {}   ·   hash {}",
+                log.input.seed.to_hex(),
+                log.input_hash
+            ))
+            .size(9.5)
+            .monospace()
+            .color(p.muted),
+        );
+
+        ui.add_space(12.0);
+        card(p).show(ui, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "aircraft {} / {}",
+                        log.result.final_aircraft.attacker, log.result.final_aircraft.defender
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "cohesion {} / {}",
+                        log.result.final_cohesion.attacker, log.result.final_cohesion.defender
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!("kills {total_a_kills} / {total_d_kills}"),
+                    p.panel_alt,
+                    p.ink,
+                );
+                ui.label(tiny("attacker / defender", p));
+            });
+        });
+
+        ui.add_space(12.0);
+        card(p).show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label(tiny("PASSES", p));
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.label(tiny("click to inspect", p));
+                });
+            });
+            ui.add_space(2.0);
+            ui.horizontal_wrapped(|ui| {
+                for (index, pass) in log.passes.iter().enumerate() {
+                    let selected = self.selected_pass == Some(index);
+                    let (rect, response) =
+                        ui.allocate_exact_size(egui::vec2(58.0, 54.0), egui::Sense::click());
+                    let fill = if selected {
+                        p.sand_soft
+                    } else if response.hovered() {
+                        p.panel
+                    } else {
+                        p.panel_alt
+                    };
+                    ui.painter()
+                        .rect_filled(rect, egui::CornerRadius::same(7), fill);
+                    let dot = match pass.pass_winner {
+                        Side::Attacker => p.sand,
+                        Side::Defender => p.blue,
+                    };
+                    ui.painter().circle_filled(
+                        egui::pos2(rect.left() + 10.0, rect.top() + 10.0),
+                        3.0,
+                        dot,
+                    );
+                    ui.painter().text(
+                        egui::pos2(rect.left() + 18.0, rect.top() + 9.0),
+                        egui::Align2::LEFT_CENTER,
+                        format!("{}", pass.pass),
+                        egui::FontId::proportional(9.0),
+                        p.muted,
+                    );
+                    ui.painter().text(
+                        egui::pos2(rect.center().x, rect.top() + 29.0),
+                        egui::Align2::CENTER_CENTER,
+                        format!("{}/{}", pass.attacker_kills, pass.defender_kills),
+                        egui::FontId::proportional(12.0),
+                        p.ink,
+                    );
+                    ui.painter().text(
+                        egui::pos2(rect.center().x, rect.top() + 44.0),
+                        egui::Align2::CENTER_CENTER,
+                        format!("{:.0}%", pass.attacker_win_probability * 100.0),
+                        egui::FontId::proportional(8.0),
+                        p.muted,
+                    );
+                    if response.clicked() {
+                        self.selected_pass = Some(index);
+                    }
+                    response.on_hover_text(format!(
+                        "Pass {} · {} kills / {} kills",
+                        pass.pass, pass.attacker_kills, pass.defender_kills
+                    ));
+                }
+            });
+        });
+
+        if let Some(index) = self.selected_pass.filter(|index| *index < log.passes.len()) {
+            let pass = &log.passes[index];
+            let winner = match pass.pass_winner {
+                Side::Attacker => &log.input.attacker.name,
+                Side::Defender => &log.input.defender.name,
+            };
+            let headline = match pass.pass_winner {
+                Side::Attacker => format!("{winner} wins the merge"),
+                Side::Defender => format!("{winner} holds the tally"),
+            };
+            ui.add_space(12.0);
+            card(p).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(tiny(
+                        format!("PASS {} · {}", pass.pass, winner.to_uppercase()),
+                        p,
+                    ));
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label(tiny(
+                            format!(
+                                "roll {:.3} · p {:.1}%",
+                                pass.roll,
+                                pass.attacker_win_probability * 100.0
+                            ),
+                            p,
+                        ));
+                    });
+                });
+                ui.label(
+                    egui::RichText::new(headline)
+                        .size(21.0)
+                        .strong()
+                        .color(p.ink),
+                );
+                ui.label(
+                    egui::RichText::new(format!(
+                        "{} scores {} kills; {} scores {}. Aircraft are now {} / {}; cohesion {} / {}.",
+                        log.input.attacker.name,
+                        pass.attacker_kills,
+                        log.input.defender.name,
+                        pass.defender_kills,
+                        pass.attacker_aircraft_after,
+                        pass.defender_aircraft_after,
+                        pass.attacker_cohesion_after,
+                        pass.defender_cohesion_after
+                    ))
+                    .size(12.5)
+                    .color(p.muted),
+                );
+                ui.add_space(8.0);
+                ui.horizontal_wrapped(|ui| {
+                    badge(
+                        ui,
+                        p,
+                        format!("kills {} / {}", pass.attacker_kills, pass.defender_kills),
+                        p.panel_alt,
+                        p.ink,
+                    );
+                    badge(
+                        ui,
+                        p,
+                        format!(
+                            "aircraft {} / {}",
+                            pass.attacker_aircraft_after, pass.defender_aircraft_after
+                        ),
+                        p.panel_alt,
+                        p.ink,
+                    );
+                    badge(
+                        ui,
+                        p,
+                        format!(
+                            "cohesion {} / {}",
+                            pass.attacker_cohesion_after, pass.defender_cohesion_after
+                        ),
+                        p.panel_alt,
+                        p.ink,
+                    );
+                });
+            });
+        }
+
+        ui.add_space(8.0);
+        egui::CollapsingHeader::new("Full pass log")
+            .default_open(false)
+            .show(ui, |ui| {
+                egui::Grid::new("dogfight_passes")
+                    .striped(true)
+                    .num_columns(6)
+                    .spacing([12.0, 4.0])
+                    .show(ui, |ui| {
+                        for header in [
+                            "Pass",
+                            "Winner",
+                            "A win p",
+                            "Kills A/D",
+                            "Aircraft A/D",
+                            "Cohesion A/D",
+                        ] {
+                            ui.strong(header);
+                        }
+                        ui.end_row();
+                        for pass in &log.passes {
+                            ui.monospace(pass.pass.to_string());
+                            ui.label(match pass.pass_winner {
+                                Side::Attacker => &log.input.attacker.name,
+                                Side::Defender => &log.input.defender.name,
+                            });
+                            ui.monospace(format!("{:.1}%", pass.attacker_win_probability * 100.0));
+                            ui.monospace(format!(
+                                "{} / {}",
+                                pass.attacker_kills, pass.defender_kills
+                            ));
+                            ui.monospace(format!(
+                                "{} / {}",
+                                pass.attacker_aircraft_after, pass.defender_aircraft_after
+                            ));
+                            ui.monospace(format!(
+                                "{} / {}",
+                                pass.attacker_cohesion_after, pass.defender_cohesion_after
+                            ));
+                            ui.end_row();
+                        }
+                    });
+            });
+    }
+
+    fn dogfight_empty_state(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            ui.label(tiny("DOGFIGHT REPORT", p));
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new("No merge resolved yet.")
+                    .size(30.0)
+                    .strong()
+                    .color(p.ink),
+            );
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new(
+                    "Set two flights, choose their aircraft and pilots, then run the passes. The report will show kills, aircraft, cohesion, and the break-off.",
+                )
+                .size(13.0)
+                .color(p.muted),
+            );
+            ui.add_space(12.0);
+            let run = egui::Button::new(
+                egui::RichText::new("Run the example dogfight")
+                    .strong()
+                    .color(egui::Color32::from_rgb(34, 24, 13)),
+            )
+            .fill(p.sand);
+            if ui.add(run).clicked() {
+                self.load_dogfight_example();
+                self.run_current();
+            }
+        });
+    }
+}
+
+fn air_force_ui(ui: &mut egui::Ui, label: &str, form: &mut AirForceForm, p: &Palette) {
+    ui.heading(label);
+    egui::Grid::new(format!("{label}_air_identity"))
+        .num_columns(2)
+        .spacing([8.0, 4.0])
+        .show(ui, |ui| {
+            ui.label("Name");
+            ui.add(egui::TextEdit::singleline(&mut form.name).desired_width(280.0));
+            ui.end_row();
+
+            ui.label("Aircraft");
+            ui.add(egui::DragValue::new(&mut form.aircraft).range(1..=64));
+            ui.end_row();
+        });
+
+    ui.add(egui::Slider::new(&mut form.cohesion, 0..=100).text("Cohesion"));
+    ui.add_space(3.0);
+    egui::Grid::new(format!("{label}_air_ratings"))
+        .num_columns(5)
+        .spacing([6.0, 3.0])
+        .show(ui, |ui| {
+            for name in ["Pilot", "Airframe", "Weapons", "Radar", "Support"] {
+                ui.label(egui::RichText::new(name).size(9.0).color(p.muted));
+            }
+            ui.end_row();
+            for value in [
+                &mut form.pilot_skill,
+                &mut form.aircraft_quality,
+                &mut form.weapons,
+                &mut form.radar,
+                &mut form.support,
+            ] {
+                ui.add(egui::DragValue::new(value).range(1..=10).speed(1.0));
+            }
+        });
 }
 
 fn team_ui(ui: &mut egui::Ui, label: &str, form: &mut TeamForm, mode: Mode, p: &Palette) {
@@ -1403,6 +1976,23 @@ fn paint_sparkline(
     );
 }
 
+fn dogfight_winner_label(log: &DogfightLog) -> String {
+    match log.result.winner {
+        Winner::Attacker => format!("{} wins", log.input.attacker.name),
+        Winner::Defender => format!("{} wins", log.input.defender.name),
+        Winner::Draw => "Draw".to_string(),
+    }
+}
+
+fn dogfight_ending_label(ending: DogfightEnding) -> &'static str {
+    match ending {
+        DogfightEnding::Splashed => "splashed",
+        DogfightEnding::BreakOff => "break-off",
+        DogfightEnding::MaxPasses => "pass cap",
+        DogfightEnding::Draw => "draw",
+    }
+}
+
 fn winner_label(log: &BattleLog) -> String {
     match log.result.winner {
         Winner::Attacker => format!("{} wins", log.input.attacker.name),
@@ -1423,6 +2013,11 @@ fn ending_label(ending: Ending, mode: Mode) -> String {
 fn example_input() -> BattleInput {
     serde_json::from_str(include_str!("../../../fixtures/example.json"))
         .expect("committed example fixture must be valid")
+}
+
+fn example_dogfight() -> DogfightInput {
+    serde_json::from_str(include_str!("../../../fixtures/dogfight.json"))
+        .expect("committed dogfight fixture must be valid")
 }
 
 #[cfg(test)]
@@ -1460,5 +2055,16 @@ mod tests {
         app.run_battle();
         assert!(app.error.is_none());
         assert_eq!(app.log.unwrap().input.mode, Mode::Skirmish);
+    }
+
+    #[test]
+    fn dogfight_mode_runs() {
+        let mut app = DrumfireApp {
+            mode: Mode::Dogfight,
+            ..DrumfireApp::default()
+        };
+        app.run_current();
+        assert!(app.error.is_none());
+        assert!(app.dogfight_log.is_some());
     }
 }

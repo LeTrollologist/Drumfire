@@ -1,0 +1,159 @@
+{
+  "input": {
+    "mode": "dogfight",
+    "attacker": {
+      "name": "Red Flight",
+      "aircraft": 6,
+      "pilot_skill": 7,
+      "aircraft_quality": 6,
+      "weapons": 6,
+      "radar": 5,
+      "support": 5,
+      "cohesion": 70
+    },
+    "defender": {
+      "name": "Blue Flight",
+      "aircraft": 8,
+      "pilot_skill": 6,
+      "aircraft_quality": 7,
+      "weapons": 6,
+      "radar": 6,
+      "support": 5,
+      "cohesion": 72
+    },
+    "config": {
+      "max_passes": 8,
+      "scale": 2.0,
+      "kill_rate": 0.12,
+      "cohesion_break": 20
+    },
+    "seed": "202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f"
+  },
+  "input_hash": "450774ee918ab220dc25e521d1c5a5b43dda534bbd83b74c9bab2dc9d87ef90e",
+  "passes": [
+    {
+      "pass": 1,
+      "attacker_strength": 3.545910149055313,
+      "defender_strength": 3.9372245773362198,
+      "attacker_win_probability": 0.45124114515034125,
+      "roll": 0.6197425721557517,
+      "pass_winner": "defender",
+      "attacker_kills": 0,
+      "defender_kills": 1,
+      "attacker_aircraft_after": 5,
+      "defender_aircraft_after": 8,
+      "attacker_cohesion_after": 64,
+      "defender_cohesion_after": 76
+    },
+    {
+      "pass": 2,
+      "attacker_strength": 3.271759469228055,
+      "defender_strength": 4.01722457733622,
+      "attacker_win_probability": 0.40788090555553863,
+      "roll": 0.9120868600772247,
+      "pass_winner": "defender",
+      "attacker_kills": 0,
+      "defender_kills": 1,
+      "attacker_aircraft_after": 4,
+      "defender_aircraft_after": 8,
+      "attacker_cohesion_after": 57,
+      "defender_cohesion_after": 80
+    },
+    {
+      "pass": 3,
+      "attacker_strength": 2.9494379124341004,
+      "defender_strength": 4.0972245773362195,
+      "attacker_win_probability": 0.36033894492137114,
+      "roll": 0.9918204523073564,
+      "pass_winner": "defender",
+      "attacker_kills": 0,
+      "defender_kills": 1,
+      "attacker_aircraft_after": 3,
+      "defender_aircraft_after": 8,
+      "attacker_cohesion_after": 49,
+      "defender_cohesion_after": 83
+    },
+    {
+      "pass": 4,
+      "attacker_strength": 2.5662943611198905,
+      "defender_strength": 4.15722457733622,
+      "attacker_win_probability": 0.3109964109937337,
+      "roll": 0.11447965490694811,
+      "pass_winner": "attacker",
+      "attacker_kills": 1,
+      "defender_kills": 0,
+      "attacker_aircraft_after": 3,
+      "defender_aircraft_after": 7,
+      "attacker_cohesion_after": 52,
+      "defender_cohesion_after": 77
+    },
+    {
+      "pass": 5,
+      "attacker_strength": 2.6262943611198906,
+      "defender_strength": 3.919441541679836,
+      "attacker_win_probability": 0.34376208578770423,
+      "roll": 0.7653208672651012,
+      "pass_winner": "defender",
+      "attacker_kills": 0,
+      "defender_kills": 1,
+      "attacker_aircraft_after": 2,
+      "defender_aircraft_after": 7,
+      "attacker_cohesion_after": 43,
+      "defender_cohesion_after": 80
+    },
+    {
+      "pass": 6,
+      "attacker_strength": 2.1586122886681096,
+      "defender_strength": 3.979441541679836,
+      "attacker_win_probability": 0.28691499933366343,
+      "roll": 0.2563602239527941,
+      "pass_winner": "attacker",
+      "attacker_kills": 1,
+      "defender_kills": 0,
+      "attacker_aircraft_after": 2,
+      "defender_aircraft_after": 6,
+      "attacker_cohesion_after": 46,
+      "defender_cohesion_after": 74
+    },
+    {
+      "pass": 7,
+      "attacker_strength": 2.2186122886681097,
+      "defender_strength": 3.7259101490553133,
+      "attacker_win_probability": 0.32002673757829375,
+      "roll": 0.28129717777481755,
+      "pass_winner": "attacker",
+      "attacker_kills": 1,
+      "defender_kills": 0,
+      "attacker_aircraft_after": 2,
+      "defender_aircraft_after": 5,
+      "attacker_cohesion_after": 49,
+      "defender_cohesion_after": 68
+    },
+    {
+      "pass": 8,
+      "attacker_strength": 2.2786122886681097,
+      "defender_strength": 3.451759469228055,
+      "attacker_win_probability": 0.3574214174127772,
+      "roll": 0.0314203742027489,
+      "pass_winner": "attacker",
+      "attacker_kills": 1,
+      "defender_kills": 0,
+      "attacker_aircraft_after": 2,
+      "defender_aircraft_after": 4,
+      "attacker_cohesion_after": 52,
+      "defender_cohesion_after": 61
+    }
+  ],
+  "result": {
+    "winner": "defender",
+    "ending": "max_passes",
+    "final_aircraft": {
+      "attacker": 2,
+      "defender": 4
+    },
+    "final_cohesion": {
+      "attacker": 52,
+      "defender": 61
+    }
+  }
+}
