@@ -1,8 +1,8 @@
 # Drumfire Campaign — design and implementation plan
 
-**Status:** Halcyon Sweep vertical slice implemented (CLI, three operations,
-campaign replay). The full seven-node war-room campaign remains the target plan
-below.
+**Status:** Halcyon Sweep vertical slice implemented (CLI + war-room GUI, three
+operations, campaign replay). The full seven-node campaign remains the target
+plan below.
 
 **Goal:** make Campaign the capstone mode: a short, replayable, combined-arms
 campaign that uses Skirmish, Battle, Frontlines, Dogfight, and Naval as
@@ -23,6 +23,8 @@ The **Halcyon Sweep** slice is playable now:
   ground strength reduces the next ground operation.
 - Campaign log with every mode log embedded, plus exact campaign replay.
 - CLI: `campaign play`, `campaign demo`, `campaign replay`.
+- GUI war room: paper map, resource rail, formation rail, operation briefing,
+  after-action report, and chronicle.
 
 The first playable path is deliberately three operations. If the handoffs are
 not fun at this scale, adding four more nodes will not fix it.
@@ -31,6 +33,7 @@ not fun at this scale, adding four more nodes will not fix it.
 cargo run -p drumfire-cli -- campaign demo
 cargo run -p drumfire-cli -- campaign play
 cargo run -p drumfire-cli -- campaign replay fixtures/campaign.log.json
+cargo run -p drumfire-gui -- --demo-campaign
 ```
 
 ---
@@ -328,6 +331,12 @@ the order of battle, losses, and the ending. This is the shareable artifact.
 ---
 
 ## 11. UI concept
+
+![Campaign war room](campaign.png)
+
+![Operation briefing](campaign-briefing.png)
+
+![After-action report](campaign-aftermath.png)
 
 ### War Room
 

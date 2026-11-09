@@ -5,6 +5,10 @@
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
+use drumfire_campaign::{
+    Branch, Campaign, CampaignResult, Control, Formation, NodeKind, OperationKind, OperationLog,
+    OperationRecord,
+};
 use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
 use drumfire_core::frontline::{
     classify_frontline, simulate_frontline, FrontlineEnding, FrontlineLog,
@@ -23,6 +27,8 @@ use drumfire_ns::{suggested_forces, NationSummary};
 use eframe::egui;
 
 fn main() -> eframe::Result<()> {
+    let demo_campaign = std::env::args().any(|arg| arg == "--demo-campaign");
+    let demo_campaign_aftermath = std::env::args().any(|arg| arg == "--demo-campaign-aftermath");
     let demo_frontline = std::env::args().any(|arg| arg == "--demo-frontline");
     let demo_naval = std::env::args().any(|arg| arg == "--demo-naval");
     let demo_dogfight = std::env::args().any(|arg| arg == "--demo-dogfight");
@@ -41,7 +47,11 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(move |cc| {
             apply_theme(&cc.egui_ctx, Theme::Paper);
-            let app = if demo_frontline {
+            let app = if demo_campaign_aftermath {
+                DrumfireApp::demo_campaign_aftermath()
+            } else if demo_campaign {
+                DrumfireApp::demo_campaign()
+            } else if demo_frontline {
                 DrumfireApp::demo_frontline()
             } else if demo_naval {
                 DrumfireApp::demo_naval()
@@ -441,11 +451,22 @@ impl SectorForm {
     }
 }
 
+#[derive(Debug, Clone)]
+enum CampaignScreen {
+    WarRoom,
+    Briefing(OperationKind),
+    Aftermath(Box<OperationRecord>),
+    Chronicle,
+}
+
 struct DrumfireApp {
     theme: Theme,
     applied_theme: Option<Theme>,
     selected_phase: Option<usize>,
     mode: Mode,
+    campaign_active: bool,
+    campaign: Option<Campaign>,
+    campaign_screen: CampaignScreen,
     attacker: TeamForm,
     defender: TeamForm,
     dogfight_attacker: AirForceForm,
@@ -509,6 +530,58 @@ impl DrumfireApp {
         app
     }
 
+    fn demo_campaign() -> Self {
+        let mut app = Self::default();
+        app.open_campaign();
+        if let Some(campaign) = &mut app.campaign {
+            let _ = campaign.play_operation(OperationKind::Frontlines);
+            let _ = campaign.play_operation(OperationKind::Dogfight);
+        }
+        app.campaign_screen = CampaignScreen::WarRoom;
+        app
+    }
+
+    fn demo_campaign_aftermath() -> Self {
+        let mut app = Self::default();
+        app.open_campaign();
+        if let Some(campaign) = &mut app.campaign {
+            if let Ok(record) = campaign.play_operation(OperationKind::Naval) {
+                app.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
+            }
+        }
+        app
+    }
+
+    fn open_campaign(&mut self) {
+        if self.campaign.is_none() {
+            self.campaign = Some(Campaign::new(Seed::from_u64(5)));
+        }
+        self.campaign_active = true;
+        self.campaign_screen = CampaignScreen::WarRoom;
+    }
+
+    fn new_campaign(&mut self) {
+        self.campaign = Some(Campaign::new(Seed::from_u64(5)));
+        self.campaign_active = true;
+        self.campaign_screen = CampaignScreen::WarRoom;
+        self.error = None;
+    }
+
+    fn launch_campaign_operation(&mut self, kind: OperationKind) {
+        let Some(campaign) = &mut self.campaign else {
+            return;
+        };
+        match campaign.play_operation(kind) {
+            Ok(record) => {
+                self.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
+                self.error = None;
+            }
+            Err(err) => {
+                self.error = Some(err.to_string());
+            }
+        }
+    }
+
     fn from_input(input: &BattleInput) -> Self {
         let home_side = if input.attacker.home {
             HomeSide::Attacker
@@ -526,6 +599,9 @@ impl DrumfireApp {
             applied_theme: None,
             selected_phase: None,
             mode: input.mode,
+            campaign_active: false,
+            campaign: None,
+            campaign_screen: CampaignScreen::WarRoom,
             attacker: TeamForm::from_team(&input.attacker),
             defender: TeamForm::from_team(&input.defender),
             dogfight_attacker: AirForceForm::from_force(&air.attacker),
@@ -963,6 +1039,11 @@ impl eframe::App for DrumfireApp {
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
+                        if self.campaign_active {
+                            self.campaign_sidebar_ui(ui, &p);
+                            ui.add_space(14.0);
+                            return;
+                        }
                         ui.horizontal(|ui| {
                             ui.heading(if self.mode == Mode::Dogfight {
                                 "Dogfight setup"
@@ -1067,9 +1148,13 @@ impl DrumfireApp {
                     self.error = None;
                 }
             }
+            ui.separator();
+            if ui.selectable_label(false, "Campaign").clicked() {
+                self.open_campaign();
+            }
         });
         ui.label(
-            egui::RichText::new("Campaign is planned; its schema is reserved.")
+            egui::RichText::new("Campaign is a meta-layer over the battle modes.")
                 .small()
                 .weak(),
         );
@@ -1365,6 +1450,11 @@ impl DrumfireApp {
         if let Some(error) = &self.error {
             ui.colored_label(p.red, error);
             ui.add_space(8.0);
+        }
+
+        if self.campaign_active {
+            self.campaign_output_ui(ui, p);
+            return;
         }
 
         if self.mode == Mode::Dogfight {
@@ -1864,6 +1954,495 @@ impl DrumfireApp {
                         });
                     });
             });
+    }
+
+    fn campaign_sidebar_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(campaign) = self.campaign.clone() else {
+            ui.label("No campaign loaded.");
+            if ui.button("Start campaign").clicked() {
+                self.new_campaign();
+            }
+            return;
+        };
+
+        ui.heading("Campaign");
+        ui.label(tiny("THE HALCYON SWEEP · KESTREL COAST", p));
+        ui.add_space(4.0);
+        ui.label(
+            egui::RichText::new(format!("Turn {} / {}", campaign.turn, campaign.max_turns))
+                .size(13.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.add_space(6.0);
+        ui.label(tiny(
+            format!(
+                "Will {} · Supply {} · Intel {} · Momentum {:+}",
+                campaign.political_will, campaign.supply, campaign.intel, campaign.momentum
+            ),
+            p,
+        ));
+        ui.label(tiny("Enemy intent: Hold", p));
+        ui.add_space(8.0);
+        if ui.button("War room").clicked() {
+            self.campaign_screen = CampaignScreen::WarRoom;
+        }
+        if ui.button("Chronicle").clicked() {
+            self.campaign_screen = CampaignScreen::Chronicle;
+        }
+        ui.add_space(4.0);
+        if ui.button("New campaign").clicked() {
+            self.new_campaign();
+        }
+        ui.add_space(8.0);
+        if ui.button("Back to battle modes").clicked() {
+            self.campaign_active = false;
+        }
+        ui.add_space(6.0);
+        ui.label(
+            egui::RichText::new(
+                "Operations hand off to the battle engines and return here with persistent losses.",
+            )
+            .small()
+            .weak(),
+        );
+    }
+
+    fn campaign_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(campaign) = self.campaign.clone() else {
+            self.open_campaign();
+            return;
+        };
+        match self.campaign_screen.clone() {
+            CampaignScreen::WarRoom => self.campaign_war_room_ui(ui, p, &campaign),
+            CampaignScreen::Briefing(kind) => {
+                self.campaign_briefing_ui(ui, p, &campaign, kind);
+            }
+            CampaignScreen::Aftermath(record) => {
+                self.campaign_aftermath_ui(ui, p, &campaign, &record);
+            }
+            CampaignScreen::Chronicle => self.campaign_chronicle_ui(ui, p, &campaign),
+        }
+    }
+
+    fn campaign_war_room_ui(&mut self, ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
+        ui.horizontal(|ui| {
+            ui.label(tiny("CAMPAIGN · WAR ROOM", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Chronicle").clicked() {
+                    self.campaign_screen = CampaignScreen::Chronicle;
+                }
+                if ui.button("Copy log JSON").clicked() {
+                    if let Ok(json) = serde_json::to_string_pretty(campaign) {
+                        ui.ctx().copy_text(json);
+                    }
+                }
+            });
+        });
+
+        ui.add_space(3.0);
+        ui.label(
+            egui::RichText::new("The Halcyon Sweep")
+                .size(30.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.label(
+            egui::RichText::new("Kestrel Coast · a short combined-arms campaign")
+                .size(12.0)
+                .color(p.muted),
+        );
+
+        ui.add_space(8.0);
+        ui.horizontal_wrapped(|ui| {
+            badge(
+                ui,
+                p,
+                format!("will {}", campaign.political_will),
+                p.panel_alt,
+                p.ink,
+            );
+            badge(
+                ui,
+                p,
+                format!("supply {}", campaign.supply),
+                p.panel_alt,
+                p.ink,
+            );
+            badge(
+                ui,
+                p,
+                format!("intel {}", campaign.intel),
+                p.panel_alt,
+                p.ink,
+            );
+            badge(
+                ui,
+                p,
+                format!("momentum {:+}", campaign.momentum),
+                p.panel_alt,
+                p.ink,
+            );
+            badge(ui, p, "enemy: hold", p.panel_alt, p.muted);
+        });
+
+        ui.add_space(10.0);
+        paint_campaign_map(ui, p, campaign);
+
+        if let Some(result) = campaign.result {
+            ui.add_space(8.0);
+            card(p).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(
+                        egui::RichText::new(match result {
+                            CampaignResult::Victory => "Campaign victory",
+                            CampaignResult::Defeat => "Campaign defeat",
+                        })
+                        .size(20.0)
+                        .strong()
+                        .color(if result == CampaignResult::Victory {
+                            p.sand
+                        } else {
+                            p.blue
+                        }),
+                    );
+                    if ui.button("Read the chronicle").clicked() {
+                        self.campaign_screen = CampaignScreen::Chronicle;
+                    }
+                });
+            });
+        }
+
+        ui.add_space(12.0);
+        ui.label(tiny("OPERATIONS", p));
+        ui.add_space(4.0);
+        let options = campaign.options();
+        ui.columns(3, |columns| {
+            for (column, option) in columns.iter_mut().zip(&options) {
+                card(p).show(column, |ui| {
+                    ui.label(tiny(option.kind.label().to_uppercase(), p));
+                    ui.label(
+                        egui::RichText::new(&option.title)
+                            .size(15.0)
+                            .strong()
+                            .color(p.ink),
+                    );
+                    ui.label(
+                        egui::RichText::new(
+                            campaign
+                                .node(&option.node_id)
+                                .map(|node| node.name.as_str())
+                                .unwrap_or("Unknown"),
+                        )
+                        .size(11.0)
+                        .color(p.muted),
+                    );
+                    ui.add_space(4.0);
+                    if option.available {
+                        let button = egui::Button::new(
+                            egui::RichText::new("Brief operation")
+                                .strong()
+                                .color(egui::Color32::from_rgb(34, 24, 13)),
+                        )
+                        .fill(p.sand);
+                        if ui.add(button).clicked() {
+                            self.campaign_screen = CampaignScreen::Briefing(option.kind);
+                        }
+                    } else {
+                        ui.label(tiny(&option.reason, p));
+                    }
+                });
+            }
+        });
+
+        ui.add_space(12.0);
+        ui.label(tiny("FORMATIONS", p));
+        ui.add_space(4.0);
+        ui.columns(campaign.formations.len(), |columns| {
+            for (column, formation) in columns.iter_mut().zip(&campaign.formations) {
+                card(p).show(column, |ui| {
+                    formation_card(ui, p, formation);
+                });
+            }
+        });
+    }
+
+    fn campaign_briefing_ui(
+        &mut self,
+        ui: &mut egui::Ui,
+        p: &Palette,
+        campaign: &Campaign,
+        kind: OperationKind,
+    ) {
+        let Some(option) = campaign
+            .options()
+            .into_iter()
+            .find(|option| option.kind == kind)
+        else {
+            self.campaign_screen = CampaignScreen::WarRoom;
+            return;
+        };
+        let node = campaign.node(&option.node_id);
+        let formation = formation_for(campaign, kind);
+
+        ui.horizontal(|ui| {
+            ui.label(tiny("CAMPAIGN · BRIEFING", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Back to war room").clicked() {
+                    self.campaign_screen = CampaignScreen::WarRoom;
+                }
+            });
+        });
+        ui.add_space(3.0);
+        ui.label(
+            egui::RichText::new(&option.title)
+                .size(28.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.label(
+            egui::RichText::new(format!(
+                "{} · {}",
+                option.kind.label(),
+                node.map(|node| node.name.as_str())
+                    .unwrap_or("Unknown node")
+            ))
+            .size(13.0)
+            .color(p.muted),
+        );
+
+        ui.add_space(10.0);
+        card(p).show(ui, |ui| {
+            ui.label(tiny("WHAT IS AT STAKE", p));
+            ui.label(
+                egui::RichText::new(stakes_for(kind))
+                    .size(14.0)
+                    .color(p.ink),
+            );
+            ui.add_space(8.0);
+            ui.label(tiny("COMMITTED", p));
+            ui.label(
+                egui::RichText::new(
+                    formation
+                        .map(|formation| formation.name.as_str())
+                        .unwrap_or("No formation available"),
+                )
+                .size(14.0)
+                .strong()
+                .color(p.ink),
+            );
+            if let Some(formation) = formation {
+                ui.label(tiny(
+                    format!(
+                        "strength {} · morale {} · supply {}",
+                        formation.strength, formation.morale, formation.supply
+                    ),
+                    p,
+                ));
+            }
+            ui.add_space(8.0);
+            ui.label(tiny("CROSS-MODE EFFECT", p));
+            ui.label(
+                egui::RichText::new(cross_mode_text(campaign, kind))
+                    .size(12.5)
+                    .color(p.muted),
+            );
+        });
+
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            let launch = egui::Button::new(
+                egui::RichText::new("Launch operation")
+                    .strong()
+                    .color(egui::Color32::from_rgb(34, 24, 13)),
+            )
+            .fill(p.sand);
+            if ui.add_enabled(option.available, launch).clicked() {
+                self.launch_campaign_operation(kind);
+            }
+            if !option.available {
+                ui.label(tiny(&option.reason, p));
+            }
+        });
+    }
+
+    fn campaign_aftermath_ui(
+        &mut self,
+        ui: &mut egui::Ui,
+        p: &Palette,
+        campaign: &Campaign,
+        record: &OperationRecord,
+    ) {
+        ui.horizontal(|ui| {
+            ui.label(tiny("CAMPAIGN · AFTERMATH", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Back to war room").clicked() {
+                    self.campaign_screen = CampaignScreen::WarRoom;
+                }
+            });
+        });
+        ui.add_space(3.0);
+        ui.label(
+            egui::RichText::new(&record.title)
+                .size(28.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.horizontal_wrapped(|ui| {
+            badge(
+                ui,
+                p,
+                if record.aftermath.victory {
+                    "operation won"
+                } else {
+                    "operation lost"
+                },
+                if record.aftermath.victory {
+                    p.sand_soft
+                } else {
+                    p.panel_alt
+                },
+                if record.aftermath.victory {
+                    p.sand
+                } else {
+                    p.blue
+                },
+            );
+            ui.label(tiny(&record.aftermath.summary, p));
+        });
+
+        ui.add_space(10.0);
+        card(p).show(ui, |ui| {
+            ui.label(tiny("WHAT CHANGED", p));
+            ui.add_space(4.0);
+            ui.horizontal_wrapped(|ui| {
+                badge(
+                    ui,
+                    p,
+                    format!("strength {:+}", record.aftermath.strength_delta),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!("will {:+}", record.aftermath.will_delta),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!("supply {:+}", record.aftermath.supply_delta),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!("intel {:+}", record.aftermath.intel_delta),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!("momentum {:+}", record.aftermath.momentum_delta),
+                    p.panel_alt,
+                    p.ink,
+                );
+            });
+            ui.add_space(8.0);
+            ui.label(tiny("BATTLE SUMMARY", p));
+            ui.label(
+                egui::RichText::new(operation_synopsis(record))
+                    .size(13.0)
+                    .color(p.ink),
+            );
+            if let Some(node_id) = &record.aftermath.control {
+                if let Some(node) = campaign.node(node_id) {
+                    ui.label(tiny(
+                        format!("{} is now {}", node.name, control_label(node.control)),
+                        p,
+                    ));
+                }
+            }
+        });
+
+        ui.add_space(10.0);
+        ui.horizontal(|ui| {
+            let next = egui::Button::new(
+                egui::RichText::new("Next turn")
+                    .strong()
+                    .color(egui::Color32::from_rgb(34, 24, 13)),
+            )
+            .fill(p.sand);
+            if ui.add(next).clicked() {
+                self.campaign_screen = CampaignScreen::WarRoom;
+            }
+            if ui.button("Read the chronicle").clicked() {
+                self.campaign_screen = CampaignScreen::Chronicle;
+            }
+        });
+    }
+
+    fn campaign_chronicle_ui(&mut self, ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
+        ui.horizontal(|ui| {
+            ui.label(tiny("CAMPAIGN · CHRONICLE", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Back to war room").clicked() {
+                    self.campaign_screen = CampaignScreen::WarRoom;
+                }
+            });
+        });
+        ui.add_space(3.0);
+        ui.label(
+            egui::RichText::new("A short war, written down")
+                .size(28.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.label(
+            egui::RichText::new(format!(
+                "{} · {} operations",
+                campaign.name,
+                campaign.operations.len()
+            ))
+            .size(12.0)
+            .color(p.muted),
+        );
+
+        ui.add_space(10.0);
+        card(p).show(ui, |ui| {
+            if campaign.chronicle.is_empty() {
+                ui.label(
+                    egui::RichText::new("No dispatches yet. Fight an operation first.")
+                        .size(14.0)
+                        .color(p.muted),
+                );
+            } else {
+                for line in &campaign.chronicle {
+                    ui.label(egui::RichText::new(line).size(13.0).color(p.ink));
+                    ui.add_space(4.0);
+                }
+            }
+        });
+
+        ui.add_space(8.0);
+        ui.horizontal(|ui| {
+            if ui.button("Copy chronicle as Markdown").clicked() {
+                let mut text = format!("# {}\n\n", campaign.name);
+                for line in &campaign.chronicle {
+                    text.push_str("- ");
+                    text.push_str(line);
+                    text.push('\n');
+                }
+                ui.ctx().copy_text(text);
+            }
+            if ui.button("Back to war room").clicked() {
+                self.campaign_screen = CampaignScreen::WarRoom;
+            }
+        });
     }
 
     fn dogfight_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -2758,6 +3337,256 @@ impl DrumfireApp {
     }
 }
 
+fn formation_for(campaign: &Campaign, kind: OperationKind) -> Option<&Formation> {
+    let branch = match kind {
+        OperationKind::Frontlines => Branch::Ground,
+        OperationKind::Dogfight => Branch::Air,
+        OperationKind::Naval => Branch::Naval,
+    };
+    campaign
+        .formations
+        .iter()
+        .find(|formation| formation.branch == branch)
+}
+
+fn formation_card(ui: &mut egui::Ui, p: &Palette, formation: &Formation) {
+    ui.label(tiny(branch_label(formation.branch).to_uppercase(), p));
+    ui.label(
+        egui::RichText::new(&formation.name)
+            .size(13.0)
+            .strong()
+            .color(p.ink),
+    );
+    ui.add_space(4.0);
+    metric_bar(ui, p, "Strength", formation.strength);
+    metric_bar(ui, p, "Morale", formation.morale);
+    metric_bar(ui, p, "Supply", formation.supply);
+}
+
+fn metric_bar(ui: &mut egui::Ui, p: &Palette, label: &str, value: u8) {
+    ui.horizontal(|ui| {
+        ui.label(egui::RichText::new(label).size(8.5).color(p.muted));
+        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+            ui.label(
+                egui::RichText::new(value.to_string())
+                    .size(8.5)
+                    .color(p.muted),
+            );
+        });
+    });
+    let (rect, _) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width().max(30.0), 5.0),
+        egui::Sense::hover(),
+    );
+    ui.painter()
+        .rect_filled(rect, egui::CornerRadius::same(3), p.line);
+    let width = rect.width() * (value.min(100) as f32 / 100.0);
+    ui.painter().rect_filled(
+        egui::Rect::from_min_max(rect.min, egui::pos2(rect.left() + width, rect.max.y)),
+        egui::CornerRadius::same(3),
+        p.sand,
+    );
+}
+
+fn branch_label(branch: Branch) -> &'static str {
+    match branch {
+        Branch::Ground => "Ground",
+        Branch::Air => "Air",
+        Branch::Naval => "Naval",
+        Branch::Reserve => "Reserve",
+    }
+}
+
+fn node_kind_label(kind: NodeKind) -> &'static str {
+    match kind {
+        NodeKind::Ridge => "ridge",
+        NodeKind::Airbase => "airbase",
+        NodeKind::Port => "port",
+    }
+}
+
+fn control_label(control: Control) -> &'static str {
+    match control {
+        Control::Player => "player",
+        Control::Enemy => "enemy",
+        Control::Contested => "contested",
+    }
+}
+
+fn control_color(control: Control, p: &Palette) -> egui::Color32 {
+    match control {
+        Control::Player => p.sand,
+        Control::Enemy => p.blue,
+        Control::Contested => p.muted,
+    }
+}
+
+fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
+    let (rect, _) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width().max(320.0), 320.0),
+        egui::Sense::hover(),
+    );
+    let painter = ui.painter();
+    painter.rect_filled(rect, egui::CornerRadius::same(14), p.panel_alt);
+
+    for step in 1..4 {
+        let x = rect.left() + rect.width() * step as f32 / 4.0;
+        painter.line_segment(
+            [egui::pos2(x, rect.top()), egui::pos2(x, rect.bottom())],
+            egui::Stroke::new(1.0, p.line),
+        );
+    }
+    for step in 1..3 {
+        let y = rect.top() + rect.height() * step as f32 / 3.0;
+        painter.line_segment(
+            [egui::pos2(rect.left(), y), egui::pos2(rect.right(), y)],
+            egui::Stroke::new(1.0, p.line),
+        );
+    }
+
+    let position = |id: &str| -> egui::Pos2 {
+        let (x, y) = match id {
+            "vantage" => (0.18, 0.60),
+            "halcyon" => (0.53, 0.22),
+            "callas" => (0.53, 0.79),
+            _ => (0.5, 0.5),
+        };
+        egui::pos2(
+            rect.left() + rect.width() * x,
+            rect.top() + rect.height() * y,
+        )
+    };
+
+    for node in &campaign.nodes {
+        let start = position(&node.id);
+        for connection in &node.connections {
+            painter.line_segment(
+                [start, position(connection)],
+                egui::Stroke::new(1.4, p.line),
+            );
+        }
+    }
+
+    for node in &campaign.nodes {
+        let center = position(&node.id);
+        let card = egui::Rect::from_center_size(center, egui::vec2(182.0, 78.0));
+        let tone = control_color(node.control, p);
+        painter.rect_filled(card.expand(2.0), egui::CornerRadius::same(10), tone);
+        painter.rect_filled(card, egui::CornerRadius::same(9), p.panel);
+        painter.circle_filled(egui::pos2(card.left() + 13.0, card.top() + 15.0), 3.5, tone);
+        painter.text(
+            egui::pos2(card.left() + 23.0, card.top() + 9.0),
+            egui::Align2::LEFT_TOP,
+            &node.name,
+            egui::FontId::proportional(13.0),
+            p.ink,
+        );
+        painter.text(
+            egui::pos2(card.left() + 12.0, card.top() + 32.0),
+            egui::Align2::LEFT_TOP,
+            format!(
+                "{} · {}",
+                node_kind_label(node.kind),
+                control_label(node.control)
+            ),
+            egui::FontId::proportional(9.0),
+            p.muted,
+        );
+        painter.text(
+            egui::pos2(card.left() + 12.0, card.top() + 50.0),
+            egui::Align2::LEFT_TOP,
+            if node.objective {
+                "OBJECTIVE"
+            } else {
+                "sector"
+            },
+            egui::FontId::monospace(8.0),
+            if node.objective { tone } else { p.muted },
+        );
+    }
+
+    painter.text(
+        egui::pos2(rect.left() + 12.0, rect.bottom() - 18.0),
+        egui::Align2::LEFT_BOTTOM,
+        "KESTREL COAST",
+        egui::FontId::monospace(9.0),
+        p.muted,
+    );
+}
+
+fn stakes_for(kind: OperationKind) -> &'static str {
+    match kind {
+        OperationKind::Frontlines => {
+            "Break the Vantage Ridge line. The road inland opens only if the ridge falls."
+        }
+        OperationKind::Dogfight => {
+            "Sweep Halcyon's skies. Air superiority makes every later ground and naval operation safer."
+        }
+        OperationKind::Naval => {
+            "Open Port Callas. The port restores supply and gives the coalition a sea route for the next push."
+        }
+    }
+}
+
+fn cross_mode_text(campaign: &Campaign, kind: OperationKind) -> String {
+    match kind {
+        OperationKind::Frontlines => {
+            "A win takes Vantage Ridge and opens the road to Halcyon and Callas. Losses stay with Old Ironsides.".to_string()
+        }
+        OperationKind::Dogfight => format!(
+            "Air superiority is {}. A win raises it and adds +2 air cover to Salt Watch's naval operation.",
+            campaign.air_superiority()
+        ),
+        OperationKind::Naval => {
+            if campaign.air_superiority() >= 60 {
+                format!(
+                    "Air superiority at {} grants +2 air cover to the fleet. A win restores supply and secures the port.",
+                    campaign.air_superiority()
+                )
+            } else {
+                "Without air superiority the fleet fights at baseline air cover. Taking Halcyon first would help."
+                    .to_string()
+            }
+        }
+    }
+}
+
+fn operation_synopsis(record: &OperationRecord) -> String {
+    match &record.log {
+        OperationLog::Frontlines(log) => format!(
+            "{} days · {} / {} objectives · {} sectors captured",
+            log.days.len(),
+            log.result.objectives_captured,
+            log.result.objectives_total,
+            log.result
+                .sectors
+                .iter()
+                .filter(|sector| sector.captured)
+                .count()
+        ),
+        OperationLog::Dogfight(log) => {
+            let kills: u32 = log
+                .passes
+                .iter()
+                .map(|pass| pass.attacker_kills as u32 + pass.defender_kills as u32)
+                .sum();
+            format!(
+                "{} passes · {} kills · aircraft remaining {} / {}",
+                log.passes.len(),
+                kills,
+                log.result.final_aircraft.attacker,
+                log.result.final_aircraft.defender
+            )
+        }
+        OperationLog::Naval(log) => format!(
+            "{} salvos · ships remaining {} / {}",
+            log.salvos.len(),
+            log.result.final_ships.attacker,
+            log.result.final_ships.defender
+        ),
+    }
+}
+
 fn front_force_ui(ui: &mut egui::Ui, label: &str, form: &mut FrontForceForm, p: &Palette) {
     ui.heading(label);
     egui::Grid::new(format!("{label}_front_identity"))
@@ -3235,5 +4064,28 @@ mod tests {
         app.run_current();
         assert!(app.error.is_none());
         assert!(app.frontline_log.is_some());
+    }
+
+    #[test]
+    fn campaign_demo_opens_to_war_room() {
+        let app = DrumfireApp::demo_campaign();
+        assert!(app.campaign_active);
+        let campaign = app.campaign.as_ref().unwrap();
+        assert_eq!(campaign.operations.len(), 2);
+    }
+
+    #[test]
+    fn campaign_launch_shows_aftermath() {
+        let mut app = DrumfireApp::default();
+        app.open_campaign();
+        app.launch_campaign_operation(OperationKind::Naval);
+        assert!(app.error.is_none());
+        assert!(matches!(app.campaign_screen, CampaignScreen::Aftermath(_)));
+    }
+
+    #[test]
+    fn aftermath_demo_starts_in_aftermath() {
+        let app = DrumfireApp::demo_campaign_aftermath();
+        assert!(matches!(app.campaign_screen, CampaignScreen::Aftermath(_)));
     }
 }

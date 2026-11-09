@@ -594,6 +594,7 @@ dependencies = [
 name = "drumfire-gui"
 version = "0.1.0"
 dependencies = [
+ "drumfire-campaign",
  "drumfire-core",
  "drumfire-model",
  "drumfire-ns",

@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-73_passing-3FA796?style=flat-square&labelColor=1A120B" alt="73 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-76_passing-3FA796?style=flat-square&labelColor=1A120B" alt="76 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,10 +69,9 @@
 
 </div>
 
-**Status:** Phase 8 — all five battle modes plus the **Halcyon Sweep** campaign
-slice: deterministic core, CLI, egui desktop UI, read-only NationStates import.
-The campaign war-room GUI is next. No account login, no write actions, no
-credentials.
+**Status:** Phase 9 — all five battle modes plus the **Halcyon Sweep** campaign
+with its war-room GUI: deterministic core, CLI, egui desktop UI, and read-only
+NationStates import. No account login, no write actions, no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -199,6 +198,17 @@ The first campaign slice is **The Halcyon Sweep**: three nodes, three named
 formations, and Frontlines → Dogfight → Naval. Air superiority earned in the
 dogfight raises naval air cover, and losses persist into the next operation.
 Full design: [`docs/campaign.md`](docs/campaign.md).
+
+<div align="center">
+  <img src="docs/campaign.png" alt="Drumfire campaign war room" width="92%" />
+</div>
+
+The war room includes the paper map, resource and formation rails, operation
+briefings, after-action reports, and the campaign chronicle. Run the GUI with:
+
+```sh
+cargo run -p drumfire-gui -- --demo-campaign
+```
 
 Override the mode on any input:
 

@@ -15,6 +15,7 @@ path = "src/main.rs"
 drumfire-model = { path = "../model" }
 drumfire-core = { path = "../core" }
 drumfire-ns = { path = "../ns" }
+drumfire-campaign = { path = "../campaign" }
 eframe.workspace = true
 serde_json.workspace = true
 getrandom.workspace = true

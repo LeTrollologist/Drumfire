@@ -202,9 +202,9 @@ Do not build six shallow modes at once. Build vertical slices:
    readiness, CLI `naval run/replay`, GUI screen.
 4. **Frontlines** — ✅ done. Sectors, reserves, fortifications, objective
    capture, CLI `frontline run/replay`, GUI sector board.
-5. **Campaign** — ✅ CLI slice done: three nodes, three formations, Frontlines →
-   Dogfight → Naval, persistent resources, campaign replay. The war-room GUI and
-   full seven-node theater are planned.
+5. **Campaign** — ✅ slice done in CLI and GUI: three nodes, three formations,
+   Frontlines → Dogfight → Naval, persistent resources, campaign replay, war
+   room and chronicle. The full seven-node theater is planned.
 
 Rough effort, part-time:
 

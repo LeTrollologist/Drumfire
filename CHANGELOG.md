@@ -31,6 +31,8 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - Frontline mode: sectors, reserves, fortifications, objectives, daily logs,
   `frontline run/replay` CLI commands, GUI sector board, and a committed
   fixture/replay test.
+- Campaign war-room GUI: paper map, resource and formation rails, operation
+  briefings, after-action reports, chronicle export, and a three-operation demo.
 - Campaign slice: **The Halcyon Sweep** with three nodes, three named formations,
   persistent will/supply/intel/momentum, Frontlines/Dogfight/Naval operation
   adapters, cross-mode air-cover bonus, campaign log, and exact replay.
