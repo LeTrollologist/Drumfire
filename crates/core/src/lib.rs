@@ -13,6 +13,7 @@ use sha2::{Digest, Sha256};
 use thiserror::Error;
 
 pub mod dogfight;
+pub mod naval;
 
 /// Weight of the morale term in the strength score.
 pub const W_MORALE: f64 = 0.025;

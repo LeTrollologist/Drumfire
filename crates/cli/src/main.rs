@@ -7,11 +7,12 @@ use clap::{Parser, Subcommand};
 use drumfire_core::dogfight::{
     classify_dogfight, replay_dogfight, simulate_dogfight, DogfightEnding, DogfightLog,
 };
+use drumfire_core::naval::{classify_naval, replay_naval, simulate_naval, NavalEnding, NavalLog};
 use drumfire_core::{
     classify, initial_win_probability, replay, simulate, strength_breakdown, BattleLog, Ending,
     Side, Winner,
 };
-use drumfire_model::{BattleInput, DogfightInput, Mode, Seed};
+use drumfire_model::{BattleInput, DogfightInput, Mode, NavalInput, Seed};
 use serde::de::DeserializeOwned;
 
 #[derive(Debug, Parser)]
@@ -74,6 +75,11 @@ enum Command {
         #[command(subcommand)]
         command: AirCommand,
     },
+    /// Run or verify a naval action.
+    Naval {
+        #[command(subcommand)]
+        command: NavalCommand,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -95,6 +101,32 @@ enum AirCommand {
     /// Verify a saved dogfight log by re-simulating it.
     Replay {
         /// Path to a dogfight log JSON produced by `air run --out`.
+        log: PathBuf,
+        /// Print the verified log as JSON.
+        #[arg(long)]
+        json: bool,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+enum NavalCommand {
+    /// Resolve a naval action from a JSON input file.
+    Run {
+        /// Path to the naval input JSON.
+        input: PathBuf,
+        /// Override the input seed with 64 hex characters, or `random`.
+        #[arg(long)]
+        seed: Option<String>,
+        /// Print the full naval log as JSON.
+        #[arg(long)]
+        json: bool,
+        /// Also write the full naval log to this path.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Verify a saved naval log by re-simulating it.
+    Replay {
+        /// Path to a naval log JSON produced by `naval run --out`.
         log: PathBuf,
         /// Print the verified log as JSON.
         #[arg(long)]
@@ -187,6 +219,39 @@ fn main() -> Result<()> {
                     println!("Dogfight replay verified.");
                     println!();
                     print_dogfight(&verified);
+                }
+            }
+        },
+        Command::Naval { command } => match command {
+            NavalCommand::Run {
+                input,
+                seed,
+                json,
+                out,
+            } => {
+                let mut input: NavalInput = read_json(&input)?;
+                if let Some(seed) = seed {
+                    input.seed = parse_seed(&seed)?;
+                }
+                let log = simulate_naval(&input)?;
+                if let Some(path) = out {
+                    write_json(&path, &log)?;
+                }
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&log)?);
+                } else {
+                    print_naval(&log);
+                }
+            }
+            NavalCommand::Replay { log, json } => {
+                let log: NavalLog = read_json(&log)?;
+                let verified = replay_naval(&log)?;
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&verified)?);
+                } else {
+                    println!("Naval replay verified.");
+                    println!();
+                    print_naval(&verified);
                 }
             }
         },
@@ -298,6 +363,74 @@ fn print_narrative(log: &BattleLog) {
         "Final morale: {} / {}",
         log.result.final_morale.attacker, log.result.final_morale.defender
     );
+}
+
+fn print_naval(log: &NavalLog) {
+    let a = &log.input.attacker.name;
+    let d = &log.input.defender.name;
+
+    println!("Naval action: {a} (attacker) vs {d} (defender)");
+    println!("Seed: {}", log.input.seed.to_hex());
+    println!("Input hash: {}", log.input_hash);
+    println!();
+
+    for s in &log.salvos {
+        println!(
+            "Salvo {:>2}: {:<8} p={:5.1}% roll={:.3}  sunk {:>2}/{:<2}  ships {:>2}/{:<2}  readiness {:>3}/{:<3}",
+            s.salvo,
+            side_name(s.salvo_winner),
+            s.attacker_win_probability * 100.0,
+            s.roll,
+            s.attacker_sunk,
+            s.defender_sunk,
+            s.attacker_ships_after,
+            s.defender_ships_after,
+            s.attacker_readiness_after,
+            s.defender_readiness_after
+        );
+    }
+
+    println!();
+    let outcome = classify_naval(log);
+    match log.result.winner {
+        Winner::Draw => println!(
+            "Result: draw — {} after {} salvos.",
+            outcome.label(),
+            log.salvos.len()
+        ),
+        winner => println!(
+            "Result: {} — {} after {} salvos.",
+            naval_winner(winner, log),
+            outcome.label(),
+            log.salvos.len()
+        ),
+    }
+    println!("Ending: {}.", naval_ending(log.result.ending));
+    println!(
+        "Final ships: {} / {}",
+        log.result.final_ships.attacker, log.result.final_ships.defender
+    );
+    println!(
+        "Final readiness: {} / {}",
+        log.result.final_readiness.attacker, log.result.final_readiness.defender
+    );
+}
+
+fn naval_winner(winner: Winner, log: &NavalLog) -> &str {
+    match winner {
+        Winner::Attacker => &log.input.attacker.name,
+        Winner::Defender => &log.input.defender.name,
+        Winner::Draw => "Draw",
+    }
+}
+
+fn naval_ending(ending: NavalEnding) -> &'static str {
+    match ending {
+        NavalEnding::Sunk => "fleet sunk",
+        NavalEnding::Withdrawal => "withdrawal",
+        NavalEnding::MaxSalvos => "salvo cap",
+        NavalEnding::Draw => "draw",
+    }
 }
 
 fn print_dogfight(log: &DogfightLog) {

@@ -1,0 +1,30 @@
+{
+  "mode": "naval",
+  "attacker": {
+    "name": "Red Fleet",
+    "ships": 6,
+    "hull_quality": 6,
+    "sensors": 6,
+    "weapons": 7,
+    "air_cover": 5,
+    "damage_control": 5,
+    "readiness": 72
+  },
+  "defender": {
+    "name": "Blue Fleet",
+    "ships": 8,
+    "hull_quality": 7,
+    "sensors": 6,
+    "weapons": 6,
+    "air_cover": 6,
+    "damage_control": 5,
+    "readiness": 68
+  },
+  "config": {
+    "max_salvos": 8,
+    "scale": 2.0,
+    "hit_rate": 0.14,
+    "readiness_break": 20
+  },
+  "seed": "606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f"
+}

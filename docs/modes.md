@@ -1,7 +1,7 @@
 # Drumfire modes — design proposal
 
-**Status:** framework implemented; **Skirmish**, **Battle**, and **Dogfight** are
-playable. **Frontlines**, **Naval**, and **Campaign** are reserved/planned. This
+**Status:** framework implemented; **Skirmish**, **Battle**, **Dogfight**, and
+**Naval** are playable. **Frontlines** and **Campaign** are reserved/planned. This
 document defines the mode model before the engine grows incompatible input
 schemas.
 
@@ -16,7 +16,7 @@ battle. The requested modes are not variations of that model:
 | **Battle** | Ground, large | Troops | Hours; a general engagement | Annihilation, rout, objective, or exhaustion | **Implemented** |
 | **Frontlines** | Ground, spatial | Battalions/sectors | Days; sector pressure | Break the line, take objectives, collapse the front | Planned |
 | **Dogfight** | Air | Aircraft/sorties | Minutes; a pass or missile exchange | Kills, drive-off, or protect the mission package | **Implemented** |
-| **Naval** | Sea | Ships/tonnage | Hours; detection and salvos | Sink/cripple, drive off, or protect the convoy | Planned |
+| **Naval** | Sea | Ships/tonnage | Hours; detection and salvos | Sink/cripple, drive off, or protect the convoy | **Implemented** |
 | **Campaign** | Meta | Battles, formations, supply | Weeks/months | Strategic objectives across multiple battles | Planned |
 
 A single `forces: int` field cannot represent troops, aircraft, ships, and
@@ -197,7 +197,8 @@ Do not build six shallow modes at once. Build vertical slices:
    profiles, mode picker, CLI `--mode`, mode-aware labels, replay tests.
 2. **Dogfight** — ✅ done. Individual aircraft, cohesion, pilot/airframe/
    weapons/radar/support factors, pass log, CLI `air run/replay`, GUI screen.
-3. **Naval** — individual ships, detection, salvos, damage.
+3. **Naval** — ✅ done. Individual ships, detection, salvos, damage control,
+   readiness, CLI `naval run/replay`, GUI screen.
 4. **Frontlines** — sectors, reserves, breakthroughs; the biggest model change.
 5. **Campaign** — persistent state over the modes that exist.
 
@@ -208,7 +209,7 @@ Rough effort, part-time:
 | Framework + ground refactor | 2–3 days | done |
 | Skirmish + Battle polish | ~1 week | done |
 | Dogfight | 1–2 weeks | done |
-| Naval | 1–2 weeks | planned |
+| Naval | 1–2 weeks | done |
 | Frontlines | 2–3 weeks | planned |
 | Campaign | 2–3 weeks | planned |
 
@@ -223,6 +224,9 @@ Implemented in this slice:
 - Committed Battle and Skirmish logs with replay tests.
 - Dogfight engine with aircraft, cohesion, pilot/airframe/weapons/radar/support,
   pass logs, `air run/replay` CLI commands, GUI screen, and a committed fixture.
+- Naval engine with ships, hulls, sensors, weapons, air cover, damage control,
+  readiness, salvo logs, `naval run/replay` CLI commands, GUI screen, and a
+  committed fixture.
 - Planned modes are rejected by validation with a clear error rather than being
   silently simulated as Battle.
 

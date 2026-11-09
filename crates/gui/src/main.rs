@@ -6,18 +6,20 @@ use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
 use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
+use drumfire_core::naval::{classify_naval, simulate_naval, NavalEnding, NavalLog};
 use drumfire_core::{
     classify, initial_win_probability, simulate, strength_breakdown, BattleLog, Ending, RoundLog,
     Side, Winner,
 };
 use drumfire_model::{
-    AirForce, AircraftCount, BattleConfig, BattleInput, DogfightConfig, DogfightInput, ForceCount,
-    Mode, Morale, Rating, Seed, TeamInput,
+    AirForce, AircraftCount, BattleConfig, BattleInput, DogfightConfig, DogfightInput, Fleet,
+    ForceCount, Mode, Morale, NavalConfig, NavalInput, Rating, Seed, ShipCount, TeamInput,
 };
 use drumfire_ns::{suggested_forces, NationSummary};
 use eframe::egui;
 
 fn main() -> eframe::Result<()> {
+    let demo_naval = std::env::args().any(|arg| arg == "--demo-naval");
     let demo_dogfight = std::env::args().any(|arg| arg == "--demo-dogfight");
     let demo =
         std::env::args().any(|arg| arg == "--demo") || std::env::var_os("DRUMFIRE_DEMO").is_some();
@@ -34,7 +36,9 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(move |cc| {
             apply_theme(&cc.egui_ctx, Theme::Paper);
-            let app = if demo_dogfight {
+            let app = if demo_naval {
+                DrumfireApp::demo_naval()
+            } else if demo_dogfight {
                 DrumfireApp::demo_dogfight()
             } else if demo {
                 DrumfireApp::demo()
@@ -278,6 +282,62 @@ impl AirForceForm {
     }
 }
 
+#[derive(Debug, Clone)]
+struct FleetForm {
+    name: String,
+    ships: u8,
+    hull_quality: u8,
+    sensors: u8,
+    weapons: u8,
+    air_cover: u8,
+    damage_control: u8,
+    readiness: i32,
+}
+
+impl FleetForm {
+    fn blank(name: &str, ships: u8) -> Self {
+        Self {
+            name: name.to_string(),
+            ships,
+            hull_quality: 6,
+            sensors: 6,
+            weapons: 6,
+            air_cover: 5,
+            damage_control: 5,
+            readiness: 70,
+        }
+    }
+
+    fn from_fleet(fleet: &Fleet) -> Self {
+        Self {
+            name: fleet.name.clone(),
+            ships: fleet.ships.get(),
+            hull_quality: fleet.hull_quality.get(),
+            sensors: fleet.sensors.get(),
+            weapons: fleet.weapons.get(),
+            air_cover: fleet.air_cover.get(),
+            damage_control: fleet.damage_control.get(),
+            readiness: fleet.readiness.get() as i32,
+        }
+    }
+
+    fn to_fleet(&self) -> Result<Fleet, String> {
+        let fleet = Fleet {
+            name: self.name.clone(),
+            ships: ShipCount::new(self.ships).map_err(|err| err.to_string())?,
+            hull_quality: Rating::new(self.hull_quality).map_err(|err| err.to_string())?,
+            sensors: Rating::new(self.sensors).map_err(|err| err.to_string())?,
+            weapons: Rating::new(self.weapons).map_err(|err| err.to_string())?,
+            air_cover: Rating::new(self.air_cover).map_err(|err| err.to_string())?,
+            damage_control: Rating::new(self.damage_control).map_err(|err| err.to_string())?,
+            readiness: Morale::new(self.readiness.clamp(0, 100) as u8)
+                .map_err(|err| err.to_string())?,
+        };
+        fleet.validate().map_err(|err| err.to_string())?;
+        Ok(fleet)
+    }
+}
+
 struct DrumfireApp {
     theme: Theme,
     applied_theme: Option<Theme>,
@@ -290,6 +350,11 @@ struct DrumfireApp {
     dogfight_config: DogfightConfig,
     dogfight_log: Option<DogfightLog>,
     selected_pass: Option<usize>,
+    naval_attacker: FleetForm,
+    naval_defender: FleetForm,
+    naval_config: NavalConfig,
+    naval_log: Option<NavalLog>,
+    selected_salvo: Option<usize>,
     config: BattleConfig,
     seed_hex: String,
     home_side: HomeSide,
@@ -322,6 +387,13 @@ impl DrumfireApp {
         app
     }
 
+    fn demo_naval() -> Self {
+        let mut app = Self::default();
+        app.load_naval_example();
+        app.run_current();
+        app
+    }
+
     fn from_input(input: &BattleInput) -> Self {
         let home_side = if input.attacker.home {
             HomeSide::Attacker
@@ -331,6 +403,7 @@ impl DrumfireApp {
             HomeSide::Neutral
         };
         let air = example_dogfight();
+        let naval = example_naval();
 
         Self {
             theme: Theme::Paper,
@@ -344,6 +417,11 @@ impl DrumfireApp {
             dogfight_config: air.config,
             dogfight_log: None,
             selected_pass: None,
+            naval_attacker: FleetForm::from_fleet(&naval.attacker),
+            naval_defender: FleetForm::from_fleet(&naval.defender),
+            naval_config: naval.config,
+            naval_log: None,
+            selected_salvo: None,
             config: input.config.clone(),
             seed_hex: input.seed.to_hex(),
             home_side,
@@ -404,6 +482,27 @@ impl DrumfireApp {
         Ok(input)
     }
 
+    fn build_naval(&self) -> Result<NavalInput, String> {
+        let attacker = self
+            .naval_attacker
+            .to_fleet()
+            .map_err(|err| format!("Attacker: {err}"))?;
+        let defender = self
+            .naval_defender
+            .to_fleet()
+            .map_err(|err| format!("Defender: {err}"))?;
+        let seed = Seed::from_hex(&self.seed_hex).map_err(|err| format!("Seed: {err}"))?;
+        let input = NavalInput {
+            mode: Mode::Naval,
+            attacker,
+            defender,
+            config: self.naval_config.clone(),
+            seed,
+        };
+        input.validate().map_err(|err| err.to_string())?;
+        Ok(input)
+    }
+
     fn run_current(&mut self) {
         if self.mode == Mode::Dogfight {
             match self.build_dogfight() {
@@ -422,6 +521,25 @@ impl DrumfireApp {
                 Err(err) => {
                     self.error = Some(err);
                     self.dogfight_log = None;
+                }
+            }
+        } else if self.mode == Mode::Naval {
+            match self.build_naval() {
+                Ok(input) => match simulate_naval(&input) {
+                    Ok(log) => {
+                        let middle = log.salvos.len() / 2;
+                        self.selected_salvo = Some(middle);
+                        self.naval_log = Some(log);
+                        self.error = None;
+                    }
+                    Err(err) => {
+                        self.error = Some(err.to_string());
+                        self.naval_log = None;
+                    }
+                },
+                Err(err) => {
+                    self.error = Some(err);
+                    self.naval_log = None;
                 }
             }
         } else {
@@ -490,6 +608,18 @@ impl DrumfireApp {
         self.error = None;
     }
 
+    fn load_naval_example(&mut self) {
+        let input = example_naval();
+        self.mode = Mode::Naval;
+        self.naval_attacker = FleetForm::from_fleet(&input.attacker);
+        self.naval_defender = FleetForm::from_fleet(&input.defender);
+        self.naval_config = input.config;
+        self.seed_hex = input.seed.to_hex();
+        self.naval_log = None;
+        self.selected_salvo = None;
+        self.error = None;
+    }
+
     fn reset(&mut self) {
         self.mode = Mode::Battle;
         self.attacker = TeamForm::blank("Attacker");
@@ -497,6 +627,9 @@ impl DrumfireApp {
         self.dogfight_attacker = AirForceForm::blank("Red Flight", 6);
         self.dogfight_defender = AirForceForm::blank("Blue Flight", 8);
         self.dogfight_config = DogfightConfig::default();
+        self.naval_attacker = FleetForm::blank("Red Fleet", 6);
+        self.naval_defender = FleetForm::blank("Blue Fleet", 8);
+        self.naval_config = NavalConfig::default();
         self.config = BattleConfig::default();
         self.home_side = HomeSide::Neutral;
         self.seed_hex = String::new();
@@ -506,6 +639,8 @@ impl DrumfireApp {
         self.selected_phase = None;
         self.dogfight_log = None;
         self.selected_pass = None;
+        self.naval_log = None;
+        self.selected_salvo = None;
         self.import_status = None;
         self.import_error = None;
     }
@@ -641,6 +776,8 @@ impl eframe::App for DrumfireApp {
                         ui.horizontal(|ui| {
                             ui.heading(if self.mode == Mode::Dogfight {
                                 "Dogfight setup"
+                            } else if self.mode == Mode::Naval {
+                                "Naval setup"
                             } else {
                                 "Battle setup"
                             });
@@ -661,6 +798,12 @@ impl eframe::App for DrumfireApp {
                             self.dogfight_setup_ui(ui, &p);
                             ui.add_space(8.0);
                             self.dogfight_config_ui(ui);
+                            ui.add_space(8.0);
+                            self.actions_ui(ui, &p);
+                        } else if self.mode == Mode::Naval {
+                            self.naval_setup_ui(ui, &p);
+                            ui.add_space(8.0);
+                            self.naval_config_ui(ui);
                             ui.add_space(8.0);
                             self.actions_ui(ui, &p);
                         } else {
@@ -704,7 +847,7 @@ impl DrumfireApp {
     fn mode_ui(&mut self, ui: &mut egui::Ui) {
         ui.horizontal(|ui| {
             ui.label("Mode");
-            for mode in [Mode::Skirmish, Mode::Battle, Mode::Dogfight] {
+            for mode in [Mode::Skirmish, Mode::Battle, Mode::Dogfight, Mode::Naval] {
                 if ui
                     .selectable_label(self.mode == mode, mode.label())
                     .clicked()
@@ -712,18 +855,18 @@ impl DrumfireApp {
                     self.mode = mode;
                     self.log = None;
                     self.dogfight_log = None;
+                    self.naval_log = None;
                     self.selected_phase = None;
                     self.selected_pass = None;
+                    self.selected_salvo = None;
                     self.error = None;
                 }
             }
         });
         ui.label(
-            egui::RichText::new(
-                "Frontlines, Naval, and Campaign are planned; their schemas are reserved.",
-            )
-            .small()
-            .weak(),
+            egui::RichText::new("Frontlines and Campaign are planned; their schemas are reserved.")
+                .small()
+                .weak(),
         );
     }
 
@@ -794,6 +937,47 @@ impl DrumfireApp {
                 ui.label(
                     egui::RichText::new(
                         "Passes are minutes of maneuvering; kills are whole aircraft.",
+                    )
+                    .small()
+                    .weak(),
+                );
+            });
+    }
+
+    fn naval_setup_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        card(p).show(ui, |ui| {
+            fleet_ui(ui, "Attacker", &mut self.naval_attacker, p);
+        });
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            fleet_ui(ui, "Defender", &mut self.naval_defender, p);
+        });
+    }
+
+    fn naval_config_ui(&mut self, ui: &mut egui::Ui) {
+        egui::CollapsingHeader::new("Naval rules")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.add(
+                    egui::Slider::new(&mut self.naval_config.max_salvos, 1..=20).text("Max salvos"),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.naval_config.scale, 0.1..=20.0)
+                        .text("Scale")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.naval_config.hit_rate, 0.0..=0.5)
+                        .text("Hit rate")
+                        .fixed_decimals(2),
+                );
+                ui.add(
+                    egui::Slider::new(&mut self.naval_config.readiness_break, 0..=100)
+                        .text("Withdraw readiness"),
+                );
+                ui.label(
+                    egui::RichText::new(
+                        "Salvos are detection-and-fire cycles; losses are whole ships.",
                     )
                     .small()
                     .weak(),
@@ -913,6 +1097,11 @@ impl DrumfireApp {
 
         if self.mode == Mode::Dogfight {
             self.dogfight_output_ui(ui, p);
+            return;
+        }
+
+        if self.mode == Mode::Naval {
+            self.naval_output_ui(ui, p);
             return;
         }
 
@@ -1728,6 +1917,375 @@ impl DrumfireApp {
             }
         });
     }
+
+    fn naval_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(log) = self.naval_log.clone() else {
+            self.naval_empty_state(ui, p);
+            return;
+        };
+
+        if self
+            .selected_salvo
+            .is_none_or(|index| index >= log.salvos.len())
+        {
+            self.selected_salvo = Some(log.salvos.len() / 2);
+        }
+
+        let winner = naval_winner_label(&log);
+        let outcome = classify_naval(&log);
+        let total_a_sunk: u32 = log.salvos.iter().map(|s| s.attacker_sunk as u32).sum();
+        let total_d_sunk: u32 = log.salvos.iter().map(|s| s.defender_sunk as u32).sum();
+
+        ui.horizontal(|ui| {
+            ui.label(tiny("NAVAL REPORT", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Copy log JSON").clicked() {
+                    if let Ok(json) = serde_json::to_string_pretty(&log) {
+                        ui.ctx().copy_text(json);
+                    }
+                }
+                ui.label(tiny("rules v1 · Naval", p));
+            });
+        });
+
+        ui.add_space(3.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.label(
+                egui::RichText::new(&log.input.attacker.name)
+                    .size(30.0)
+                    .strong()
+                    .color(p.sand),
+            );
+            ui.label(egui::RichText::new("vs").size(12.0).color(p.muted));
+            ui.label(
+                egui::RichText::new(&log.input.defender.name)
+                    .size(30.0)
+                    .strong()
+                    .color(p.blue),
+            );
+        });
+
+        ui.add_space(4.0);
+        ui.horizontal_wrapped(|ui| {
+            ui.label(egui::RichText::new(winner).size(18.0).strong().color(p.ink));
+            badge(ui, p, format!("· {}", outcome.label()), p.sand_soft, p.sand);
+            ui.label(tiny(
+                format!(
+                    "{} salvos · {}",
+                    log.salvos.len(),
+                    naval_ending_label(log.result.ending)
+                ),
+                p,
+            ));
+        });
+        ui.label(
+            egui::RichText::new(format!(
+                "seed {}   ·   hash {}",
+                log.input.seed.to_hex(),
+                log.input_hash
+            ))
+            .size(9.5)
+            .monospace()
+            .color(p.muted),
+        );
+
+        ui.add_space(12.0);
+        card(p).show(ui, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "ships {} / {}",
+                        log.result.final_ships.attacker, log.result.final_ships.defender
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!(
+                        "readiness {} / {}",
+                        log.result.final_readiness.attacker, log.result.final_readiness.defender
+                    ),
+                    p.panel_alt,
+                    p.ink,
+                );
+                badge(
+                    ui,
+                    p,
+                    format!("sunk {total_a_sunk} / {total_d_sunk}"),
+                    p.panel_alt,
+                    p.ink,
+                );
+                ui.label(tiny("attacker / defender", p));
+            });
+        });
+
+        ui.add_space(12.0);
+        card(p).show(ui, |ui| {
+            ui.horizontal(|ui| {
+                ui.label(tiny("SALVOS", p));
+                ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                    ui.label(tiny("click to inspect", p));
+                });
+            });
+            ui.add_space(2.0);
+            ui.horizontal_wrapped(|ui| {
+                for (index, salvo) in log.salvos.iter().enumerate() {
+                    let selected = self.selected_salvo == Some(index);
+                    let (rect, response) =
+                        ui.allocate_exact_size(egui::vec2(58.0, 54.0), egui::Sense::click());
+                    let fill = if selected {
+                        p.sand_soft
+                    } else if response.hovered() {
+                        p.panel
+                    } else {
+                        p.panel_alt
+                    };
+                    ui.painter()
+                        .rect_filled(rect, egui::CornerRadius::same(7), fill);
+                    let dot = match salvo.salvo_winner {
+                        Side::Attacker => p.sand,
+                        Side::Defender => p.blue,
+                    };
+                    ui.painter().circle_filled(
+                        egui::pos2(rect.left() + 10.0, rect.top() + 10.0),
+                        3.0,
+                        dot,
+                    );
+                    ui.painter().text(
+                        egui::pos2(rect.left() + 18.0, rect.top() + 9.0),
+                        egui::Align2::LEFT_CENTER,
+                        format!("{}", salvo.salvo),
+                        egui::FontId::proportional(9.0),
+                        p.muted,
+                    );
+                    ui.painter().text(
+                        egui::pos2(rect.center().x, rect.top() + 29.0),
+                        egui::Align2::CENTER_CENTER,
+                        format!("{}/{}", salvo.attacker_sunk, salvo.defender_sunk),
+                        egui::FontId::proportional(12.0),
+                        p.ink,
+                    );
+                    ui.painter().text(
+                        egui::pos2(rect.center().x, rect.top() + 44.0),
+                        egui::Align2::CENTER_CENTER,
+                        format!("{:.0}%", salvo.attacker_win_probability * 100.0),
+                        egui::FontId::proportional(8.0),
+                        p.muted,
+                    );
+                    if response.clicked() {
+                        self.selected_salvo = Some(index);
+                    }
+                    response.on_hover_text(format!(
+                        "Salvo {} · sunk {} / {}",
+                        salvo.salvo, salvo.attacker_sunk, salvo.defender_sunk
+                    ));
+                }
+            });
+        });
+
+        if let Some(index) = self
+            .selected_salvo
+            .filter(|index| *index < log.salvos.len())
+        {
+            let salvo = &log.salvos[index];
+            let winner = match salvo.salvo_winner {
+                Side::Attacker => &log.input.attacker.name,
+                Side::Defender => &log.input.defender.name,
+            };
+            let headline = match salvo.salvo_winner {
+                Side::Attacker => format!("{winner} controls the salvo"),
+                Side::Defender => format!("{winner} weathers the salvo"),
+            };
+            ui.add_space(12.0);
+            card(p).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label(tiny(
+                        format!("SALVO {} · {}", salvo.salvo, winner.to_uppercase()),
+                        p,
+                    ));
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.label(tiny(
+                            format!(
+                                "roll {:.3} · p {:.1}%",
+                                salvo.roll,
+                                salvo.attacker_win_probability * 100.0
+                            ),
+                            p,
+                        ));
+                    });
+                });
+                ui.label(
+                    egui::RichText::new(headline)
+                        .size(21.0)
+                        .strong()
+                        .color(p.ink),
+                );
+                ui.label(
+                    egui::RichText::new(format!(
+                        "{} sinks {}; {} sinks {}. Ships are now {} / {}; readiness {} / {}.",
+                        log.input.attacker.name,
+                        salvo.attacker_sunk,
+                        log.input.defender.name,
+                        salvo.defender_sunk,
+                        salvo.attacker_ships_after,
+                        salvo.defender_ships_after,
+                        salvo.attacker_readiness_after,
+                        salvo.defender_readiness_after
+                    ))
+                    .size(12.5)
+                    .color(p.muted),
+                );
+                ui.add_space(8.0);
+                ui.horizontal_wrapped(|ui| {
+                    badge(
+                        ui,
+                        p,
+                        format!("sunk {} / {}", salvo.attacker_sunk, salvo.defender_sunk),
+                        p.panel_alt,
+                        p.ink,
+                    );
+                    badge(
+                        ui,
+                        p,
+                        format!(
+                            "ships {} / {}",
+                            salvo.attacker_ships_after, salvo.defender_ships_after
+                        ),
+                        p.panel_alt,
+                        p.ink,
+                    );
+                    badge(
+                        ui,
+                        p,
+                        format!(
+                            "readiness {} / {}",
+                            salvo.attacker_readiness_after, salvo.defender_readiness_after
+                        ),
+                        p.panel_alt,
+                        p.ink,
+                    );
+                });
+            });
+        }
+
+        ui.add_space(8.0);
+        egui::CollapsingHeader::new("Full salvo log")
+            .default_open(false)
+            .show(ui, |ui| {
+                egui::Grid::new("naval_salvos")
+                    .striped(true)
+                    .num_columns(6)
+                    .spacing([12.0, 4.0])
+                    .show(ui, |ui| {
+                        for header in [
+                            "Salvo",
+                            "Winner",
+                            "A win p",
+                            "Sunk A/D",
+                            "Ships A/D",
+                            "Readiness A/D",
+                        ] {
+                            ui.strong(header);
+                        }
+                        ui.end_row();
+                        for salvo in &log.salvos {
+                            ui.monospace(salvo.salvo.to_string());
+                            ui.label(match salvo.salvo_winner {
+                                Side::Attacker => &log.input.attacker.name,
+                                Side::Defender => &log.input.defender.name,
+                            });
+                            ui.monospace(format!("{:.1}%", salvo.attacker_win_probability * 100.0));
+                            ui.monospace(format!(
+                                "{} / {}",
+                                salvo.attacker_sunk, salvo.defender_sunk
+                            ));
+                            ui.monospace(format!(
+                                "{} / {}",
+                                salvo.attacker_ships_after, salvo.defender_ships_after
+                            ));
+                            ui.monospace(format!(
+                                "{} / {}",
+                                salvo.attacker_readiness_after, salvo.defender_readiness_after
+                            ));
+                            ui.end_row();
+                        }
+                    });
+            });
+    }
+
+    fn naval_empty_state(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        ui.add_space(8.0);
+        card(p).show(ui, |ui| {
+            ui.label(tiny("NAVAL REPORT", p));
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new("No action resolved yet.")
+                    .size(30.0)
+                    .strong()
+                    .color(p.ink),
+            );
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new(
+                    "Set two fleets, choose their hulls, sensors, weapons, air cover, and damage control, then run the salvos.",
+                )
+                .size(13.0)
+                .color(p.muted),
+            );
+            ui.add_space(12.0);
+            let run = egui::Button::new(
+                egui::RichText::new("Run the example naval action")
+                    .strong()
+                    .color(egui::Color32::from_rgb(34, 24, 13)),
+            )
+            .fill(p.sand);
+            if ui.add(run).clicked() {
+                self.load_naval_example();
+                self.run_current();
+            }
+        });
+    }
+}
+
+fn fleet_ui(ui: &mut egui::Ui, label: &str, form: &mut FleetForm, p: &Palette) {
+    ui.heading(label);
+    egui::Grid::new(format!("{label}_fleet_identity"))
+        .num_columns(2)
+        .spacing([8.0, 4.0])
+        .show(ui, |ui| {
+            ui.label("Name");
+            ui.add(egui::TextEdit::singleline(&mut form.name).desired_width(280.0));
+            ui.end_row();
+
+            ui.label("Ships");
+            ui.add(egui::DragValue::new(&mut form.ships).range(1..=32));
+            ui.end_row();
+        });
+
+    ui.add(egui::Slider::new(&mut form.readiness, 0..=100).text("Readiness"));
+    ui.add_space(3.0);
+    egui::Grid::new(format!("{label}_fleet_ratings"))
+        .num_columns(5)
+        .spacing([6.0, 3.0])
+        .show(ui, |ui| {
+            for name in ["Hull", "Sensors", "Weapons", "Air", "Damage"] {
+                ui.label(egui::RichText::new(name).size(9.0).color(p.muted));
+            }
+            ui.end_row();
+            for value in [
+                &mut form.hull_quality,
+                &mut form.sensors,
+                &mut form.weapons,
+                &mut form.air_cover,
+                &mut form.damage_control,
+            ] {
+                ui.add(egui::DragValue::new(value).range(1..=10).speed(1.0));
+            }
+        });
 }
 
 fn air_force_ui(ui: &mut egui::Ui, label: &str, form: &mut AirForceForm, p: &Palette) {
@@ -1976,6 +2534,23 @@ fn paint_sparkline(
     );
 }
 
+fn naval_winner_label(log: &NavalLog) -> String {
+    match log.result.winner {
+        Winner::Attacker => format!("{} wins", log.input.attacker.name),
+        Winner::Defender => format!("{} wins", log.input.defender.name),
+        Winner::Draw => "Draw".to_string(),
+    }
+}
+
+fn naval_ending_label(ending: NavalEnding) -> &'static str {
+    match ending {
+        NavalEnding::Sunk => "fleet sunk",
+        NavalEnding::Withdrawal => "withdrawal",
+        NavalEnding::MaxSalvos => "salvo cap",
+        NavalEnding::Draw => "draw",
+    }
+}
+
 fn dogfight_winner_label(log: &DogfightLog) -> String {
     match log.result.winner {
         Winner::Attacker => format!("{} wins", log.input.attacker.name),
@@ -2018,6 +2593,11 @@ fn example_input() -> BattleInput {
 fn example_dogfight() -> DogfightInput {
     serde_json::from_str(include_str!("../../../fixtures/dogfight.json"))
         .expect("committed dogfight fixture must be valid")
+}
+
+fn example_naval() -> NavalInput {
+    serde_json::from_str(include_str!("../../../fixtures/naval.json"))
+        .expect("committed naval fixture must be valid")
 }
 
 #[cfg(test)]
@@ -2066,5 +2646,16 @@ mod tests {
         app.run_current();
         assert!(app.error.is_none());
         assert!(app.dogfight_log.is_some());
+    }
+
+    #[test]
+    fn naval_mode_runs() {
+        let mut app = DrumfireApp {
+            mode: Mode::Naval,
+            ..DrumfireApp::default()
+        };
+        app.run_current();
+        assert!(app.error.is_none());
+        assert!(app.naval_log.is_some());
     }
 }

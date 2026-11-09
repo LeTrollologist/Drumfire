@@ -1,0 +1,145 @@
+{
+  "input": {
+    "mode": "naval",
+    "attacker": {
+      "name": "Red Fleet",
+      "ships": 6,
+      "hull_quality": 6,
+      "sensors": 6,
+      "weapons": 7,
+      "air_cover": 5,
+      "damage_control": 5,
+      "readiness": 72
+    },
+    "defender": {
+      "name": "Blue Fleet",
+      "ships": 8,
+      "hull_quality": 7,
+      "sensors": 6,
+      "weapons": 6,
+      "air_cover": 6,
+      "damage_control": 5,
+      "readiness": 68
+    },
+    "config": {
+      "max_salvos": 8,
+      "scale": 2.0,
+      "hit_rate": 0.14,
+      "readiness_break": 20
+    },
+    "seed": "606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f"
+  },
+  "input_hash": "896300b729060f612c951798e8019a5429df12a92a5d88beaf1cef9c25a269cc",
+  "salvos": [
+    {
+      "salvo": 1,
+      "attacker_strength": 3.485910149055313,
+      "defender_strength": 3.8572245773362193,
+      "attacker_win_probability": 0.4537185582042394,
+      "roll": 0.5889953204858089,
+      "salvo_winner": "defender",
+      "attacker_sunk": 0,
+      "defender_sunk": 1,
+      "attacker_ships_after": 5,
+      "defender_ships_after": 8,
+      "attacker_readiness_after": 64,
+      "defender_readiness_after": 72
+    },
+    {
+      "salvo": 2,
+      "attacker_strength": 3.1717594692280544,
+      "defender_strength": 3.9372245773362193,
+      "attacker_win_probability": 0.40546800767827457,
+      "roll": 0.6139370459586384,
+      "salvo_winner": "defender",
+      "attacker_sunk": 0,
+      "defender_sunk": 1,
+      "attacker_ships_after": 4,
+      "defender_ships_after": 8,
+      "attacker_readiness_after": 55,
+      "defender_readiness_after": 76
+    },
+    {
+      "salvo": 3,
+      "attacker_strength": 2.8094379124341002,
+      "defender_strength": 4.017224577336219,
+      "attacker_win_probability": 0.3534534666285602,
+      "roll": 0.8171975355501274,
+      "salvo_winner": "defender",
+      "attacker_sunk": 0,
+      "defender_sunk": 1,
+      "attacker_ships_after": 3,
+      "defender_ships_after": 8,
+      "attacker_readiness_after": 45,
+      "defender_readiness_after": 79
+    },
+    {
+      "salvo": 4,
+      "attacker_strength": 2.3862943611198904,
+      "defender_strength": 4.077224577336219,
+      "attacker_win_probability": 0.3003850189997155,
+      "roll": 0.2935232934932782,
+      "salvo_winner": "attacker",
+      "attacker_sunk": 1,
+      "defender_sunk": 0,
+      "attacker_ships_after": 3,
+      "defender_ships_after": 7,
+      "attacker_readiness_after": 48,
+      "defender_readiness_after": 72
+    },
+    {
+      "salvo": 5,
+      "attacker_strength": 2.4462943611198904,
+      "defender_strength": 3.8194415416798355,
+      "attacker_win_probability": 0.33479572810457886,
+      "roll": 0.3591305987433503,
+      "salvo_winner": "defender",
+      "attacker_sunk": 0,
+      "defender_sunk": 1,
+      "attacker_ships_after": 2,
+      "defender_ships_after": 7,
+      "attacker_readiness_after": 36,
+      "defender_readiness_after": 75
+    },
+    {
+      "salvo": 6,
+      "attacker_strength": 1.9186122886681096,
+      "defender_strength": 3.8794415416798356,
+      "attacker_win_probability": 0.2728095204446731,
+      "roll": 0.395888075053517,
+      "salvo_winner": "defender",
+      "attacker_sunk": 0,
+      "defender_sunk": 1,
+      "attacker_ships_after": 1,
+      "defender_ships_after": 7,
+      "attacker_readiness_after": 21,
+      "defender_readiness_after": 78
+    },
+    {
+      "salvo": 7,
+      "attacker_strength": 1.2131471805599454,
+      "defender_strength": 3.9394415416798356,
+      "attacker_win_probability": 0.2037292790700618,
+      "roll": 0.7227440928606497,
+      "salvo_winner": "defender",
+      "attacker_sunk": 0,
+      "defender_sunk": 1,
+      "attacker_ships_after": 0,
+      "defender_ships_after": 7,
+      "attacker_readiness_after": 0,
+      "defender_readiness_after": 81
+    }
+  ],
+  "result": {
+    "winner": "defender",
+    "ending": "sunk",
+    "final_ships": {
+      "attacker": 0,
+      "defender": 7
+    },
+    "final_readiness": {
+      "attacker": 0,
+      "defender": 81
+    }
+  }
+}

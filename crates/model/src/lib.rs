@@ -369,7 +369,10 @@ impl Mode {
 
     /// Whether this build can simulate the mode.
     pub fn is_supported(self) -> bool {
-        matches!(self, Mode::Skirmish | Mode::Battle | Mode::Dogfight)
+        matches!(
+            self,
+            Mode::Skirmish | Mode::Battle | Mode::Dogfight | Mode::Naval
+        )
     }
 
     /// Whether the mode uses the shared ground order of battle.
@@ -580,6 +583,157 @@ impl DogfightInput {
     }
 }
 
+/// Error returned when constructing a [`ShipCount`].
+#[derive(Debug, Error, PartialEq, Eq)]
+#[error("ship count must be between 1 and 32, got {0}")]
+pub struct ShipCountError(pub u8);
+
+/// A validated number of ships committed to a naval action.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[serde(try_from = "u8", into = "u8")]
+pub struct ShipCount(u8);
+
+impl ShipCount {
+    pub const MAX: u8 = 32;
+
+    pub fn new(value: u8) -> Result<Self, ShipCountError> {
+        if (1..=Self::MAX).contains(&value) {
+            Ok(Self(value))
+        } else {
+            Err(ShipCountError(value))
+        }
+    }
+
+    pub fn get(self) -> u8 {
+        self.0
+    }
+}
+
+impl TryFrom<u8> for ShipCount {
+    type Error = ShipCountError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}
+
+impl From<ShipCount> for u8 {
+    fn from(value: ShipCount) -> Self {
+        value.0
+    }
+}
+
+/// One side's naval order of battle.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct Fleet {
+    pub name: String,
+    pub ships: ShipCount,
+    /// Hull, armor, and damage resistance.
+    pub hull_quality: Rating,
+    /// Radar, sonar, electronic warfare, and fire control.
+    pub sensors: Rating,
+    /// Missiles, torpedoes, guns, and magazine depth.
+    pub weapons: Rating,
+    /// Carrier air cover, SAMs, and point defense.
+    pub air_cover: Rating,
+    /// Damage control, crew quality, and repair parties.
+    pub damage_control: Rating,
+    /// Readiness and formation cohesion.
+    pub readiness: Morale,
+}
+
+impl Fleet {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        let name = self.name.trim();
+        if name.is_empty() {
+            return Err(ValidationError::EmptyName);
+        }
+        if name.chars().count() > MAX_NAME_LEN {
+            return Err(ValidationError::NameTooLong { max: MAX_NAME_LEN });
+        }
+        Ok(())
+    }
+}
+
+/// Tunable naval parameters.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
+pub struct NavalConfig {
+    /// Hard cap on salvos. Range: 1..=20.
+    pub max_salvos: u32,
+    /// Logistic scale for the strength difference. Range: 0.1..=20.0.
+    pub scale: f64,
+    /// Base hit/sink intensity per salvo. Range: 0.0..=0.5.
+    pub hit_rate: f64,
+    /// A side at or below this readiness withdraws. Range: 0..=100.
+    pub readiness_break: u8,
+}
+
+impl Default for NavalConfig {
+    fn default() -> Self {
+        Self {
+            max_salvos: 8,
+            scale: 2.0,
+            hit_rate: 0.14,
+            readiness_break: 20,
+        }
+    }
+}
+
+impl NavalConfig {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        if !(1..=20).contains(&self.max_salvos) {
+            return Err(ValidationError::InvalidConfig(
+                "max_salvos must be between 1 and 20",
+            ));
+        }
+        if !self.scale.is_finite() || !(0.1..=20.0).contains(&self.scale) {
+            return Err(ValidationError::InvalidConfig(
+                "scale must be finite and between 0.1 and 20.0",
+            ));
+        }
+        if !self.hit_rate.is_finite() || !(0.0..=0.5).contains(&self.hit_rate) {
+            return Err(ValidationError::InvalidConfig(
+                "hit_rate must be finite and between 0.0 and 0.5",
+            ));
+        }
+        if self.readiness_break > 100 {
+            return Err(ValidationError::InvalidConfig(
+                "readiness_break must be between 0 and 100",
+            ));
+        }
+        Ok(())
+    }
+}
+
+fn naval_mode() -> Mode {
+    Mode::Naval
+}
+
+/// The complete, serializable input to one naval action.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NavalInput {
+    #[serde(default = "naval_mode")]
+    pub mode: Mode,
+    pub attacker: Fleet,
+    pub defender: Fleet,
+    #[serde(default)]
+    pub config: NavalConfig,
+    pub seed: Seed,
+}
+
+impl NavalInput {
+    pub fn validate(&self) -> Result<(), ValidationError> {
+        if self.mode != Mode::Naval {
+            return Err(ValidationError::UnsupportedMode(self.mode));
+        }
+        self.attacker.validate()?;
+        self.defender.validate()?;
+        self.config.validate()?;
+        Ok(())
+    }
+}
+
 /// Errors produced by model-level validation.
 #[derive(Debug, Error, PartialEq, Eq)]
 pub enum ValidationError {
@@ -758,6 +912,19 @@ mod tests {
         }
     }
 
+    fn fleet(name: &str, ships: u8) -> Fleet {
+        Fleet {
+            name: name.to_string(),
+            ships: ShipCount::new(ships).unwrap(),
+            hull_quality: Rating::new(6).unwrap(),
+            sensors: Rating::new(6).unwrap(),
+            weapons: Rating::new(6).unwrap(),
+            air_cover: Rating::new(5).unwrap(),
+            damage_control: Rating::new(5).unwrap(),
+            readiness: Morale::new(70).unwrap(),
+        }
+    }
+
     #[test]
     fn aircraft_count_rejects_zero_and_huge_counts() {
         assert!(AircraftCount::new(0).is_err());
@@ -793,6 +960,30 @@ mod tests {
     }
 
     #[test]
+    fn ship_count_rejects_zero_and_huge_counts() {
+        assert!(ShipCount::new(0).is_err());
+        assert!(ShipCount::new(33).is_err());
+        assert_eq!(ShipCount::new(1).unwrap().get(), 1);
+        assert_eq!(ShipCount::new(32).unwrap().get(), 32);
+    }
+
+    #[test]
+    fn naval_input_round_trips() {
+        let input = NavalInput {
+            mode: Mode::Naval,
+            attacker: fleet("Red Fleet", 6),
+            defender: fleet("Blue Fleet", 8),
+            config: NavalConfig::default(),
+            seed: Seed::from_u64(13),
+        };
+        input.validate().unwrap();
+        let json = serde_json::to_string(&input).unwrap();
+        assert!(json.contains("\"mode\":\"naval\""));
+        let parsed: NavalInput = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed, input);
+    }
+
+    #[test]
     fn mode_metadata_is_distinct() {
         assert_eq!(Mode::Skirmish.phase_label(), "Exchange");
         assert_eq!(Mode::Battle.phase_label(), "Phase");
@@ -801,7 +992,7 @@ mod tests {
         assert!(Mode::Skirmish.is_supported());
         assert!(Mode::Battle.is_supported());
         assert!(Mode::Dogfight.is_supported());
-        assert!(!Mode::Naval.is_supported());
+        assert!(Mode::Naval.is_supported());
     }
 
     #[test]
