@@ -1,0 +1,203 @@
+{
+  "name": "The Alder Corridor",
+  "start_date": "2026-11-10",
+  "max_days": 5,
+  "modules": {
+    "advanced_rules": true,
+    "intel": true,
+    "logistics": true,
+    "manpower": true,
+    "reserve_manpower": true,
+    "tanks": true,
+    "planes": true,
+    "ships": true,
+    "satellites": true,
+    "strategic_weapons": false,
+    "rods_from_god": false,
+    "nuclear_weapons": false,
+    "population": true,
+    "population_stability": true,
+    "occupation": true,
+    "liberation": false,
+    "nationstates": true,
+    "alliances": true,
+    "diplomacy": true
+  },
+  "sides": [
+    {
+      "id": "aurelia",
+      "name": "Aurelia",
+      "nation": "Aurelia",
+      "capital_zone": "aurelia_capital"
+    },
+    {
+      "id": "vermillion",
+      "name": "Vermillion",
+      "nation": "Vermillion",
+      "capital_zone": "vermillion_capital"
+    }
+  ],
+  "zones": [
+    {
+      "id": "aurelia_capital",
+      "name": "Aurelia Capital",
+      "kind": "capital",
+      "owner": "aurelia",
+      "connections": [
+        "alder_gate"
+      ],
+      "terrain": "urban",
+      "fortification": 7,
+      "supply_hub": true
+    },
+    {
+      "id": "alder_gate",
+      "name": "Alder Gate",
+      "kind": "city",
+      "owner": "aurelia",
+      "connections": [
+        "aurelia_capital",
+        "rail_junction",
+        "airbase"
+      ],
+      "terrain": "plains",
+      "fortification": 4,
+      "supply_hub": false
+    },
+    {
+      "id": "airbase",
+      "name": "Kestrel Airbase",
+      "kind": "airbase",
+      "owner": "neutral",
+      "connections": [
+        "alder_gate",
+        "rail_junction"
+      ],
+      "terrain": "plains",
+      "fortification": 3,
+      "supply_hub": false
+    },
+    {
+      "id": "rail_junction",
+      "name": "Rail Junction",
+      "kind": "rail",
+      "owner": "neutral",
+      "connections": [
+        "alder_gate",
+        "airbase",
+        "vesper",
+        "coast"
+      ],
+      "terrain": "plains",
+      "fortification": 5,
+      "supply_hub": true
+    },
+    {
+      "id": "coast",
+      "name": "Callas Coast",
+      "kind": "port",
+      "owner": "neutral",
+      "connections": [
+        "rail_junction",
+        "vesper"
+      ],
+      "terrain": "coast",
+      "fortification": 3,
+      "supply_hub": true
+    },
+    {
+      "id": "vesper",
+      "name": "Vesper",
+      "kind": "city",
+      "owner": "vermillion",
+      "connections": [
+        "rail_junction",
+        "coast",
+        "vermillion_capital"
+      ],
+      "terrain": "urban",
+      "fortification": 6,
+      "supply_hub": false
+    },
+    {
+      "id": "vermillion_capital",
+      "name": "Vermillion Capital",
+      "kind": "capital",
+      "owner": "vermillion",
+      "connections": [
+        "vesper"
+      ],
+      "terrain": "hills",
+      "fortification": 7,
+      "supply_hub": true
+    }
+  ],
+  "units": [
+    {
+      "id": "aurelia_1",
+      "name": "Aurelian 1st Corps",
+      "side": "aurelia",
+      "branch": "ground",
+      "zone": "alder_gate",
+      "strength": 12000,
+      "morale": 76,
+      "supply": 82,
+      "experience": 3
+    },
+    {
+      "id": "aurelia_2",
+      "name": "Aurelian 2nd Corps",
+      "side": "aurelia",
+      "branch": "ground",
+      "zone": "aurelia_capital",
+      "strength": 9000,
+      "morale": 72,
+      "supply": 86,
+      "experience": 2
+    },
+    {
+      "id": "aurelia_air",
+      "name": "Aurelian 1st Air Wing",
+      "side": "aurelia",
+      "branch": "air",
+      "zone": "aurelia_capital",
+      "strength": 2400,
+      "morale": 80,
+      "supply": 88,
+      "experience": 3
+    },
+    {
+      "id": "vermillion_7",
+      "name": "Vermillion 7th Corps",
+      "side": "vermillion",
+      "branch": "ground",
+      "zone": "vesper",
+      "strength": 11000,
+      "morale": 74,
+      "supply": 80,
+      "experience": 3
+    },
+    {
+      "id": "vermillion_8",
+      "name": "Vermillion 8th Corps",
+      "side": "vermillion",
+      "branch": "ground",
+      "zone": "vermillion_capital",
+      "strength": 8000,
+      "morale": 70,
+      "supply": 84,
+      "experience": 2
+    },
+    {
+      "id": "vermillion_air",
+      "name": "Vermillion 2nd Air Wing",
+      "side": "vermillion",
+      "branch": "air",
+      "zone": "vermillion_capital",
+      "strength": 2200,
+      "morale": 78,
+      "supply": 84,
+      "experience": 2
+    }
+  ]
+}

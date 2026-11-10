@@ -5,6 +5,9 @@ use std::path::{Path, PathBuf};
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
+use drumfire_campaign::referee::{
+    conflict_markdown, resolve_conflict, ConflictLog, RefereeScenario,
+};
 use drumfire_campaign::{
     replay_campaign, Campaign, CampaignScenario, OperationId, OperationRecord,
 };
@@ -96,6 +99,11 @@ enum Command {
     Campaign {
         #[command(subcommand)]
         command: CampaignCommand,
+    },
+    /// Referee-mode conflict simulation for roleplay.
+    Referee {
+        #[command(subcommand)]
+        command: RefereeCommand,
     },
 }
 
@@ -214,6 +222,44 @@ enum CampaignCommand {
         /// Path to a campaign log JSON.
         log: PathBuf,
     },
+}
+
+#[derive(Debug, Subcommand)]
+enum RefereeCommand {
+    /// Print or write the demo scenario.
+    Scenario {
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Write the demo order sheets to a directory.
+    Orders {
+        /// Directory for the two order-sheet JSON files.
+        out: PathBuf,
+    },
+    /// Resolve a scenario with one or more order sheets.
+    Resolve {
+        #[arg(long)]
+        scenario: PathBuf,
+        /// Order-sheet JSON; repeat for each side.
+        #[arg(long)]
+        orders: Vec<PathBuf>,
+        #[arg(long)]
+        out: Option<PathBuf>,
+        #[arg(long)]
+        json: bool,
+    },
+    /// Print a saved conflict log as a Markdown report.
+    Report { log: PathBuf },
+    /// Resolve the built-in demo and print the report.
+    Demo {
+        #[arg(long)]
+        json: bool,
+        /// Write the conflict log JSON.
+        #[arg(long)]
+        out: Option<PathBuf>,
+    },
+    /// Write scenario, order sheets, log, and Markdown report to a directory.
+    Packet { out: PathBuf },
 }
 
 fn main() -> Result<()> {
@@ -411,6 +457,71 @@ fn main() -> Result<()> {
                 print_campaign(&campaign);
             }
         },
+        Command::Referee { command } => match command {
+            RefereeCommand::Scenario { out } => {
+                let scenario = RefereeScenario::demo();
+                if let Some(path) = out {
+                    write_json(&path, &scenario)?;
+                } else {
+                    println!("{}", serde_json::to_string_pretty(&scenario)?);
+                }
+            }
+            RefereeCommand::Orders { out } => {
+                write_referee_orders(&out)?;
+                println!("Wrote referee order sheets to {}", out.display());
+            }
+            RefereeCommand::Resolve {
+                scenario,
+                orders,
+                out,
+                json,
+            } => {
+                let scenario: RefereeScenario = read_json(&scenario)?;
+                let sheets = orders
+                    .iter()
+                    .map(|path| read_json(path))
+                    .collect::<Result<Vec<_>>>()?;
+                let log = resolve_conflict(&scenario, &sheets)?;
+                if let Some(path) = out {
+                    write_json(&path, &log)?;
+                }
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&log)?);
+                } else {
+                    print!("{}", conflict_markdown(&log));
+                }
+            }
+            RefereeCommand::Report { log } => {
+                let log: ConflictLog = read_json(&log)?;
+                print!("{}", conflict_markdown(&log));
+            }
+            RefereeCommand::Demo { json, out } => {
+                let scenario = RefereeScenario::demo();
+                let log = resolve_conflict(&scenario, &RefereeScenario::demo_orders())?;
+                if let Some(path) = out {
+                    write_json(&path, &log)?;
+                }
+                if json {
+                    println!("{}", serde_json::to_string_pretty(&log)?);
+                } else {
+                    print!("{}", conflict_markdown(&log));
+                }
+            }
+            RefereeCommand::Packet { out } => {
+                std::fs::create_dir_all(&out)
+                    .with_context(|| format!("failed to create {}", out.display()))?;
+                let scenario = RefereeScenario::demo();
+                let sheets = RefereeScenario::demo_orders();
+                let log = resolve_conflict(&scenario, &sheets)?;
+                write_json(&out.join("scenario.json"), &scenario)?;
+                for sheet in &sheets {
+                    write_json(&out.join(format!("orders-{}.json", sheet.side)), sheet)?;
+                }
+                write_json(&out.join("conflict.log.json"), &log)?;
+                write_text(&out.join("report.md"), &conflict_markdown(&log))?;
+                println!("Wrote referee packet to {}", out.display());
+            }
+        },
     }
     Ok(())
 }
@@ -424,6 +535,18 @@ fn read_json<T: DeserializeOwned>(path: &Path) -> Result<T> {
 fn write_json<T: serde::Serialize>(path: &Path, value: &T) -> Result<()> {
     let text = serde_json::to_string_pretty(value)?;
     std::fs::write(path, text).with_context(|| format!("failed to write {}", path.display()))
+}
+
+fn write_text(path: &Path, text: &str) -> Result<()> {
+    std::fs::write(path, text).with_context(|| format!("failed to write {}", path.display()))
+}
+
+fn write_referee_orders(dir: &Path) -> Result<()> {
+    std::fs::create_dir_all(dir).with_context(|| format!("failed to create {}", dir.display()))?;
+    for sheet in RefereeScenario::demo_orders() {
+        write_json(&dir.join(format!("orders-{}.json", sheet.side)), &sheet)?;
+    }
+    Ok(())
 }
 
 fn parse_seed(value: &str) -> Result<Seed> {

@@ -3,6 +3,18 @@
 All notable changes to Drumfire are documented here. The combat rules have
 their own version in [`docs/rules.md`](docs/rules.md).
 
+## Unreleased
+
+### Added
+
+- Referee mode: a roleplay conflict packet with a scenario, two order sheets,
+  multi-day resolution, a conflict log, and an exported Markdown report.
+- Connected-zone movement, ground engagements through the Battle engine, air and
+  naval support, supply tracing, recon contacts, and casualty reports.
+- CLI `referee scenario`, `referee orders`, `referee resolve`, `referee report`,
+  `referee demo`, and `referee packet`.
+- [`docs/referee.md`](docs/referee.md) and the `referee-packet/` example packet.
+
 ## 0.2.0 — 2026-11-09
 
 The combined-arms release: Frontlines, Dogfight, Naval, and the seven-node

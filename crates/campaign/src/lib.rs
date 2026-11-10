@@ -4,6 +4,8 @@
 //! seven operations using all five battle modes, persistent resources, enemy
 //! intents, and exact campaign replay.
 
+pub mod referee;
+
 use drumfire_core::dogfight::{
     replay_dogfight, simulate_dogfight, DogfightError, DogfightLog, DogfightReplayError,
 };

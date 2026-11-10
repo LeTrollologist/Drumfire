@@ -1,0 +1,58 @@
+{
+  "side": "vermillion",
+  "orders": [
+    {
+      "day": 1,
+      "unit": "vermillion_7",
+      "action": {
+        "type": "move",
+        "to": "rail_junction"
+      }
+    },
+    {
+      "day": 1,
+      "unit": "vermillion_air",
+      "action": {
+        "type": "recon"
+      }
+    },
+    {
+      "day": 2,
+      "unit": "vermillion_8",
+      "action": {
+        "type": "move",
+        "to": "vesper"
+      }
+    },
+    {
+      "day": 3,
+      "unit": "vermillion_7",
+      "action": {
+        "type": "defend"
+      }
+    },
+    {
+      "day": 4,
+      "unit": "vermillion_7",
+      "action": {
+        "type": "attack",
+        "target": "rail_junction"
+      }
+    },
+    {
+      "day": 4,
+      "unit": "vermillion_8",
+      "action": {
+        "type": "move",
+        "to": "vesper"
+      }
+    },
+    {
+      "day": 5,
+      "unit": "vermillion_7",
+      "action": {
+        "type": "resupply"
+      }
+    }
+  ]
+}

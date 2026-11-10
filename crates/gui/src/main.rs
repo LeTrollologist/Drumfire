@@ -137,16 +137,16 @@ fn apply_theme(ctx: &egui::Context, theme: Theme) {
     style.visuals.override_text_color = Some(p.ink);
     style.visuals.hyperlink_color = p.blue;
     style.visuals.selection.bg_fill = p.sand_soft;
-    style.visuals.selection.stroke = egui::Stroke::new(1.0, p.sand);
+    style.visuals.selection.stroke = egui::Stroke::new(1.0_f32, p.sand);
     style.visuals.widgets.noninteractive.bg_fill = p.panel;
-    style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(1.0, p.line);
+    style.visuals.widgets.noninteractive.bg_stroke = egui::Stroke::new(1.0_f32, p.line);
     style.visuals.widgets.inactive.bg_fill = p.panel_alt;
-    style.visuals.widgets.inactive.bg_stroke = egui::Stroke::new(1.0, p.line);
+    style.visuals.widgets.inactive.bg_stroke = egui::Stroke::new(1.0_f32, p.line);
     style.visuals.widgets.hovered.bg_fill = p.sand_soft;
-    style.visuals.widgets.hovered.bg_stroke = egui::Stroke::new(1.0, p.sand);
+    style.visuals.widgets.hovered.bg_stroke = egui::Stroke::new(1.0_f32, p.sand);
     style.visuals.widgets.active.bg_fill = p.sand_soft;
-    style.visuals.widgets.active.bg_stroke = egui::Stroke::new(1.0, p.sand);
-    style.visuals.window_stroke = egui::Stroke::new(1.0, p.line);
+    style.visuals.widgets.active.bg_stroke = egui::Stroke::new(1.0_f32, p.sand);
+    style.visuals.window_stroke = egui::Stroke::new(1.0_f32, p.line);
     style.spacing.item_spacing = egui::vec2(10.0, 8.0);
     style.spacing.button_padding = egui::vec2(12.0, 7.0);
     style.spacing.slider_width = 200.0;
@@ -168,7 +168,7 @@ fn apply_theme(ctx: &egui::Context, theme: Theme) {
 fn card(p: &Palette) -> egui::Frame {
     egui::Frame::NONE
         .fill(p.panel)
-        .stroke(egui::Stroke::new(1.0, p.line))
+        .stroke(egui::Stroke::new(1.0_f32, p.line))
         .corner_radius(12)
         .inner_margin(egui::Margin::same(16))
 }
@@ -1666,7 +1666,7 @@ impl DrumfireApp {
                     egui::pos2(split, rect.top()),
                     egui::pos2(split, rect.bottom()),
                 ],
-                egui::Stroke::new(1.0, p.panel),
+                egui::Stroke::new(1.0_f32, p.panel),
             );
 
             ui.add_space(4.0);
@@ -3759,14 +3759,14 @@ fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
         let x = rect.left() + rect.width() * step as f32 / 4.0;
         painter.line_segment(
             [egui::pos2(x, rect.top()), egui::pos2(x, rect.bottom())],
-            egui::Stroke::new(1.0, p.line),
+            egui::Stroke::new(1.0_f32, p.line),
         );
     }
     for step in 1..3 {
         let y = rect.top() + rect.height() * step as f32 / 3.0;
         painter.line_segment(
             [egui::pos2(rect.left(), y), egui::pos2(rect.right(), y)],
-            egui::Stroke::new(1.0, p.line),
+            egui::Stroke::new(1.0_f32, p.line),
         );
     }
 
@@ -3792,7 +3792,7 @@ fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
         for connection in &node.connections {
             painter.line_segment(
                 [start, position(connection)],
-                egui::Stroke::new(1.4, p.line),
+                egui::Stroke::new(1.4_f32, p.line),
             );
         }
     }
@@ -4228,7 +4228,7 @@ fn paint_sparkline(
         let y = rect.bottom() - rect.height() * ((0.5 - lo) / (hi - lo)) as f32;
         painter.line_segment(
             [egui::pos2(rect.left(), y), egui::pos2(rect.right(), y)],
-            egui::Stroke::new(1.0, p.line),
+            egui::Stroke::new(1.0_f32, p.line),
         );
     }
 
@@ -4246,7 +4246,7 @@ fn paint_sparkline(
 
     painter.add(egui::Shape::line(
         points.clone(),
-        egui::Stroke::new(2.0, p.blue),
+        egui::Stroke::new(2.0_f32, p.blue),
     ));
     for point in &points {
         painter.circle_filled(*point, 2.0, p.blue);
@@ -4257,7 +4257,7 @@ fn paint_sparkline(
                 egui::pos2(index.x, rect.top()),
                 egui::pos2(index.x, rect.bottom()),
             ],
-            egui::Stroke::new(1.0, p.sand),
+            egui::Stroke::new(1.0_f32, p.sand),
         );
         painter.circle_filled(*index, 4.0, p.sand);
     }

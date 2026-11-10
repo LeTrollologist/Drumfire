@@ -1,0 +1,65 @@
+{
+  "side": "aurelia",
+  "orders": [
+    {
+      "day": 1,
+      "unit": "aurelia_1",
+      "action": {
+        "type": "move",
+        "to": "rail_junction"
+      }
+    },
+    {
+      "day": 1,
+      "unit": "aurelia_air",
+      "action": {
+        "type": "recon"
+      }
+    },
+    {
+      "day": 2,
+      "unit": "aurelia_2",
+      "action": {
+        "type": "move",
+        "to": "alder_gate"
+      }
+    },
+    {
+      "day": 2,
+      "unit": "aurelia_air",
+      "action": {
+        "type": "recon"
+      }
+    },
+    {
+      "day": 3,
+      "unit": "aurelia_1",
+      "action": {
+        "type": "attack",
+        "target": "vesper"
+      }
+    },
+    {
+      "day": 3,
+      "unit": "aurelia_2",
+      "action": {
+        "type": "move",
+        "to": "rail_junction"
+      }
+    },
+    {
+      "day": 4,
+      "unit": "aurelia_1",
+      "action": {
+        "type": "defend"
+      }
+    },
+    {
+      "day": 5,
+      "unit": "aurelia_1",
+      "action": {
+        "type": "resupply"
+      }
+    }
+  ]
+}

@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-78_passing-3FA796?style=flat-square&labelColor=1A120B" alt="78 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-81_passing-3FA796?style=flat-square&labelColor=1A120B" alt="81 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,11 +69,11 @@
 
 </div>
 
-**Status:** Phase 11 — all five battle modes plus the seven-node **Halcyon Sweep**
-campaign, now with a scenario ruleset: editable city and formation names, forts,
-garrisons, starting resources, module toggles, and NationStates capital import.
-Deterministic core, CLI, egui desktop UI, and read-only NationStates data. No
-account login, no write actions, no credentials.
+**Status:** Phase 12 — battle modes, the Halcyon Sweep campaign, a scenario
+ruleset with module toggles and NationStates capital import, and the first
+**referee conflict packet** for roleplay adjudication. Deterministic core, CLI,
+egui desktop UI, and read-only NationStates data. No account login, no write
+actions, no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -207,6 +207,24 @@ shards provide the capital name for imported nations.
 Full design: [`docs/campaign.md`](docs/campaign.md). Scenario schema:
 [`docs/scenario.md`](docs/scenario.md).
 
+### Referee mode
+
+Referee mode is a roleplay adjudication tool, not a player campaign: no side, no
+victory screen, no fixed story. It resolves two order sheets into a dated report.
+
+```sh
+cargo run -p drumfire-cli -- referee packet referee-packet
+cargo run -p drumfire-cli -- referee demo
+cargo run -p drumfire-cli -- referee resolve \
+  --scenario referee-packet/scenario.json \
+  --orders referee-packet/orders-aurelia.json \
+  --orders referee-packet/orders-vermillion.json
+```
+
+The packet contains a scenario, two order sheets, a conflict log, and a Markdown
+report. Edit the scenario and orders, resolve, and publish the record. No winner
+is declared. See [`docs/referee.md`](docs/referee.md).
+
 <div align="center">
   <img src="docs/campaign.png" alt="Drumfire campaign war room" width="92%" />
 </div>
@@ -299,6 +317,10 @@ DRUMFIRE_CONTACT="https://example.com/drumfire" cargo run -p drumfire-cli -- nat
 | `drumfire campaign demo --scenario <file>` | Run a custom scenario. |
 | `drumfire campaign scenario --out <file>` | Write the built-in scenario template for editing. |
 | `drumfire campaign replay <log>` | Verify every operation in a campaign log. |
+| `drumfire referee demo` | Resolve the built-in referee packet. |
+| `drumfire referee packet <dir>` | Write scenario, orders, log, and report. |
+| `drumfire referee resolve --scenario <file> --orders <file>...` | Resolve a custom conflict. |
+| `drumfire referee report <log>` | Print a saved conflict as Markdown. |
 | `drumfire explain <input> [--mode]` | Show each side’s strength components and opening probability. |
 | `drumfire nation <name>` | Fetch one nation from the public NationStates API. |
 | `drumfire nation <name> --json` | Same, as JSON. |
@@ -467,9 +489,16 @@ drumfire/
     frontlines.md
     campaign.md
     scenario.md
+    referee.md
     nationstates.md
   scenarios/
     kestrel-coast.json
+  referee-packet/
+    scenario.json
+    orders-aurelia.json
+    orders-vermillion.json
+    conflict.log.json
+    report.md
   fixtures/
     example.json
     example.log.json
