@@ -48,7 +48,9 @@
       ],
       "terrain": "urban",
       "fortification": 7,
-      "supply_hub": true
+      "supply_hub": true,
+      "x": 0.12,
+      "y": 0.55
     },
     {
       "id": "alder_gate",
@@ -62,7 +64,9 @@
       ],
       "terrain": "plains",
       "fortification": 4,
-      "supply_hub": false
+      "supply_hub": false,
+      "x": 0.32,
+      "y": 0.45
     },
     {
       "id": "airbase",
@@ -75,7 +79,9 @@
       ],
       "terrain": "plains",
       "fortification": 3,
-      "supply_hub": false
+      "supply_hub": false,
+      "x": 0.48,
+      "y": 0.2
     },
     {
       "id": "rail_junction",
@@ -90,7 +96,9 @@
       ],
       "terrain": "plains",
       "fortification": 5,
-      "supply_hub": true
+      "supply_hub": true,
+      "x": 0.5,
+      "y": 0.55
     },
     {
       "id": "coast",
@@ -103,7 +111,9 @@
       ],
       "terrain": "coast",
       "fortification": 3,
-      "supply_hub": true
+      "supply_hub": true,
+      "x": 0.5,
+      "y": 0.82
     },
     {
       "id": "vesper",
@@ -117,7 +127,9 @@
       ],
       "terrain": "urban",
       "fortification": 6,
-      "supply_hub": false
+      "supply_hub": false,
+      "x": 0.72,
+      "y": 0.6
     },
     {
       "id": "vermillion_capital",
@@ -129,7 +141,9 @@
       ],
       "terrain": "hills",
       "fortification": 7,
-      "supply_hub": true
+      "supply_hub": true,
+      "x": 0.9,
+      "y": 0.45
     }
   ],
   "units": [

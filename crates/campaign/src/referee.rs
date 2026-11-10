@@ -47,6 +47,10 @@ pub struct Zone {
     pub terrain: Terrain,
     pub fortification: u8,
     pub supply_hub: bool,
+    #[serde(default)]
+    pub x: f32,
+    #[serde(default)]
+    pub y: f32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -183,15 +187,16 @@ pub enum RefereeError {
     Simulation(#[from] SimError),
 }
 
-struct Conflict {
+#[derive(Debug, Clone)]
+pub struct RefereeSimulation {
     scenario: RefereeScenario,
     zones: Vec<ZoneState>,
     units: Vec<UnitState>,
     day: u32,
 }
 
-impl Conflict {
-    fn new(scenario: RefereeScenario) -> Result<Self, RefereeError> {
+impl RefereeSimulation {
+    pub fn new(scenario: RefereeScenario) -> Result<Self, RefereeError> {
         scenario.validate()?;
         Ok(Self {
             zones: scenario
@@ -222,6 +227,42 @@ impl Conflict {
             scenario,
             day: 1,
         })
+    }
+
+    pub fn scenario(&self) -> &RefereeScenario {
+        &self.scenario
+    }
+
+    pub fn day(&self) -> u32 {
+        self.day
+    }
+
+    pub fn zones(&self) -> &[ZoneState] {
+        &self.zones
+    }
+
+    pub fn units(&self) -> &[UnitState] {
+        &self.units
+    }
+
+    pub fn log(&self, days: &[DayReport]) -> ConflictLog {
+        ConflictLog {
+            scenario: self.scenario.clone(),
+            days: days.to_vec(),
+            final_zones: self.zones.clone(),
+            final_units: self.units.clone(),
+            summary: self.summary(),
+        }
+    }
+
+    /// Resolve the current day and advance the simulation clock.
+    pub fn advance_day(&mut self, sheets: &[OrderSheet]) -> Result<DayReport, RefereeError> {
+        let day = self.day.min(self.scenario.max_days);
+        let report = self.resolve_day(day, sheets)?;
+        if self.day < self.scenario.max_days {
+            self.day += 1;
+        }
+        Ok(report)
     }
 
     fn resolve(mut self, sheets: &[OrderSheet]) -> Result<ConflictLog, RefereeError> {
@@ -803,6 +844,8 @@ impl RefereeScenario {
                     terrain: Terrain::Urban,
                     fortification: 7,
                     supply_hub: true,
+                    x: 0.12,
+                    y: 0.55,
                 },
                 Zone {
                     id: "alder_gate".to_string(),
@@ -817,6 +860,8 @@ impl RefereeScenario {
                     terrain: Terrain::Plains,
                     fortification: 4,
                     supply_hub: false,
+                    x: 0.32,
+                    y: 0.45,
                 },
                 Zone {
                     id: "airbase".to_string(),
@@ -827,6 +872,8 @@ impl RefereeScenario {
                     terrain: Terrain::Plains,
                     fortification: 3,
                     supply_hub: false,
+                    x: 0.48,
+                    y: 0.2,
                 },
                 Zone {
                     id: "rail_junction".to_string(),
@@ -842,6 +889,8 @@ impl RefereeScenario {
                     terrain: Terrain::Plains,
                     fortification: 5,
                     supply_hub: true,
+                    x: 0.5,
+                    y: 0.55,
                 },
                 Zone {
                     id: "coast".to_string(),
@@ -852,6 +901,8 @@ impl RefereeScenario {
                     terrain: Terrain::Coast,
                     fortification: 3,
                     supply_hub: true,
+                    x: 0.5,
+                    y: 0.82,
                 },
                 Zone {
                     id: "vesper".to_string(),
@@ -866,6 +917,8 @@ impl RefereeScenario {
                     terrain: Terrain::Urban,
                     fortification: 6,
                     supply_hub: false,
+                    x: 0.72,
+                    y: 0.6,
                 },
                 Zone {
                     id: "vermillion_capital".to_string(),
@@ -876,6 +929,8 @@ impl RefereeScenario {
                     terrain: Terrain::Hills,
                     fortification: 7,
                     supply_hub: true,
+                    x: 0.9,
+                    y: 0.45,
                 },
             ],
             units: vec![
@@ -1060,7 +1115,7 @@ pub fn resolve_conflict(
     scenario: &RefereeScenario,
     sheets: &[OrderSheet],
 ) -> Result<ConflictLog, RefereeError> {
-    Conflict::new(scenario.clone())?.resolve(sheets)
+    RefereeSimulation::new(scenario.clone())?.resolve(sheets)
 }
 
 pub fn conflict_markdown(log: &ConflictLog) -> String {

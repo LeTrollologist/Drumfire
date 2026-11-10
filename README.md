@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-81_passing-3FA796?style=flat-square&labelColor=1A120B" alt="81 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-83_passing-3FA796?style=flat-square&labelColor=1A120B" alt="83 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,11 +69,11 @@
 
 </div>
 
-**Status:** Phase 12 — battle modes, the Halcyon Sweep campaign, a scenario
-ruleset with module toggles and NationStates capital import, and the first
-**referee conflict packet** for roleplay adjudication. Deterministic core, CLI,
-egui desktop UI, and read-only NationStates data. No account login, no write
-actions, no credentials.
+**Status:** Phase 13 — battle modes, the Halcyon Sweep campaign, a scenario
+ruleset with module toggles and NationStates capital import, and a **referee
+conflict console** for roleplay adjudication. Deterministic core, CLI, egui
+desktop UI, and read-only NationStates data. No account login, no write actions,
+no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -224,6 +224,13 @@ cargo run -p drumfire-cli -- referee resolve \
 The packet contains a scenario, two order sheets, a conflict log, and a Markdown
 report. Edit the scenario and orders, resolve, and publish the record. No winner
 is declared. See [`docs/referee.md`](docs/referee.md).
+
+The GUI referee console adds a map, both sides' order entry, private side views,
+day-by-day resolution, and clipboard report export:
+
+```sh
+cargo run -p drumfire-gui -- --demo-referee
+```
 
 <div align="center">
   <img src="docs/campaign.png" alt="Drumfire campaign war room" width="92%" />

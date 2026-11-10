@@ -2,9 +2,14 @@
 
 //! Drumfire desktop UI (egui/eframe).
 
+use std::collections::HashMap;
 use std::sync::mpsc::{self, Receiver};
 use std::time::Duration;
 
+use drumfire_campaign::referee::{
+    conflict_markdown, DayReport, Order, OrderAction, OrderSheet, RefereeScenario,
+    RefereeSimulation,
+};
 use drumfire_campaign::{
     Branch, Campaign, CampaignModules, CampaignResult, Control, Formation, ModulePreset, NodeKind,
     OperationId, OperationLog, OperationRecord,
@@ -27,6 +32,7 @@ use drumfire_ns::{suggested_forces, NationSummary};
 use eframe::egui;
 
 fn main() -> eframe::Result<()> {
+    let demo_referee = std::env::args().any(|arg| arg == "--demo-referee");
     let demo_campaign = std::env::args().any(|arg| arg == "--demo-campaign");
     let demo_campaign_aftermath = std::env::args().any(|arg| arg == "--demo-campaign-aftermath");
     let demo_frontline = std::env::args().any(|arg| arg == "--demo-frontline");
@@ -47,7 +53,9 @@ fn main() -> eframe::Result<()> {
         options,
         Box::new(move |cc| {
             apply_theme(&cc.egui_ctx, Theme::Paper);
-            let app = if demo_campaign_aftermath {
+            let app = if demo_referee {
+                DrumfireApp::demo_referee()
+            } else if demo_campaign_aftermath {
                 DrumfireApp::demo_campaign_aftermath()
             } else if demo_campaign {
                 DrumfireApp::demo_campaign()
@@ -459,6 +467,27 @@ enum CampaignScreen {
     Chronicle,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RefOrderKind {
+    Defend,
+    Move,
+    Attack,
+    Recon,
+    Resupply,
+}
+
+#[derive(Debug, Clone)]
+struct RefOrderForm {
+    kind: RefOrderKind,
+    target: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum RefereeView {
+    All,
+    Side(String),
+}
+
 struct DrumfireApp {
     theme: Theme,
     applied_theme: Option<Theme>,
@@ -467,6 +496,11 @@ struct DrumfireApp {
     campaign_active: bool,
     campaign: Option<Campaign>,
     campaign_screen: CampaignScreen,
+    referee_active: bool,
+    referee_sim: Option<RefereeSimulation>,
+    referee_orders: HashMap<String, RefOrderForm>,
+    referee_days: Vec<DayReport>,
+    referee_view: RefereeView,
     attacker: TeamForm,
     defender: TeamForm,
     dogfight_attacker: AirForceForm,
@@ -527,6 +561,17 @@ impl DrumfireApp {
         let mut app = Self::default();
         app.load_frontline_example();
         app.run_current();
+        app
+    }
+
+    fn demo_referee() -> Self {
+        let mut app = DrumfireApp {
+            theme: Theme::Paper,
+            ..Self::default()
+        };
+        app.open_referee();
+        app.resolve_referee_day();
+        app.resolve_referee_day();
         app
     }
 
@@ -602,6 +647,11 @@ impl DrumfireApp {
             campaign_active: false,
             campaign: None,
             campaign_screen: CampaignScreen::WarRoom,
+            referee_active: false,
+            referee_sim: None,
+            referee_orders: HashMap::new(),
+            referee_days: Vec::new(),
+            referee_view: RefereeView::All,
             attacker: TeamForm::from_team(&input.attacker),
             defender: TeamForm::from_team(&input.defender),
             dogfight_attacker: AirForceForm::from_force(&air.attacker),
@@ -1039,6 +1089,11 @@ impl eframe::App for DrumfireApp {
                 egui::ScrollArea::vertical()
                     .auto_shrink([false, false])
                     .show(ui, |ui| {
+                        if self.referee_active {
+                            self.referee_sidebar_ui(ui, &p);
+                            ui.add_space(14.0);
+                            return;
+                        }
                         if self.campaign_active {
                             self.campaign_sidebar_ui(ui, &p);
                             ui.add_space(14.0);
@@ -1151,6 +1206,9 @@ impl DrumfireApp {
             ui.separator();
             if ui.selectable_label(false, "Campaign").clicked() {
                 self.open_campaign();
+            }
+            if ui.selectable_label(false, "Referee").clicked() {
+                self.open_referee();
             }
         });
         ui.label(
@@ -1450,6 +1508,11 @@ impl DrumfireApp {
         if let Some(error) = &self.error {
             ui.colored_label(p.red, error);
             ui.add_space(8.0);
+        }
+
+        if self.referee_active {
+            self.referee_output_ui(ui, p);
+            return;
         }
 
         if self.campaign_active {
@@ -1954,6 +2017,265 @@ impl DrumfireApp {
                         });
                     });
             });
+    }
+
+    fn open_referee(&mut self) {
+        let scenario = RefereeScenario::demo();
+        match RefereeSimulation::new(scenario) {
+            Ok(sim) => {
+                self.referee_orders = default_referee_orders(&sim);
+                self.referee_days.clear();
+                self.referee_view = RefereeView::All;
+                self.referee_sim = Some(sim);
+                self.referee_active = true;
+                self.campaign_active = false;
+                self.error = None;
+            }
+            Err(err) => self.error = Some(err.to_string()),
+        }
+    }
+
+    fn referee_sheets(&self) -> Vec<OrderSheet> {
+        let Some(sim) = &self.referee_sim else {
+            return Vec::new();
+        };
+        sim.scenario()
+            .sides
+            .iter()
+            .map(|side| {
+                let orders = sim
+                    .units()
+                    .iter()
+                    .filter(|unit| unit.side == side.id)
+                    .filter_map(|unit| {
+                        self.referee_orders.get(&unit.id).map(|form| Order {
+                            day: sim.day(),
+                            unit: unit.id.clone(),
+                            action: form.to_action(),
+                        })
+                    })
+                    .collect();
+                OrderSheet {
+                    side: side.id.clone(),
+                    orders,
+                }
+            })
+            .collect()
+    }
+
+    fn resolve_referee_day(&mut self) {
+        let sheets = self.referee_sheets();
+        let Some(sim) = &mut self.referee_sim else {
+            return;
+        };
+        match sim.advance_day(&sheets) {
+            Ok(report) => {
+                self.referee_days.push(report);
+                self.error = None;
+            }
+            Err(err) => self.error = Some(err.to_string()),
+        }
+    }
+
+    fn referee_sidebar_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(sim) = self.referee_sim.as_ref() else {
+            ui.label("No referee scenario loaded.");
+            if ui.button("Load demo").clicked() {
+                self.open_referee();
+            }
+            return;
+        };
+        let scenario = sim.scenario().clone();
+        let max_days = scenario.max_days;
+        let day = sim.day();
+        let finished = self.referee_days.len() >= max_days as usize;
+
+        ui.heading("Referee");
+        ui.label(tiny(scenario.name.to_uppercase(), p));
+        ui.label(
+            egui::RichText::new(format!("Day {} / {}", day, max_days))
+                .size(13.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.label(tiny("No player side · no victory condition", p));
+        ui.add_space(6.0);
+        ui.label("View");
+        ui.selectable_value(&mut self.referee_view, RefereeView::All, "Referee (all)");
+        for side in &scenario.sides {
+            ui.selectable_value(
+                &mut self.referee_view,
+                RefereeView::Side(side.id.clone()),
+                &side.name,
+            );
+        }
+        ui.add_space(8.0);
+        if ui
+            .add_enabled(!finished, egui::Button::new("Resolve day"))
+            .clicked()
+        {
+            self.resolve_referee_day();
+        }
+        if ui.button("Copy report as Markdown").clicked() {
+            if let Some(sim) = &self.referee_sim {
+                let log = sim.log(&self.referee_days);
+                ui.ctx().copy_text(conflict_markdown(&log));
+            }
+        }
+        if finished {
+            ui.label(
+                egui::RichText::new("All days resolved.")
+                    .size(10.0)
+                    .color(p.muted),
+            );
+        }
+        ui.add_space(6.0);
+        if ui.button("Reset packet").clicked() {
+            self.open_referee();
+        }
+        if ui.button("Back to battle modes").clicked() {
+            self.referee_active = false;
+        }
+        ui.add_space(6.0);
+        ui.label(
+            egui::RichText::new(
+                "Orders for both sides. The report is the record; it does not declare a winner.",
+            )
+            .small()
+            .weak(),
+        );
+    }
+
+    fn referee_output_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
+        let Some(sim) = self.referee_sim.clone() else {
+            return;
+        };
+        ui.horizontal(|ui| {
+            ui.label(tiny("REFEREE · CONFLICT CONSOLE", p));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if ui.button("Copy report").clicked() {
+                    let log = sim.log(&self.referee_days);
+                    ui.ctx().copy_text(conflict_markdown(&log));
+                }
+                ui.label(tiny(format!("Day {}", sim.day()), p));
+            });
+        });
+        ui.add_space(3.0);
+        ui.label(
+            egui::RichText::new(&sim.scenario().name)
+                .size(30.0)
+                .strong()
+                .color(p.ink),
+        );
+        ui.label(
+            egui::RichText::new("A shared adjudication record, not a campaign screen.")
+                .size(12.0)
+                .color(p.muted),
+        );
+
+        ui.add_space(8.0);
+        paint_referee_map(ui, p, &sim, &self.referee_view);
+
+        ui.add_space(10.0);
+        ui.label(tiny("ORDERS", p));
+        ui.add_space(4.0);
+        let scenario = sim.scenario().clone();
+        let units = sim.units().to_vec();
+        for side in &scenario.sides {
+            if let RefereeView::Side(view_side) = &self.referee_view {
+                if view_side != &side.id {
+                    continue;
+                }
+            }
+            card(p).show(ui, |ui| {
+                ui.label(tiny(side.name.to_uppercase(), p));
+                let mut any = false;
+                for unit in units.iter().filter(|unit| unit.side == side.id) {
+                    any = true;
+                    let form = self
+                        .referee_orders
+                        .entry(unit.id.clone())
+                        .or_insert_with(|| RefOrderForm {
+                            kind: RefOrderKind::Defend,
+                            target: default_target(&scenario, &unit.zone),
+                        });
+                    ui.horizontal(|ui| {
+                        ui.label(
+                            egui::RichText::new(&unit.name)
+                                .size(12.0)
+                                .strong()
+                                .color(p.ink),
+                        );
+                        ui.label(tiny(zone_name(&scenario, &unit.zone), p));
+                        ui.label(tiny(format!("{}", unit.strength), p));
+                        egui::ComboBox::from_id_salt(format!("order_{}", unit.id))
+                            .selected_text(order_kind_label(form.kind))
+                            .width(82.0)
+                            .show_ui(ui, |ui| {
+                                for kind in [
+                                    RefOrderKind::Defend,
+                                    RefOrderKind::Move,
+                                    RefOrderKind::Attack,
+                                    RefOrderKind::Recon,
+                                    RefOrderKind::Resupply,
+                                ] {
+                                    ui.selectable_value(
+                                        &mut form.kind,
+                                        kind,
+                                        order_kind_label(kind),
+                                    );
+                                }
+                            });
+                        if matches!(form.kind, RefOrderKind::Move | RefOrderKind::Attack) {
+                            let targets = adjacent_zones(&scenario, &unit.zone);
+                            egui::ComboBox::from_id_salt(format!("target_{}", unit.id))
+                                .selected_text(zone_name(&scenario, &form.target))
+                                .width(116.0)
+                                .show_ui(ui, |ui| {
+                                    for target in &targets {
+                                        ui.selectable_value(
+                                            &mut form.target,
+                                            target.clone(),
+                                            zone_name(&scenario, target),
+                                        );
+                                    }
+                                });
+                        }
+                    });
+                }
+                if !any {
+                    ui.label(tiny("No units in this view.", p));
+                }
+            });
+            ui.add_space(6.0);
+        }
+
+        if let Some(report) = self.referee_days.last() {
+            ui.add_space(6.0);
+            card(p).show(ui, |ui| {
+                ui.label(tiny(format!("DAY {} REPORT", report.day), p));
+                for event in &report.events {
+                    ui.label(egui::RichText::new(event).size(12.0).color(p.ink));
+                }
+                if !report.casualties.is_empty() {
+                    ui.add_space(4.0);
+                    ui.label(tiny("CASUALTIES", p));
+                    for casualty in &report.casualties {
+                        ui.label(tiny(
+                            format!("{} · {}: {}", casualty.side, casualty.unit, casualty.losses),
+                            p,
+                        ));
+                    }
+                }
+                if !report.control_changes.is_empty() {
+                    ui.add_space(4.0);
+                    ui.label(tiny("CONTROL", p));
+                    for change in &report.control_changes {
+                        ui.label(tiny(change, p));
+                    }
+                }
+            });
+        }
     }
 
     fn campaign_sidebar_ui(&mut self, ui: &mut egui::Ui, p: &Palette) {
@@ -3958,6 +4280,214 @@ fn module_checkbox(ui: &mut egui::Ui, value: &mut bool, label: &str, help: &str)
     ui.checkbox(value, label).on_hover_text(help);
 }
 
+impl RefOrderForm {
+    fn to_action(&self) -> OrderAction {
+        match self.kind {
+            RefOrderKind::Defend => OrderAction::Defend,
+            RefOrderKind::Move => OrderAction::Move {
+                to: self.target.clone(),
+            },
+            RefOrderKind::Attack => OrderAction::Attack {
+                target: self.target.clone(),
+            },
+            RefOrderKind::Recon => OrderAction::Recon,
+            RefOrderKind::Resupply => OrderAction::Resupply,
+        }
+    }
+}
+
+fn order_kind_label(kind: RefOrderKind) -> &'static str {
+    match kind {
+        RefOrderKind::Defend => "Defend",
+        RefOrderKind::Move => "Move",
+        RefOrderKind::Attack => "Attack",
+        RefOrderKind::Recon => "Recon",
+        RefOrderKind::Resupply => "Resupply",
+    }
+}
+
+fn default_referee_orders(sim: &RefereeSimulation) -> HashMap<String, RefOrderForm> {
+    sim.units()
+        .iter()
+        .map(|unit| {
+            (
+                unit.id.clone(),
+                RefOrderForm {
+                    kind: RefOrderKind::Defend,
+                    target: default_target(sim.scenario(), &unit.zone),
+                },
+            )
+        })
+        .collect()
+}
+
+fn default_target(scenario: &RefereeScenario, zone: &str) -> String {
+    scenario
+        .zones
+        .iter()
+        .find(|candidate| candidate.id == zone)
+        .and_then(|candidate| candidate.connections.first().cloned())
+        .unwrap_or_else(|| zone.to_string())
+}
+
+fn adjacent_zones(scenario: &RefereeScenario, zone: &str) -> Vec<String> {
+    scenario
+        .zones
+        .iter()
+        .find(|candidate| candidate.id == zone)
+        .map(|candidate| candidate.connections.clone())
+        .unwrap_or_default()
+}
+
+fn zone_name(scenario: &RefereeScenario, zone: &str) -> String {
+    scenario
+        .zones
+        .iter()
+        .find(|candidate| candidate.id == zone)
+        .map(|candidate| candidate.name.clone())
+        .unwrap_or_else(|| zone.to_string())
+}
+
+fn paint_referee_map(ui: &mut egui::Ui, p: &Palette, sim: &RefereeSimulation, view: &RefereeView) {
+    let (rect, _) = ui.allocate_exact_size(
+        egui::vec2(ui.available_width().max(320.0), 420.0),
+        egui::Sense::hover(),
+    );
+    let painter = ui.painter();
+    painter.rect_filled(rect, egui::CornerRadius::same(14), p.panel_alt);
+
+    let scenario = sim.scenario();
+    let position = |id: &str| -> egui::Pos2 {
+        let index = scenario
+            .zones
+            .iter()
+            .position(|zone| zone.id == id)
+            .unwrap_or(0);
+        let zone = &scenario.zones[index];
+        let (x, y) = if zone.x > 0.0 || zone.y > 0.0 {
+            (zone.x, zone.y)
+        } else {
+            let angle = index as f32 / scenario.zones.len().max(1) as f32 * std::f32::consts::TAU;
+            (0.5 + 0.32 * angle.cos(), 0.5 + 0.30 * angle.sin())
+        };
+        egui::pos2(
+            rect.left() + rect.width() * x.clamp(0.05, 0.95),
+            rect.top() + rect.height() * y.clamp(0.08, 0.92),
+        )
+    };
+
+    for zone in &scenario.zones {
+        let start = position(&zone.id);
+        for connection in &zone.connections {
+            painter.line_segment(
+                [start, position(connection)],
+                egui::Stroke::new(1.3_f32, p.line),
+            );
+        }
+    }
+
+    for zone in &scenario.zones {
+        let center = position(&zone.id);
+        let card = egui::Rect::from_center_size(center, egui::vec2(150.0, 56.0));
+        let tone = side_color(&zone.owner, scenario, p);
+        painter.rect_filled(card.expand(2.0), egui::CornerRadius::same(9), tone);
+        painter.rect_filled(card, egui::CornerRadius::same(8), p.panel);
+        painter.text(
+            egui::pos2(card.left() + 10.0, card.top() + 6.0),
+            egui::Align2::LEFT_TOP,
+            &zone.name,
+            egui::FontId::proportional(11.0),
+            p.ink,
+        );
+        painter.text(
+            egui::pos2(card.left() + 10.0, card.top() + 24.0),
+            egui::Align2::LEFT_TOP,
+            format!(
+                "{} · {}",
+                zone_kind_label(zone.kind),
+                side_name(&zone.owner, scenario)
+            ),
+            egui::FontId::proportional(8.0),
+            p.muted,
+        );
+        painter.text(
+            egui::pos2(card.left() + 10.0, card.top() + 40.0),
+            egui::Align2::LEFT_TOP,
+            format!("fort {}", zone.fortification),
+            egui::FontId::monospace(7.5),
+            p.muted,
+        );
+
+        let mut offset = 0.0;
+        for unit in sim.units().iter().filter(|unit| unit.zone == zone.id) {
+            if let RefereeView::Side(side) = view {
+                if &unit.side != side {
+                    continue;
+                }
+            }
+            let chip = egui::Rect::from_min_size(
+                egui::pos2(card.left(), card.bottom() + 3.0 + offset),
+                egui::vec2(150.0, 16.0),
+            );
+            painter.rect_filled(chip, egui::CornerRadius::same(4), p.panel);
+            painter.text(
+                egui::pos2(chip.left() + 4.0, chip.center().y),
+                egui::Align2::LEFT_CENTER,
+                format!("{} · {}", short_unit_name(&unit.name), unit.strength),
+                egui::FontId::proportional(8.0),
+                side_color(&unit.side, scenario, p),
+            );
+            offset += 18.0;
+        }
+    }
+
+    painter.text(
+        egui::pos2(rect.left() + 12.0, rect.bottom() - 14.0),
+        egui::Align2::LEFT_BOTTOM,
+        "REFEREE MAP",
+        egui::FontId::monospace(9.0),
+        p.muted,
+    );
+}
+
+fn zone_kind_label(kind: drumfire_campaign::referee::ZoneKind) -> &'static str {
+    use drumfire_campaign::referee::ZoneKind;
+    match kind {
+        ZoneKind::Capital => "capital",
+        ZoneKind::City => "city",
+        ZoneKind::Port => "port",
+        ZoneKind::Airbase => "airbase",
+        ZoneKind::Rail => "rail",
+        ZoneKind::Countryside => "country",
+    }
+}
+
+fn side_name(side: &str, scenario: &RefereeScenario) -> String {
+    scenario
+        .sides
+        .iter()
+        .find(|candidate| candidate.id == side)
+        .map(|candidate| candidate.name.clone())
+        .unwrap_or_else(|| "Neutral".to_string())
+}
+
+fn side_color(side: &str, scenario: &RefereeScenario, p: &Palette) -> egui::Color32 {
+    let index = scenario
+        .sides
+        .iter()
+        .position(|candidate| candidate.id == side)
+        .unwrap_or(2);
+    match index {
+        0 => p.sand,
+        1 => p.blue,
+        _ => p.muted,
+    }
+}
+
+fn short_unit_name(name: &str) -> &str {
+    name.split_whitespace().last().unwrap_or(name)
+}
+
 fn front_force_ui(ui: &mut egui::Ui, label: &str, form: &mut FrontForceForm, p: &Palette) {
     ui.heading(label);
     egui::Grid::new(format!("{label}_front_identity"))
@@ -4458,5 +4988,21 @@ mod tests {
     fn aftermath_demo_starts_in_aftermath() {
         let app = DrumfireApp::demo_campaign_aftermath();
         assert!(matches!(app.campaign_screen, CampaignScreen::Aftermath(_)));
+    }
+
+    #[test]
+    fn referee_demo_resolves_two_days() {
+        let app = DrumfireApp::demo_referee();
+        assert!(app.referee_active);
+        assert_eq!(app.referee_days.len(), 2);
+    }
+
+    #[test]
+    fn referee_day_resolution_advances() {
+        let mut app = DrumfireApp::default();
+        app.open_referee();
+        app.resolve_referee_day();
+        assert!(app.error.is_none());
+        assert_eq!(app.referee_days.len(), 1);
     }
 }

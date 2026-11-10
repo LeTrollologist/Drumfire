@@ -9,6 +9,8 @@ their own version in [`docs/rules.md`](docs/rules.md).
 
 - Referee mode: a roleplay conflict packet with a scenario, two order sheets,
   multi-day resolution, a conflict log, and an exported Markdown report.
+- Referee GUI console: map, unit chips, side views, per-unit order entry,
+  day-by-day resolution, and clipboard report export.
 - Connected-zone movement, ground engagements through the Battle engine, air and
   naval support, supply tracing, recon contacts, and casualty reports.
 - CLI `referee scenario`, `referee orders`, `referee resolve`, `referee report`,

@@ -7,6 +7,28 @@ multi-day report, and uses it as the shared record for roleplay.
 The first packet is **The Alder Corridor**: Aurelia vs Vermillion, seven zones,
 five days, and two order sheets.
 
+![Referee console](referee.png)
+
+---
+
+## 1. GUI referee console
+
+```sh
+cargo run -p drumfire-gui -- --demo-referee
+```
+
+The console provides:
+
+- a connected-zone map with owners, forts, and unit chips;
+- **Referee (all)**, **Aurelia**, and **Vermillion** views;
+- per-unit order entry for both sides: Defend, Move, Attack, Recon, Resupply;
+- target selectors for movement and attacks;
+- **Resolve day** and **Copy report as Markdown**;
+- the latest day's events, casualties, and control changes.
+
+There is no player side and no victory screen. The view selector is an
+information filter, not a faction login.
+
 ---
 
 ## 1. The packet
