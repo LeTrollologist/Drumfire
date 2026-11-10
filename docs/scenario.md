@@ -187,6 +187,11 @@ A written scenario is a full initial state, not a patch on top of the built-in
 one. `campaign scenario --out` writes the built-in template; edit the names and
 values, then run `campaign demo --scenario path`.
 
+Scenarios are validated before simulation: unique node/formation IDs, valid
+routes, fortification 1–10, garrison ≥ 1, formation morale/supply 0–100,
+experience 0–10, module dependencies, and starting resources 0–100. Invalid
+files return an error instead of panicking. CLI JSON inputs are capped at 16 MiB.
+
 ---
 
 ## 5. Campaign log

@@ -3,7 +3,10 @@
 All notable changes to Drumfire are documented here. The combat rules have
 their own version in [`docs/rules.md`](docs/rules.md).
 
-## Unreleased
+## 0.3.0 — 2026-11-10
+
+The referee release: a roleplay conflict console and packet, plus hardened
+scenario validation and bounded JSON input.
 
 ### Added
 
@@ -16,6 +19,15 @@ their own version in [`docs/rules.md`](docs/rules.md).
 - CLI `referee scenario`, `referee orders`, `referee resolve`, `referee report`,
   `referee demo`, and `referee packet`.
 - [`docs/referee.md`](docs/referee.md) and the `referee-packet/` example packet.
+
+### Fixed
+
+- Campaign and referee scenarios now validate numeric ranges, duplicate IDs,
+  routes, capitals, names, module dependencies, and unit/formation values before
+  simulation. Malformed scenarios return an error instead of panicking.
+- CLI JSON inputs are capped at 16 MiB before reading or deserializing.
+- Referee zones can carry map coordinates for the console.
+- README/API examples now include the `capital` and `customcapital` shards.
 
 ## 0.2.0 — 2026-11-09
 

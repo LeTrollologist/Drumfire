@@ -11,7 +11,7 @@
 <!-- Tier 1: project metadata -->
 <p align="center">
   <a href="https://github.com/LeTrollologist/Drumfire/releases">
-    <img src="https://img.shields.io/badge/Release-v0.2.0-D6A45D?style=for-the-badge&logo=github&logoColor=1A120B&labelColor=1A120B" alt="Release" />
+    <img src="https://img.shields.io/badge/Release-v0.3.0-D6A45D?style=for-the-badge&logo=github&logoColor=1A120B&labelColor=1A120B" alt="Release" />
   </a>
   <a href="crates/">
     <img src="https://img.shields.io/badge/Engine-Rust-E8963F?style=for-the-badge&logo=rust&logoColor=1A120B&labelColor=1A120B" alt="Engine: Rust" />
@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-83_passing-3FA796?style=flat-square&labelColor=1A120B" alt="83 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-86_passing-3FA796?style=flat-square&labelColor=1A120B" alt="86 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,11 +69,11 @@
 
 </div>
 
-**Status:** Phase 13 — battle modes, the Halcyon Sweep campaign, a scenario
-ruleset with module toggles and NationStates capital import, and a **referee
-conflict console** for roleplay adjudication. Deterministic core, CLI, egui
-desktop UI, and read-only NationStates data. No account login, no write actions,
-no credentials.
+**Status:** Phase 14 — battle modes, the Halcyon Sweep campaign, a scenario
+ruleset with module toggles and NationStates capital lookup, and a **referee
+conflict console** for roleplay adjudication. Scenarios are validated and CLI
+JSON input is capped at 16 MiB. Deterministic core, CLI, egui desktop UI, and
+read-only NationStates data. No account login, no write actions, no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -202,7 +202,7 @@ The built-in campaign is **The Halcyon Sweep**. Its scenario file is
 formations, forts, garrisons, starting resources, and ruleset modules are
 editable. The GUI exposes the same values as text fields and sliders under
 **Ruleset** and **Scenario setup**. NationStates `capital` and `customcapital`
-shards provide the capital name for imported nations.
+shards provide a capital name for lookup; scenario values remain directly editable.
 
 Full design: [`docs/campaign.md`](docs/campaign.md). Scenario schema:
 [`docs/scenario.md`](docs/scenario.md).
@@ -383,7 +383,7 @@ factors; `config` and `home` are optional.
 | `dogfight` | implemented, separate air schema | Pass | Aircraft |
 | `naval` | implemented, separate fleet schema | Salvo | Ships |
 | `frontlines` | implemented, sector/reserves schema | Day | Sectors |
-| `campaign` | implemented slice, meta-layer | Operation | Formations |
+| `campaign` | implemented, meta-layer | Operation | Formations |
 
 A serialized Battle input omits `mode` so existing logs and hashes remain stable.
 A Skirmish input includes it.
@@ -436,7 +436,7 @@ Drumfire is **read-only**. It fetches one nation’s public data with a single
 batched request:
 
 ```text
-q=name+fullname+region+population+category+motto+currency+flag
+q=name+fullname+region+population+category+capital+customcapital+motto+currency+flag
 v=13
 ```
 

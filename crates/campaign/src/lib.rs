@@ -6,6 +6,8 @@
 
 pub mod referee;
 
+use std::collections::HashSet;
+
 use drumfire_core::dogfight::{
     replay_dogfight, simulate_dogfight, DogfightError, DogfightLog, DogfightReplayError,
 };
@@ -326,6 +328,76 @@ impl CampaignScenario {
         }
         if !(1..=50).contains(&self.max_turns) {
             return Err("max_turns must be between 1 and 50".to_string());
+        }
+        for (label, value) in [
+            ("starting_will", self.starting_will),
+            ("starting_supply", self.starting_supply),
+            ("starting_intel", self.starting_intel),
+        ] {
+            if !(0..=100).contains(&value) {
+                return Err(format!("{label} must be between 0 and 100"));
+            }
+        }
+        let mut node_ids = HashSet::new();
+        for node in &self.nodes {
+            if node.id.trim().is_empty() || node.name.trim().is_empty() {
+                return Err("every node needs an id and a name".to_string());
+            }
+            if !node_ids.insert(node.id.as_str()) {
+                return Err(format!("duplicate node id {}", node.id));
+            }
+            if !(1..=10).contains(&node.fortification) {
+                return Err(format!(
+                    "node {} fortification must be between 1 and 10",
+                    node.id
+                ));
+            }
+            if node.enemy_garrison == 0 {
+                return Err(format!(
+                    "node {} enemy_garrison must be at least 1",
+                    node.id
+                ));
+            }
+        }
+        for node in &self.nodes {
+            for connection in &node.connections {
+                if connection == &node.id {
+                    return Err(format!("node {} connects to itself", node.id));
+                }
+                if !node_ids.contains(connection.as_str()) {
+                    return Err(format!(
+                        "node {} connects to unknown node {}",
+                        node.id, connection
+                    ));
+                }
+            }
+        }
+        let mut formation_ids = HashSet::new();
+        for formation in &self.formations {
+            if formation.id.trim().is_empty() || formation.name.trim().is_empty() {
+                return Err("every formation needs an id and a name".to_string());
+            }
+            if !formation_ids.insert(formation.id.as_str()) {
+                return Err(format!("duplicate formation id {}", formation.id));
+            }
+            if !(1..=100).contains(&formation.strength) {
+                return Err(format!(
+                    "formation {} strength must be between 1 and 100",
+                    formation.id
+                ));
+            }
+            if formation.morale > 100 || formation.supply > 100 {
+                return Err(format!(
+                    "formation {} morale and supply must be between 0 and 100",
+                    formation.id
+                ));
+            }
+            if formation.experience > 10 {
+                return Err(format!(
+                    "formation {} experience must be between 0 and 10",
+                    formation.id
+                ));
+            }
         }
         for required in [
             "vantage", "halcyon", "orne", "callas", "sable", "vesper", "meridian",
@@ -1687,5 +1759,20 @@ mod tests {
             CampaignModules::preset(ModulePreset::CombinedArms).preset_name(),
             "Combined Arms"
         );
+    }
+
+    #[test]
+    fn invalid_scenario_values_are_rejected() {
+        let mut scenario = CampaignScenario::default();
+        scenario.formations[0].morale = 101;
+        assert!(Campaign::from_scenario(seed(), scenario).is_err());
+
+        let mut scenario = CampaignScenario::default();
+        scenario.nodes[0].fortification = 0;
+        assert!(Campaign::from_scenario(seed(), scenario).is_err());
+
+        let mut scenario = CampaignScenario::default();
+        scenario.nodes[1].id = scenario.nodes[0].id.clone();
+        assert!(Campaign::from_scenario(seed(), scenario).is_err());
     }
 }

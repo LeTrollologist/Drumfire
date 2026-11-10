@@ -769,19 +769,69 @@ impl RefereeScenario {
         if self.name.trim().is_empty() {
             return Err(RefereeError::Scenario("scenario name is empty".to_string()));
         }
+        if !(1..=365).contains(&self.max_days) {
+            return Err(RefereeError::Scenario(
+                "max_days must be between 1 and 365".to_string(),
+            ));
+        }
+        self.modules.validate().map_err(RefereeError::Scenario)?;
         if self.sides.len() < 2 {
             return Err(RefereeError::Scenario(
                 "a conflict needs at least two sides".to_string(),
             ));
         }
-        let side_ids: HashSet<&str> = self.sides.iter().map(|side| side.id.as_str()).collect();
+        let mut side_ids = HashSet::new();
+        for side in &self.sides {
+            if side.id.trim().is_empty() || side.name.trim().is_empty() {
+                return Err(RefereeError::Scenario(
+                    "every side needs an id and a name".to_string(),
+                ));
+            }
+            if side.id == "neutral" {
+                return Err(RefereeError::Scenario(
+                    "side id 'neutral' is reserved".to_string(),
+                ));
+            }
+            if !side_ids.insert(side.id.as_str()) {
+                return Err(RefereeError::Scenario(format!(
+                    "duplicate side id {}",
+                    side.id
+                )));
+            }
+        }
         let zone_ids: HashSet<&str> = self.zones.iter().map(|zone| zone.id.as_str()).collect();
         if self.zones.len() < 2 {
             return Err(RefereeError::Scenario(
                 "a conflict needs at least two zones".to_string(),
             ));
         }
+        if zone_ids.len() != self.zones.len() {
+            return Err(RefereeError::Scenario(
+                "zone ids must be unique".to_string(),
+            ));
+        }
         for zone in &self.zones {
+            if zone.id.trim().is_empty() || zone.name.trim().is_empty() {
+                return Err(RefereeError::Scenario(
+                    "every zone needs an id and a name".to_string(),
+                ));
+            }
+            if !(1..=10).contains(&zone.fortification) {
+                return Err(RefereeError::Scenario(format!(
+                    "zone {} fortification must be between 1 and 10",
+                    zone.id
+                )));
+            }
+            if !zone.x.is_finite()
+                || !zone.y.is_finite()
+                || !(0.0..=1.0).contains(&zone.x)
+                || !(0.0..=1.0).contains(&zone.y)
+            {
+                return Err(RefereeError::Scenario(format!(
+                    "zone {} coordinates must be finite and between 0 and 1",
+                    zone.id
+                )));
+            }
             if !side_ids.contains(zone.owner.as_str()) && zone.owner != "neutral" {
                 return Err(RefereeError::Scenario(format!(
                     "zone {} has unknown owner {}",
@@ -789,6 +839,12 @@ impl RefereeScenario {
                 )));
             }
             for connection in &zone.connections {
+                if connection == &zone.id {
+                    return Err(RefereeError::Scenario(format!(
+                        "zone {} connects to itself",
+                        zone.id
+                    )));
+                }
                 if !zone_ids.contains(connection.as_str()) {
                     return Err(RefereeError::Scenario(format!(
                         "zone {} connects to unknown zone {}",
@@ -797,7 +853,27 @@ impl RefereeScenario {
                 }
             }
         }
+        for side in &self.sides {
+            if !zone_ids.contains(side.capital_zone.as_str()) {
+                return Err(RefereeError::Scenario(format!(
+                    "side {} capital zone {} does not exist",
+                    side.id, side.capital_zone
+                )));
+            }
+        }
+        let mut unit_ids = HashSet::new();
         for unit in &self.units {
+            if unit.id.trim().is_empty() || unit.name.trim().is_empty() {
+                return Err(RefereeError::Scenario(
+                    "every unit needs an id and a name".to_string(),
+                ));
+            }
+            if !unit_ids.insert(unit.id.as_str()) {
+                return Err(RefereeError::Scenario(format!(
+                    "duplicate unit id {}",
+                    unit.id
+                )));
+            }
             if !side_ids.contains(unit.side.as_str()) {
                 return Err(RefereeError::Scenario(format!(
                     "unit {} has unknown side {}",
@@ -808,6 +884,18 @@ impl RefereeScenario {
                 return Err(RefereeError::Scenario(format!(
                     "unit {} starts in unknown zone {}",
                     unit.id, unit.zone
+                )));
+            }
+            if unit.strength == 0 {
+                return Err(RefereeError::Scenario(format!(
+                    "unit {} strength must be at least 1",
+                    unit.id
+                )));
+            }
+            if unit.morale > 100 || unit.supply > 100 || unit.experience > 10 {
+                return Err(RefereeError::Scenario(format!(
+                    "unit {} morale/supply or experience is out of range",
+                    unit.id
                 )));
             }
         }
@@ -1230,6 +1318,17 @@ mod tests {
     fn unknown_zone_is_rejected() {
         let mut scenario = RefereeScenario::demo();
         scenario.zones[0].connections.push("missing".to_string());
+        assert!(scenario.validate().is_err());
+    }
+
+    #[test]
+    fn invalid_unit_values_are_rejected() {
+        let mut scenario = RefereeScenario::demo();
+        scenario.units[0].morale = 101;
+        assert!(scenario.validate().is_err());
+
+        let mut scenario = RefereeScenario::demo();
+        scenario.max_days = 0;
         assert!(scenario.validate().is_err());
     }
 

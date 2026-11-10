@@ -526,7 +526,23 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+const MAX_JSON_BYTES: u64 = 16 * 1024 * 1024;
+
 fn read_json<T: DeserializeOwned>(path: &Path) -> Result<T> {
+    read_json_with_limit(path, MAX_JSON_BYTES)
+}
+
+fn read_json_with_limit<T: DeserializeOwned>(path: &Path, max_bytes: u64) -> Result<T> {
+    let metadata =
+        std::fs::metadata(path).with_context(|| format!("failed to stat {}", path.display()))?;
+    if metadata.len() > max_bytes {
+        anyhow::bail!(
+            "{} is {} bytes; the JSON input limit is {} bytes",
+            path.display(),
+            metadata.len(),
+            max_bytes
+        );
+    }
     let text = std::fs::read_to_string(path)
         .with_context(|| format!("failed to read {}", path.display()))?;
     serde_json::from_str(&text).with_context(|| format!("invalid JSON in {}", path.display()))
@@ -1061,4 +1077,16 @@ fn explain(input: &BattleInput) -> Result<()> {
         p * 100.0
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn oversized_json_is_rejected_before_reading() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
+        let result: Result<serde_json::Value> = read_json_with_limit(&path, 1);
+        assert!(result.is_err());
+    }
 }
