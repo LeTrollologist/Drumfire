@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Drumfire is pre-1.0. Security fixes land on the latest `0.3.x` release and on
+Drumfire is pre-1.0. Security fixes land on the latest `0.4.x` release and on
 `main`.
 
 ## Reporting a vulnerability

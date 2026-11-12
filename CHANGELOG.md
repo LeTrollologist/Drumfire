@@ -3,7 +3,11 @@
 All notable changes to Drumfire are documented here. The combat rules have
 their own version in [`docs/rules.md`](docs/rules.md).
 
-## Unreleased
+## 0.4.0 — 2026-11-12
+
+The map-generated operations release: campaign options come from reachable
+nodes, referee movement is simultaneous, and the referee console can load and
+export packets. Reserved modules are now explicitly disabled.
 
 ### Changed
 
