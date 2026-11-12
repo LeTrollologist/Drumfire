@@ -4,25 +4,25 @@
     "start_date": "2026-11-10",
     "max_days": 5,
     "modules": {
-      "advanced_rules": true,
-      "intel": true,
+      "advanced_rules": false,
+      "intel": false,
       "logistics": true,
       "manpower": true,
-      "reserve_manpower": true,
+      "reserve_manpower": false,
       "tanks": true,
       "planes": true,
       "ships": true,
-      "satellites": true,
+      "satellites": false,
       "strategic_weapons": false,
       "rods_from_god": false,
       "nuclear_weapons": false,
-      "population": true,
-      "population_stability": true,
-      "occupation": true,
+      "population": false,
+      "population_stability": false,
+      "occupation": false,
       "liberation": false,
-      "nationstates": true,
-      "alliances": true,
-      "diplomacy": true
+      "nationstates": false,
+      "alliances": false,
+      "diplomacy": false
     },
     "sides": [
       {
@@ -220,35 +220,32 @@
     {
       "day": 1,
       "events": [
-        "Aurelian 1st Corps occupies Rail Junction",
         "Aurelian 1st Air Wing reconnoiters from Aurelia Capital",
-        "Aurelia holds Rail Junction after 11 rounds",
-        "Vermillion 2nd Air Wing reconnoiters from Vermillion Capital"
+        "Vermillion 2nd Air Wing reconnoiters from Vermillion Capital",
+        "Vermillion holds Rail Junction after 16 rounds"
       ],
       "casualties": [
         {
-          "side": "vermillion",
-          "unit": "Vermillion 7th Corps",
-          "losses": 8574
-        },
-        {
           "side": "aurelia",
           "unit": "Aurelian 1st Corps",
-          "losses": 6989
+          "losses": 9826
+        },
+        {
+          "side": "vermillion",
+          "unit": "Vermillion 7th Corps",
+          "losses": 8154
         }
       ],
-      "control_changes": [
-        "Aurelia occupied Rail Junction"
-      ],
+      "control_changes": [],
       "contacts": [],
       "notes": []
     },
     {
       "day": 2,
       "events": [
-        "Aurelian 2nd Corps advances from Aurelia Capital to Alder Gate",
         "Aurelian 1st Air Wing reconnoiters from Aurelia Capital",
-        "Vermillion 8th Corps advances from Vermillion Capital to Vesper"
+        "Aurelia advances into Alder Gate",
+        "Vermillion advances into Vesper"
       ],
       "casualties": [],
       "control_changes": [],
@@ -258,28 +255,13 @@
     {
       "day": 3,
       "events": [
-        "Vermillion holds Vesper after 16 rounds",
-        "Aurelian 2nd Corps advances from Alder Gate to Rail Junction",
-        "Vermillion 7th Corps holds position"
+        "Vermillion 7th Corps holds position",
+        "Aurelia occupies Rail Junction"
       ],
-      "casualties": [
-        {
-          "side": "aurelia",
-          "unit": "Aurelian 1st Corps",
-          "losses": 4471
-        },
-        {
-          "side": "vermillion",
-          "unit": "Vermillion 7th Corps",
-          "losses": 2011
-        },
-        {
-          "side": "vermillion",
-          "unit": "Vermillion 8th Corps",
-          "losses": 6632
-        }
+      "casualties": [],
+      "control_changes": [
+        "Aurelia occupied Rail Junction"
       ],
-      "control_changes": [],
       "contacts": [],
       "notes": []
     },
@@ -287,24 +269,24 @@
       "day": 4,
       "events": [
         "Aurelian 1st Corps holds position",
-        "Aurelia holds Rail Junction after 9 rounds",
-        "Vermillion 8th Corps is already at Vesper"
+        "Vermillion 8th Corps is already at Vesper",
+        "Aurelia holds Rail Junction after 11 rounds"
       ],
       "casualties": [
         {
           "side": "vermillion",
           "unit": "Vermillion 7th Corps",
-          "losses": 330
+          "losses": 2351
         },
         {
           "side": "aurelia",
           "unit": "Aurelian 1st Corps",
-          "losses": 269
+          "losses": 1425
         },
         {
           "side": "aurelia",
           "unit": "Aurelian 2nd Corps",
-          "losses": 4491
+          "losses": 5897
         }
       ],
       "control_changes": [],
@@ -374,7 +356,7 @@
       "side": "aurelia",
       "branch": "ground",
       "zone": "rail_junction",
-      "strength": 271,
+      "strength": 749,
       "morale": 81,
       "supply": 100,
       "experience": 3
@@ -385,7 +367,7 @@
       "side": "aurelia",
       "branch": "ground",
       "zone": "rail_junction",
-      "strength": 4509,
+      "strength": 3103,
       "morale": 77,
       "supply": 100,
       "experience": 2
@@ -407,7 +389,7 @@
       "side": "vermillion",
       "branch": "ground",
       "zone": "vesper",
-      "strength": 85,
+      "strength": 495,
       "morale": 79,
       "supply": 100,
       "experience": 3
@@ -418,7 +400,7 @@
       "side": "vermillion",
       "branch": "ground",
       "zone": "vesper",
-      "strength": 1368,
+      "strength": 8000,
       "morale": 75,
       "supply": 100,
       "experience": 2
@@ -435,5 +417,5 @@
       "experience": 2
     }
   ],
-  "summary": "Conflict: The Alder Corridor\nAurelia: 3 zones; units Aurelian 1st Corps (271), Aurelian 2nd Corps (4509), Aurelian 1st Air Wing (2400)\nVermillion: 2 zones; units Vermillion 7th Corps (85), Vermillion 8th Corps (1368), Vermillion 2nd Air Wing (2200)"
+  "summary": "Conflict: The Alder Corridor\nAurelia: 3 zones; units Aurelian 1st Corps (749), Aurelian 2nd Corps (3103), Aurelian 1st Air Wing (2400)\nVermillion: 2 zones; units Vermillion 7th Corps (495), Vermillion 8th Corps (8000), Vermillion 2nd Air Wing (2200)"
 }

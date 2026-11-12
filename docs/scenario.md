@@ -116,27 +116,26 @@ Invalid combinations are rejected by scenario validation and by campaign play.
 | `tanks` | Ground attacker force gets an armored bonus |
 | `planes` | Dogfight operations are available |
 | `ships` | Naval operations are available |
-| `advanced_rules` | Reserved rules-layer flag |
-| `intel` | Reserved fog/intent flag; intent is currently shown |
-| `satellites` | Reserved strategic-recon flag |
-| `strategic_weapons`, `rods_from_god`, `nuclear_weapons` | Reserved strategic-strike layer |
-| `population`, `population_stability` | Reserved society layer |
-| `occupation`, `liberation` | Reserved occupation layer |
-| `nationstates` | Marks scenarios intended for NS-derived data |
-| `alliances`, `diplomacy` | Reserved coalition layer |
+| `advanced_rules` | Reserved; disabled by validation |
+| `intel` | Reserved; disabled by validation |
+| `satellites` | Reserved; disabled by validation |
+| `strategic_weapons`, `rods_from_god`, `nuclear_weapons` | Reserved; disabled by validation |
+| `population`, `population_stability` | Reserved; disabled by validation |
+| `occupation`, `liberation` | Reserved; disabled by validation |
+| `nationstates` | Reserved; disabled by validation |
+| `alliances`, `diplomacy` | Reserved; disabled by validation |
 
-The reserved modules are serialized and validated now so scenarios and campaign
-logs stay stable as their simulation hooks are added.
+Only `manpower`, `logistics`, `tanks`, `planes`, and `ships` have simulation
+effects. Enabling a reserved module is a validation error, not a silent no-op.
 
 ### Presets
 
 | Preset | Contents |
 |---|---|
 | `Abstract` | Minimal rules; no manpower/logistics; planes and ships remain available |
-| `Combined Arms` | Default; foundations, manpower, equipment, satellites, society, alliances |
-| `Full Spectrum` | Everything, including strategic weapons and liberation |
+| `Combined Arms` | Default; logistics, manpower, tanks, planes, ships |
 
-Custom combinations are allowed if dependencies pass.
+Custom combinations are allowed if they use only implemented modules.
 
 ---
 
@@ -151,6 +150,7 @@ Custom combinations are allowed if dependencies pass.
   "starting_will": 70,
   "starting_supply": 60,
   "starting_intel": 40,
+  "victory_nodes": ["meridian"],
   "modules": {
     "planes": true,
     "ships": true,

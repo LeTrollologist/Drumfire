@@ -107,7 +107,7 @@ impl EnemyIntent {
 }
 
 /// The battle mode used by an operation.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum OperationKind {
     Frontlines,
@@ -178,7 +178,6 @@ impl Default for CampaignModules {
 pub enum ModulePreset {
     Abstract,
     CombinedArms,
-    FullSpectrum,
 }
 
 impl CampaignModules {
@@ -206,46 +205,25 @@ impl CampaignModules {
                 diplomacy: false,
             },
             ModulePreset::CombinedArms => Self {
-                advanced_rules: true,
-                intel: true,
+                advanced_rules: false,
+                intel: false,
                 logistics: true,
                 manpower: true,
-                reserve_manpower: true,
+                reserve_manpower: false,
                 tanks: true,
                 planes: true,
                 ships: true,
-                satellites: true,
+                satellites: false,
                 strategic_weapons: false,
                 rods_from_god: false,
                 nuclear_weapons: false,
-                population: true,
-                population_stability: true,
-                occupation: true,
+                population: false,
+                population_stability: false,
+                occupation: false,
                 liberation: false,
-                nationstates: true,
-                alliances: true,
-                diplomacy: true,
-            },
-            ModulePreset::FullSpectrum => Self {
-                advanced_rules: true,
-                intel: true,
-                logistics: true,
-                manpower: true,
-                reserve_manpower: true,
-                tanks: true,
-                planes: true,
-                ships: true,
-                satellites: true,
-                strategic_weapons: true,
-                rods_from_god: true,
-                nuclear_weapons: true,
-                population: true,
-                population_stability: true,
-                occupation: true,
-                liberation: true,
-                nationstates: true,
-                alliances: true,
-                diplomacy: true,
+                nationstates: false,
+                alliances: false,
+                diplomacy: false,
             },
         }
     }
@@ -255,14 +233,34 @@ impl CampaignModules {
             "Abstract"
         } else if *self == Self::preset(ModulePreset::CombinedArms) {
             "Combined Arms"
-        } else if *self == Self::preset(ModulePreset::FullSpectrum) {
-            "Full Spectrum"
         } else {
             "Custom"
         }
     }
 
     pub fn validate(&self) -> Result<(), String> {
+        for (name, enabled) in [
+            ("advanced_rules", self.advanced_rules),
+            ("intel", self.intel),
+            ("reserve_manpower", self.reserve_manpower),
+            ("satellites", self.satellites),
+            ("strategic_weapons", self.strategic_weapons),
+            ("rods_from_god", self.rods_from_god),
+            ("nuclear_weapons", self.nuclear_weapons),
+            ("population", self.population),
+            ("population_stability", self.population_stability),
+            ("occupation", self.occupation),
+            ("liberation", self.liberation),
+            ("nationstates", self.nationstates),
+            ("alliances", self.alliances),
+            ("diplomacy", self.diplomacy),
+        ] {
+            if enabled {
+                return Err(format!(
+                    "module {name} is reserved and must be disabled in this build"
+                ));
+            }
+        }
         if self.reserve_manpower && !self.manpower {
             return Err("reserve manpower requires manpower".to_string());
         }
@@ -299,6 +297,8 @@ pub struct CampaignScenario {
     pub modules: CampaignModules,
     pub nodes: Vec<Node>,
     pub formations: Vec<Formation>,
+    /// Capturing all of these wins the campaign.
+    pub victory_nodes: Vec<String>,
 }
 
 impl Default for CampaignScenario {
@@ -314,6 +314,7 @@ impl Default for CampaignScenario {
             modules: CampaignModules::default(),
             nodes: default_nodes(),
             formations: default_formations(),
+            victory_nodes: vec!["meridian".to_string()],
         }
     }
 }
@@ -380,9 +381,9 @@ impl CampaignScenario {
             if !formation_ids.insert(formation.id.as_str()) {
                 return Err(format!("duplicate formation id {}", formation.id));
             }
-            if !(1..=100).contains(&formation.strength) {
+            if !(10..=100).contains(&formation.strength) {
                 return Err(format!(
-                    "formation {} strength must be between 1 and 100",
+                    "formation {} strength must be between 10 and 100",
                     formation.id
                 ));
             }
@@ -419,6 +420,14 @@ impl CampaignScenario {
                 .any(|formation| formation.id == required)
             {
                 return Err(format!("scenario is missing required formation {required}"));
+            }
+        }
+        if self.victory_nodes.is_empty() {
+            return Err("at least one victory node is required".to_string());
+        }
+        for victory in &self.victory_nodes {
+            if !self.nodes.iter().any(|node| node.id == *victory) {
+                return Err(format!("victory node {victory} does not exist"));
             }
         }
         self.modules.validate()?;
@@ -559,94 +568,57 @@ fn default_formations() -> Vec<Formation> {
     ]
 }
 
-/// A concrete operation in the theater.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum OperationId {
-    IronTide,
-    SwiftBridge,
-    BrightLance,
-    CrimsonWake,
-    SableHammer,
-    Ashfall,
-    Meridian,
+fn operation_modes(kind: NodeKind) -> Vec<OperationKind> {
+    match kind {
+        NodeKind::Ridge | NodeKind::RailHub | NodeKind::Industrial | NodeKind::Capital => {
+            vec![
+                OperationKind::Frontlines,
+                OperationKind::Battle,
+                OperationKind::Skirmish,
+            ]
+        }
+        NodeKind::Airbase => vec![
+            OperationKind::Dogfight,
+            OperationKind::Skirmish,
+            OperationKind::Battle,
+        ],
+        NodeKind::Port => vec![
+            OperationKind::Naval,
+            OperationKind::Battle,
+            OperationKind::Skirmish,
+        ],
+        NodeKind::Bridge => vec![
+            OperationKind::Skirmish,
+            OperationKind::Battle,
+            OperationKind::Frontlines,
+        ],
+    }
 }
 
-impl OperationId {
-    pub const ALL: [OperationId; 7] = [
-        OperationId::IronTide,
-        OperationId::SwiftBridge,
-        OperationId::BrightLance,
-        OperationId::CrimsonWake,
-        OperationId::SableHammer,
-        OperationId::Ashfall,
-        OperationId::Meridian,
-    ];
+/// A concrete operation: one node, one mode.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct OperationKey {
+    pub node_id: String,
+    pub kind: OperationKind,
+}
 
-    pub fn kind(self) -> OperationKind {
-        match self {
-            OperationId::IronTide => OperationKind::Frontlines,
-            OperationId::SwiftBridge => OperationKind::Skirmish,
-            OperationId::BrightLance => OperationKind::Dogfight,
-            OperationId::CrimsonWake => OperationKind::Naval,
-            OperationId::SableHammer | OperationId::Ashfall | OperationId::Meridian => {
-                OperationKind::Battle
-            }
+impl OperationKey {
+    pub fn new(node_id: impl Into<String>, kind: OperationKind) -> Self {
+        Self {
+            node_id: node_id.into(),
+            kind,
         }
     }
 
-    pub fn node_id(self) -> &'static str {
-        match self {
-            OperationId::IronTide => "vantage",
-            OperationId::SwiftBridge => "orne",
-            OperationId::BrightLance => "halcyon",
-            OperationId::CrimsonWake => "callas",
-            OperationId::SableHammer => "sable",
-            OperationId::Ashfall => "vesper",
-            OperationId::Meridian => "meridian",
-        }
-    }
-
-    pub fn title(self) -> &'static str {
-        match self {
-            OperationId::IronTide => "Operation Iron Tide",
-            OperationId::SwiftBridge => "Operation Swift Bridge",
-            OperationId::BrightLance => "Operation Bright Lance",
-            OperationId::CrimsonWake => "Operation Crimson Wake",
-            OperationId::SableHammer => "Operation Sable Hammer",
-            OperationId::Ashfall => "Operation Ashfall",
-            OperationId::Meridian => "Operation Meridian",
-        }
-    }
-
-    pub fn formation_id(self) -> &'static str {
-        match self {
-            OperationId::IronTide | OperationId::SableHammer => "old-ironsides",
-            OperationId::SwiftBridge => "ridgewalkers",
-            OperationId::BrightLance => "nightjars",
-            OperationId::CrimsonWake => "salt-watch",
-            OperationId::Ashfall => "ridgewalkers",
-            OperationId::Meridian => "reserve-corps",
-        }
-    }
-
-    pub fn code(self) -> u8 {
-        match self {
-            OperationId::IronTide => 1,
-            OperationId::SwiftBridge => 2,
-            OperationId::BrightLance => 3,
-            OperationId::CrimsonWake => 4,
-            OperationId::SableHammer => 5,
-            OperationId::Ashfall => 6,
-            OperationId::Meridian => 7,
-        }
+    pub fn title(&self, node_name: &str) -> String {
+        format!("{} — {}", self.kind.label(), node_name)
     }
 }
 
 /// An operation the player can choose.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OperationOption {
-    pub id: OperationId,
+    pub key: OperationKey,
     pub kind: OperationKind,
     pub node_id: String,
     pub title: String,
@@ -682,7 +654,7 @@ pub struct Aftermath {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct OperationRecord {
     pub turn: u32,
-    pub id: OperationId,
+    pub key: OperationKey,
     pub kind: OperationKind,
     pub node_id: String,
     pub title: String,
@@ -727,7 +699,7 @@ pub enum CampaignError {
     #[error("the campaign is already finished")]
     Finished,
     #[error("operation {0:?} is not available")]
-    Unavailable(OperationId),
+    Unavailable(OperationKey),
     #[error("no formation is available for this operation")]
     MissingFormation,
     #[error(transparent)]
@@ -791,18 +763,30 @@ impl Campaign {
         })
     }
 
-    /// Run the canonical seven-operation demo.
+    /// Auto-play the available campaign operations.
     pub fn demo(seed: Seed) -> Result<Self, CampaignError> {
         let mut campaign = Self::new(seed);
-        for id in OperationId::ALL {
-            campaign.play_operation(id)?;
+        while !campaign.finished {
+            let Some(option) = campaign
+                .options()
+                .into_iter()
+                .find(|option| option.available)
+            else {
+                campaign.finish(CampaignResult::Defeat);
+                break;
+            };
+            campaign.play_operation(option.key)?;
         }
         Ok(campaign)
     }
 
     /// The current air-superiority value derived from node control.
     pub fn air_superiority(&self) -> u8 {
-        if self.node("halcyon").map(|node| node.control) == Some(Control::Player) {
+        if self
+            .nodes
+            .iter()
+            .any(|node| node.kind == NodeKind::Airbase && node.control == Control::Player)
+        {
             75
         } else {
             40
@@ -811,7 +795,11 @@ impl Campaign {
 
     /// The current naval-control value derived from node control.
     pub fn naval_control(&self) -> u8 {
-        if self.node("callas").map(|node| node.control) == Some(Control::Player) {
+        if self
+            .nodes
+            .iter()
+            .any(|node| node.kind == NodeKind::Port && node.control == Control::Player)
+        {
             75
         } else {
             40
@@ -826,111 +814,73 @@ impl Campaign {
         self.nodes.iter_mut().find(|node| node.id == id)
     }
 
-    pub fn formation_for(&self, id: OperationId) -> Option<&Formation> {
-        self.formations
-            .iter()
-            .find(|formation| formation.id == id.formation_id())
-    }
-
     fn formation_mut(&mut self, id: &str) -> Option<&mut Formation> {
         self.formations
             .iter_mut()
             .find(|formation| formation.id == id)
     }
 
-    /// Every operation, with availability and a reason.
+    /// Every operation available from the current front.
     pub fn options(&self) -> Vec<OperationOption> {
-        OperationId::ALL
-            .iter()
-            .map(|id| {
-                let kind = id.kind();
-                let node_id = id.node_id();
-                let node = self.node(node_id);
-                let done = self
-                    .operations
-                    .iter()
-                    .any(|op| op.id == *id && op.aftermath.victory);
+        let mut options = Vec::new();
+        for node in &self.nodes {
+            if node.control == Control::Player || !self.reachable(&node.id) {
+                continue;
+            }
+            for kind in operation_modes(node.kind) {
+                let formation = self.formation_for_kind(kind);
                 let (available, reason) = if self.finished {
                     (false, "campaign finished".to_string())
-                } else if done {
-                    (false, "already attempted".to_string())
-                } else if node
-                    .map(|node| node.control == Control::Player)
-                    .unwrap_or(false)
-                {
-                    (false, "already controlled".to_string())
+                } else if kind == OperationKind::Dogfight && !self.scenario.modules.planes {
+                    (false, "planes module is off".to_string())
+                } else if kind == OperationKind::Naval && !self.scenario.modules.ships {
+                    (false, "ships module is off".to_string())
+                } else if formation.is_none() {
+                    (false, "no formation for this operation".to_string())
                 } else {
-                    match id {
-                        OperationId::IronTide => (true, "available".to_string()),
-                        OperationId::SwiftBridge => {
-                            if self.is_player("vantage") {
-                                (true, "available".to_string())
-                            } else {
-                                (false, "take Vantage Ridge first".to_string())
-                            }
-                        }
-                        OperationId::BrightLance => {
-                            if !self.scenario.modules.planes {
-                                (false, "planes module is off".to_string())
-                            } else if self.is_player("vantage") {
-                                (true, "available".to_string())
-                            } else {
-                                (false, "take Vantage Ridge first".to_string())
-                            }
-                        }
-                        OperationId::CrimsonWake => {
-                            if !self.scenario.modules.ships {
-                                (false, "ships module is off".to_string())
-                            } else if self.is_player("vantage") {
-                                (true, "available".to_string())
-                            } else {
-                                (false, "take Vantage Ridge first".to_string())
-                            }
-                        }
-                        OperationId::SableHammer => {
-                            if self.is_player("halcyon") {
-                                (true, "available".to_string())
-                            } else {
-                                (false, "take Halcyon Airbase first".to_string())
-                            }
-                        }
-                        OperationId::Ashfall => {
-                            if self.is_player("sable") || self.is_player("callas") {
-                                (true, "available".to_string())
-                            } else {
-                                (false, "take Sable Junction or Port Callas".to_string())
-                            }
-                        }
-                        OperationId::Meridian => {
-                            if self.combined_arms_ready() {
-                                (true, "combined-arms gate met".to_string())
-                            } else {
-                                (false, "need Halcyon, Sable, Callas, and Vesper".to_string())
-                            }
-                        }
-                    }
+                    (true, "available".to_string())
                 };
-                OperationOption {
-                    id: *id,
+                options.push(OperationOption {
+                    key: OperationKey::new(&node.id, kind),
                     kind,
-                    node_id: node_id.to_string(),
-                    title: id.title().to_string(),
+                    node_id: node.id.clone(),
+                    title: OperationKey::new(&node.id, kind).title(&node.name),
                     available,
                     reason,
-                }
-            })
-            .collect()
+                });
+            }
+        }
+        options
     }
 
     pub fn is_player(&self, node_id: &str) -> bool {
         self.node(node_id).map(|node| node.control) == Some(Control::Player)
     }
 
-    pub fn combined_arms_ready(&self) -> bool {
-        self.is_player("halcyon")
-            && self.is_player("sable")
-            && self.is_player("callas")
-            && self.is_player("vesper")
+    fn reachable(&self, node_id: &str) -> bool {
+        let Some(node) = self.node(node_id) else {
+            return false;
+        };
+        node.control == Control::Contested
+            || node
+                .connections
+                .iter()
+                .any(|connection| self.is_player(connection))
+    }
+
+    pub fn formation_for_kind(&self, kind: OperationKind) -> Option<&Formation> {
+        let branch = match kind {
+            OperationKind::Dogfight => Branch::Air,
+            OperationKind::Naval => Branch::Naval,
+            _ => Branch::Ground,
+        };
+        self.formations
+            .iter()
+            .filter(|formation| match branch {
+                Branch::Ground => matches!(formation.branch, Branch::Ground | Branch::Reserve),
+                _ => formation.branch == branch,
+            })
+            .max_by_key(|formation| formation.strength)
     }
 
     /// Scenario values can be edited until the first operation is launched.
@@ -976,13 +926,11 @@ impl Campaign {
     }
 
     /// Build the front-line input without mutating the campaign.
-    pub fn frontline_input(&self) -> Result<FrontlineInput, CampaignError> {
+    pub fn frontline_input(&self, node_id: &str) -> Result<FrontlineInput, CampaignError> {
         let formation = self
-            .formation_for(OperationId::IronTide)
+            .formation_for_kind(OperationKind::Frontlines)
             .ok_or(CampaignError::MissingFormation)?;
-        let node = self
-            .node("vantage")
-            .ok_or(CampaignError::MissingFormation)?;
+        let node = self.node(node_id).ok_or(CampaignError::MissingFormation)?;
 
         let total = (formation.strength as u32 * 100).max(100);
         let split = [total * 30 / 100, total * 45 / 100, total * 25 / 100];
@@ -1007,7 +955,7 @@ impl Campaign {
                 intel: Rating::new(intel).unwrap(),
             },
             defender: FrontForce {
-                name: "Halcyon Garrison".to_string(),
+                name: format!("{} Garrison", node.name),
                 reserves: 3000,
                 morale: Morale::new(65).unwrap(),
                 tech: Rating::new(5).unwrap(),
@@ -1047,14 +995,14 @@ impl Campaign {
                 capture_threshold: 0.25,
                 ..FrontlineConfig::default()
             },
-            seed: self.operation_seed(OperationId::IronTide),
+            seed: self.operation_seed(node_id, OperationKind::Frontlines),
         })
     }
 
     /// Build a dogfight input without mutating the campaign.
-    pub fn dogfight_input(&self) -> Result<DogfightInput, CampaignError> {
+    pub fn dogfight_input(&self, node_id: &str) -> Result<DogfightInput, CampaignError> {
         let formation = self
-            .formation_for(OperationId::BrightLance)
+            .formation_for_kind(OperationKind::Dogfight)
             .ok_or(CampaignError::MissingFormation)?;
         let aircraft = (formation.strength / 10).clamp(4, 10);
         let skill = (4 + formation.experience).min(10);
@@ -1073,7 +1021,12 @@ impl Campaign {
                 cohesion: Morale::new(formation.morale).unwrap(),
             },
             defender: AirForce {
-                name: "Halcyon Interceptors".to_string(),
+                name: format!(
+                    "{} Interceptors",
+                    self.node(node_id)
+                        .map(|n| n.name.as_str())
+                        .unwrap_or("Enemy")
+                ),
                 aircraft: drumfire_model::AircraftCount::new(6).unwrap(),
                 pilot_skill: Rating::new(5).unwrap(),
                 aircraft_quality: Rating::new(5).unwrap(),
@@ -1083,15 +1036,15 @@ impl Campaign {
                 cohesion: Morale::new(65).unwrap(),
             },
             config: DogfightConfig::default(),
-            seed: self.operation_seed(OperationId::BrightLance),
+            seed: self.operation_seed(node_id, OperationKind::Dogfight),
         })
     }
 
     /// Build the naval input, including the air-superiority bonus when Halcyon
     /// is controlled.
-    pub fn naval_input(&self) -> Result<NavalInput, CampaignError> {
+    pub fn naval_input(&self, node_id: &str) -> Result<NavalInput, CampaignError> {
         let formation = self
-            .formation_for(OperationId::CrimsonWake)
+            .formation_for_kind(OperationKind::Naval)
             .ok_or(CampaignError::MissingFormation)?;
         let ships = (formation.strength / 15).clamp(2, 8);
         let air_cover = 5 + if self.air_superiority() >= 60 { 2 } else { 0 };
@@ -1110,7 +1063,12 @@ impl Campaign {
                 readiness: Morale::new(formation.morale).unwrap(),
             },
             defender: Fleet {
-                name: "Callas Defense Flotilla".to_string(),
+                name: format!(
+                    "{} Defense Flotilla",
+                    self.node(node_id)
+                        .map(|n| n.name.as_str())
+                        .unwrap_or("Enemy")
+                ),
                 ships: ShipCount::new(4).unwrap(),
                 hull_quality: Rating::new(6).unwrap(),
                 sensors: Rating::new(6).unwrap(),
@@ -1120,23 +1078,23 @@ impl Campaign {
                 readiness: Morale::new(65).unwrap(),
             },
             config: NavalConfig::default(),
-            seed: self.operation_seed(OperationId::CrimsonWake),
+            seed: self.operation_seed(node_id, OperationKind::Naval),
         })
     }
 
     /// Build a ground battle or skirmish input.
-    pub fn ground_input(&self, id: OperationId) -> Result<BattleInput, CampaignError> {
+    pub fn ground_input(&self, key: &OperationKey) -> Result<BattleInput, CampaignError> {
         let formation = self
-            .formation_for(id)
+            .formation_for_kind(key.kind)
             .ok_or(CampaignError::MissingFormation)?;
         let node = self
-            .node(id.node_id())
+            .node(&key.node_id)
             .ok_or(CampaignError::MissingFormation)?;
-        let mode = match id.kind() {
+        let mode = match key.kind {
             OperationKind::Skirmish => Mode::Skirmish,
             _ => Mode::Battle,
         };
-        let force_scale = if id.kind() == OperationKind::Skirmish {
+        let force_scale = if key.kind == OperationKind::Skirmish {
             45
         } else {
             100
@@ -1179,15 +1137,16 @@ impl Campaign {
                 morale_rout_threshold: 10,
                 ..BattleConfig::default()
             },
-            seed: self.operation_seed(id),
+            seed: self.operation_seed(&key.node_id, key.kind),
         })
     }
 
-    fn operation_seed(&self, id: OperationId) -> Seed {
+    fn operation_seed(&self, node_id: &str, kind: OperationKind) -> Seed {
         let mut hasher = Sha256::new();
         hasher.update(self.seed.as_bytes());
         hasher.update(self.turn.to_le_bytes());
-        hasher.update([id.code()]);
+        hasher.update(node_id.as_bytes());
+        hasher.update([kind.code()]);
         let digest = hasher.finalize();
         let mut bytes = [0u8; 32];
         bytes.copy_from_slice(&digest);
@@ -1195,7 +1154,7 @@ impl Campaign {
     }
 
     /// Play one operation and apply its aftermath.
-    pub fn play_operation(&mut self, id: OperationId) -> Result<OperationRecord, CampaignError> {
+    pub fn play_operation(&mut self, key: OperationKey) -> Result<OperationRecord, CampaignError> {
         self.scenario
             .modules
             .validate()
@@ -1206,67 +1165,71 @@ impl Campaign {
         let option = self
             .options()
             .into_iter()
-            .find(|option| option.id == id)
-            .ok_or(CampaignError::Unavailable(id))?;
+            .find(|option| option.key == key)
+            .ok_or_else(|| CampaignError::Unavailable(key.clone()))?;
         if !option.available {
-            return Err(CampaignError::Unavailable(id));
+            return Err(CampaignError::Unavailable(key));
         }
 
         let intent_note = self.resolve_enemy_intent();
+        let node_name = self
+            .node(&key.node_id)
+            .map(|node| node.name.clone())
+            .unwrap_or_else(|| key.node_id.clone());
 
-        let record = match id.kind() {
+        let record = match key.kind {
             OperationKind::Frontlines => {
-                let input = self.frontline_input()?;
+                let input = self.frontline_input(&key.node_id)?;
                 let log = simulate_frontline(&input)?;
-                let aftermath = self.apply_frontline(&log)?;
+                let aftermath = self.apply_frontline(&log, &key.node_id)?;
                 OperationRecord {
                     turn: self.turn,
-                    id,
-                    kind: id.kind(),
-                    node_id: id.node_id().to_string(),
-                    title: id.title().to_string(),
+                    key: key.clone(),
+                    kind: key.kind,
+                    node_id: key.node_id.clone(),
+                    title: key.title(&node_name),
                     log: OperationLog::Frontlines(log),
                     aftermath,
                 }
             }
             OperationKind::Dogfight => {
-                let input = self.dogfight_input()?;
+                let input = self.dogfight_input(&key.node_id)?;
                 let log = simulate_dogfight(&input)?;
-                let aftermath = self.apply_dogfight(&log)?;
+                let aftermath = self.apply_dogfight(&log, &key.node_id)?;
                 OperationRecord {
                     turn: self.turn,
-                    id,
-                    kind: id.kind(),
-                    node_id: id.node_id().to_string(),
-                    title: id.title().to_string(),
+                    key: key.clone(),
+                    kind: key.kind,
+                    node_id: key.node_id.clone(),
+                    title: key.title(&node_name),
                     log: OperationLog::Dogfight(log),
                     aftermath,
                 }
             }
             OperationKind::Naval => {
-                let input = self.naval_input()?;
+                let input = self.naval_input(&key.node_id)?;
                 let log = simulate_naval(&input)?;
-                let aftermath = self.apply_naval(&log)?;
+                let aftermath = self.apply_naval(&log, &key.node_id)?;
                 OperationRecord {
                     turn: self.turn,
-                    id,
-                    kind: id.kind(),
-                    node_id: id.node_id().to_string(),
-                    title: id.title().to_string(),
+                    key: key.clone(),
+                    kind: key.kind,
+                    node_id: key.node_id.clone(),
+                    title: key.title(&node_name),
                     log: OperationLog::Naval(log),
                     aftermath,
                 }
             }
             OperationKind::Battle | OperationKind::Skirmish => {
-                let input = self.ground_input(id)?;
+                let input = self.ground_input(&key)?;
                 let log = simulate(&input)?;
-                let aftermath = self.apply_ground(&log, id)?;
+                let aftermath = self.apply_ground(&log, &key)?;
                 OperationRecord {
                     turn: self.turn,
-                    id,
-                    kind: id.kind(),
-                    node_id: id.node_id().to_string(),
-                    title: id.title().to_string(),
+                    key: key.clone(),
+                    kind: key.kind,
+                    node_id: key.node_id.clone(),
+                    title: key.title(&node_name),
                     log: OperationLog::Ground(log),
                     aftermath,
                 }
@@ -1292,8 +1255,15 @@ impl Campaign {
         Ok(record)
     }
 
-    fn apply_frontline(&mut self, log: &FrontlineLog) -> Result<Aftermath, CampaignError> {
-        let formation_id = OperationId::IronTide.formation_id().to_string();
+    fn apply_frontline(
+        &mut self,
+        log: &FrontlineLog,
+        node_id: &str,
+    ) -> Result<Aftermath, CampaignError> {
+        let formation_id = self
+            .formation_for_kind(OperationKind::Frontlines)
+            .map(|formation| formation.id.clone())
+            .ok_or(CampaignError::MissingFormation)?;
         let initial = log
             .input
             .sectors
@@ -1323,12 +1293,12 @@ impl Campaign {
 
         self.apply_formation(&formation_id, strength_delta, victory);
         self.apply_resources(will_delta, supply_delta, intel_delta, momentum_delta);
-        if victory {
-            if let Some(node) = self.node_mut("vantage") {
-                node.control = Control::Player;
-            }
-        } else if let Some(node) = self.node_mut("vantage") {
-            node.control = Control::Enemy;
+        if let Some(node) = self.node_mut(node_id) {
+            node.control = if victory {
+                Control::Player
+            } else {
+                Control::Enemy
+            };
         }
 
         Ok(Aftermath {
@@ -1336,13 +1306,13 @@ impl Campaign {
             summary: format!(
                 "{} · {}% losses · {}",
                 if victory {
-                    "ridge taken"
+                    "front advanced"
                 } else {
                     "attack stalled"
                 },
                 loss_pct,
                 if victory {
-                    "the road inland is open"
+                    "the line moved"
                 } else {
                     "the front falls back"
                 }
@@ -1353,12 +1323,19 @@ impl Campaign {
             supply_delta,
             intel_delta,
             momentum_delta,
-            control: Some("vantage".to_string()),
+            control: Some(node_id.to_string()),
         })
     }
 
-    fn apply_dogfight(&mut self, log: &DogfightLog) -> Result<Aftermath, CampaignError> {
-        let formation_id = OperationId::BrightLance.formation_id().to_string();
+    fn apply_dogfight(
+        &mut self,
+        log: &DogfightLog,
+        node_id: &str,
+    ) -> Result<Aftermath, CampaignError> {
+        let formation_id = self
+            .formation_for_kind(OperationKind::Dogfight)
+            .map(|formation| formation.id.clone())
+            .ok_or(CampaignError::MissingFormation)?;
         let initial = log.input.attacker.aircraft.get() as f64;
         let final_air = log.result.final_aircraft.attacker as f64;
         let loss_pct = (((initial - final_air) / initial.max(1.0)) * 100.0).round() as i32;
@@ -1370,12 +1347,12 @@ impl Campaign {
 
         self.apply_formation(&formation_id, strength_delta, victory);
         self.apply_resources(will_delta, 0, intel_delta, momentum_delta);
-        if victory {
-            if let Some(node) = self.node_mut("halcyon") {
-                node.control = Control::Player;
-            }
-        } else if let Some(node) = self.node_mut("halcyon") {
-            node.control = Control::Enemy;
+        if let Some(node) = self.node_mut(node_id) {
+            node.control = if victory {
+                Control::Player
+            } else {
+                Control::Enemy
+            };
         }
 
         Ok(Aftermath {
@@ -1392,12 +1369,15 @@ impl Campaign {
             supply_delta: 0,
             intel_delta,
             momentum_delta,
-            control: Some("halcyon".to_string()),
+            control: Some(node_id.to_string()),
         })
     }
 
-    fn apply_naval(&mut self, log: &NavalLog) -> Result<Aftermath, CampaignError> {
-        let formation_id = OperationId::CrimsonWake.formation_id().to_string();
+    fn apply_naval(&mut self, log: &NavalLog, node_id: &str) -> Result<Aftermath, CampaignError> {
+        let formation_id = self
+            .formation_for_kind(OperationKind::Naval)
+            .map(|formation| formation.id.clone())
+            .ok_or(CampaignError::MissingFormation)?;
         let initial = log.input.attacker.ships.get() as f64;
         let final_ships = log.result.final_ships.attacker as f64;
         let loss_pct = (((initial - final_ships) / initial.max(1.0)) * 100.0).round() as i32;
@@ -1409,12 +1389,12 @@ impl Campaign {
 
         self.apply_formation(&formation_id, strength_delta, victory);
         self.apply_resources(will_delta, supply_delta, 0, momentum_delta);
-        if victory {
-            if let Some(node) = self.node_mut("callas") {
-                node.control = Control::Player;
-            }
-        } else if let Some(node) = self.node_mut("callas") {
-            node.control = Control::Enemy;
+        if let Some(node) = self.node_mut(node_id) {
+            node.control = if victory {
+                Control::Player
+            } else {
+                Control::Enemy
+            };
         }
 
         Ok(Aftermath {
@@ -1435,27 +1415,27 @@ impl Campaign {
             supply_delta,
             intel_delta: 0,
             momentum_delta,
-            control: Some("callas".to_string()),
+            control: Some(node_id.to_string()),
         })
     }
 
     fn apply_ground(
         &mut self,
         log: &BattleLog,
-        id: OperationId,
+        key: &OperationKey,
     ) -> Result<Aftermath, CampaignError> {
-        let formation_id = id.formation_id().to_string();
+        let formation_id = self
+            .formation_for_kind(key.kind)
+            .map(|formation| formation.id.clone())
+            .ok_or(CampaignError::MissingFormation)?;
         let initial = log.input.attacker.forces.get() as f64;
         let final_forces = log.result.final_forces.attacker as f64;
         let loss_pct = (((initial - final_forces) / initial.max(1.0)) * 100.0).round() as i32;
         let victory = log.result.winner == Winner::Attacker;
         let strength_delta = -(loss_pct / 2).min(30);
-        let (will_delta, supply_delta, intel_delta, momentum_delta) = match id {
-            OperationId::SwiftBridge => (4, 5, 8, 1),
-            OperationId::SableHammer => (9, 7, 5, 2),
-            OperationId::Ashfall => (12, 4, 4, 2),
-            OperationId::Meridian => (20, 6, 8, 3),
-            _ => (5, 4, 3, 1),
+        let (will_delta, supply_delta, intel_delta, momentum_delta) = match key.kind {
+            OperationKind::Skirmish => (4, 5, 8, 1),
+            _ => (9, 6, 5, 2),
         };
         let will_delta = if victory { will_delta } else { -10 };
         let supply_delta = if victory { supply_delta } else { -8 };
@@ -1464,8 +1444,7 @@ impl Campaign {
 
         self.apply_formation(&formation_id, strength_delta, victory);
         self.apply_resources(will_delta, supply_delta, intel_delta, momentum_delta);
-        let node_id = id.node_id();
-        if let Some(node) = self.node_mut(node_id) {
+        if let Some(node) = self.node_mut(&key.node_id) {
             node.control = if victory {
                 Control::Player
             } else {
@@ -1483,12 +1462,10 @@ impl Campaign {
                     "assault repulsed"
                 },
                 loss_pct,
-                match id {
-                    OperationId::SwiftBridge => "the bridge is open",
-                    OperationId::SableHammer => "the rail hub is ours",
-                    OperationId::Ashfall => "the works are silent",
-                    OperationId::Meridian => "the capital is taken",
-                    _ => "the line moves",
+                if victory {
+                    "the line moves"
+                } else {
+                    "the attack falls back"
                 }
             ),
             formation_id,
@@ -1497,7 +1474,7 @@ impl Campaign {
             supply_delta,
             intel_delta,
             momentum_delta,
-            control: Some(node_id.to_string()),
+            control: Some(key.node_id.clone()),
         })
     }
 
@@ -1536,11 +1513,14 @@ impl Campaign {
         match self.enemy_intent {
             EnemyIntent::Hold => None,
             EnemyIntent::Reinforce => {
-                let target = ["meridian", "sable", "vesper", "callas"]
-                    .into_iter()
-                    .find(|id| !self.is_player(id));
+                let target = self
+                    .nodes
+                    .iter()
+                    .filter(|node| node.control != Control::Player)
+                    .max_by_key(|node| node.kind == NodeKind::Capital)
+                    .map(|node| node.id.clone());
                 if let Some(id) = target {
-                    if let Some(node) = self.node_mut(id) {
+                    if let Some(node) = self.node_mut(&id) {
                         node.enemy_garrison = node.enemy_garrison.saturating_add(1500);
                         return Some(format!("reinforces {}", node.name));
                     }
@@ -1556,11 +1536,14 @@ impl Campaign {
                 Some("counterattacks the forward line".to_string())
             }
             EnemyIntent::Withdraw => {
-                let target = ["vesper", "sable", "callas", "orne"]
-                    .into_iter()
-                    .find(|id| !self.is_player(id));
+                let target = self
+                    .nodes
+                    .iter()
+                    .filter(|node| node.control != Control::Player)
+                    .min_by_key(|node| node.kind == NodeKind::Capital)
+                    .map(|node| node.id.clone());
                 if let Some(id) = target {
-                    if let Some(node) = self.node_mut(id) {
+                    if let Some(node) = self.node_mut(&id) {
                         node.enemy_garrison = (node.enemy_garrison / 2).max(1000);
                         node.control = Control::Contested;
                         return Some(format!("withdraws from {}", node.name));
@@ -1592,7 +1575,12 @@ impl Campaign {
             self.finish(CampaignResult::Defeat);
             return;
         }
-        if self.is_player("meridian") {
+        if self
+            .scenario
+            .victory_nodes
+            .iter()
+            .all(|node_id| self.is_player(node_id))
+        {
             self.finish(CampaignResult::Victory);
             return;
         }
@@ -1605,10 +1593,10 @@ impl Campaign {
         self.finished = true;
         self.result = Some(result);
         let verdict = match result {
-            CampaignResult::Victory => "The Halcyon Sweep succeeds.",
-            CampaignResult::Defeat => "The Halcyon Sweep stalls.",
+            CampaignResult::Victory => format!("{} wins the campaign.", self.name),
+            CampaignResult::Defeat => format!("{} stalls.", self.name),
         };
-        self.chronicle.push(verdict.to_string());
+        self.chronicle.push(verdict);
     }
 }
 
@@ -1639,7 +1627,7 @@ pub fn replay_campaign(campaign: &Campaign) -> Result<(), CampaignReplayError> {
 
     let mut rebuilt = Campaign::from_scenario(campaign.seed, campaign.scenario.clone())?;
     for operation in &campaign.operations {
-        let replay = rebuilt.play_operation(operation.id)?;
+        let replay = rebuilt.play_operation(operation.key.clone())?;
         if replay != *operation {
             return Err(CampaignReplayError::Mismatch(operation.turn));
         }
@@ -1661,39 +1649,49 @@ mod tests {
     }
 
     #[test]
-    fn campaign_starts_with_seven_options() {
+    fn campaign_starts_with_node_options() {
         let campaign = Campaign::new(seed());
         let options = campaign.options();
-        assert_eq!(options.len(), 7);
-        assert!(options[0].available);
+        assert!(!options.is_empty());
+        assert!(options.iter().any(|option| option.node_id == "vantage"));
+        assert!(options.iter().any(|option| option.available));
     }
 
     #[test]
     fn air_superiority_changes_naval_air_cover() {
         let mut campaign = Campaign::new(seed());
-        let before = campaign.naval_input().unwrap().attacker.air_cover.get();
+        let before = campaign
+            .naval_input("callas")
+            .unwrap()
+            .attacker
+            .air_cover
+            .get();
         campaign.node_mut("halcyon").unwrap().control = Control::Player;
-        let after = campaign.naval_input().unwrap().attacker.air_cover.get();
+        let after = campaign
+            .naval_input("callas")
+            .unwrap()
+            .attacker
+            .air_cover
+            .get();
         assert!(after > before);
     }
 
     #[test]
     fn demo_campaign_completes_and_replays() {
         let campaign = Campaign::demo(seed()).unwrap();
-        assert_eq!(campaign.operations.len(), 7);
+        assert!(!campaign.operations.is_empty());
         assert!(campaign.finished);
         assert_eq!(campaign.result, Some(CampaignResult::Victory));
         replay_campaign(&campaign).unwrap();
     }
 
     #[test]
-    fn operation_cannot_be_repeated() {
+    fn unavailable_operation_is_rejected() {
         let mut campaign = Campaign::new(seed());
-        campaign.play_operation(OperationId::IronTide).unwrap();
-        campaign.play_operation(OperationId::BrightLance).unwrap();
+        let key = OperationKey::new("vantage", OperationKind::Naval);
         assert!(matches!(
-            campaign.play_operation(OperationId::BrightLance),
-            Err(CampaignError::Unavailable(OperationId::BrightLance))
+            campaign.play_operation(key.clone()),
+            Err(CampaignError::Unavailable(_))
         ));
     }
 
@@ -1704,16 +1702,6 @@ mod tests {
         assert!((0..=100).contains(&campaign.supply));
         assert!((0..=100).contains(&campaign.intel));
         assert!((-5..=5).contains(&campaign.momentum));
-    }
-
-    #[test]
-    fn combined_arms_gate_requires_four_nodes() {
-        let mut campaign = Campaign::new(seed());
-        assert!(!campaign.combined_arms_ready());
-        for node in ["halcyon", "sable", "callas", "vesper"] {
-            campaign.node_mut(node).unwrap().control = Control::Player;
-        }
-        assert!(campaign.combined_arms_ready());
     }
 
     #[test]
@@ -1735,16 +1723,17 @@ mod tests {
         };
         scenario.nodes[0].name = "Alder Gate".to_string();
         scenario.modules.planes = false;
-        let campaign = Campaign::from_scenario(seed(), scenario).unwrap();
+        let mut campaign = Campaign::from_scenario(seed(), scenario).unwrap();
         assert_eq!(campaign.name, "Custom War");
         assert_eq!(campaign.nodes[0].name, "Alder Gate");
-        let bright_lance = campaign
+        campaign.node_mut("vantage").unwrap().control = Control::Player;
+        let dogfight = campaign
             .options()
             .into_iter()
-            .find(|option| option.id == OperationId::BrightLance)
+            .find(|option| option.node_id == "halcyon" && option.kind == OperationKind::Dogfight)
             .unwrap();
-        assert!(!bright_lance.available);
-        assert_eq!(bright_lance.reason, "planes module is off");
+        assert!(!dogfight.available);
+        assert_eq!(dogfight.reason, "planes module is off");
     }
 
     #[test]

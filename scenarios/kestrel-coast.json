@@ -7,25 +7,25 @@
   "starting_supply": 60,
   "starting_intel": 40,
   "modules": {
-    "advanced_rules": true,
-    "intel": true,
+    "advanced_rules": false,
+    "intel": false,
     "logistics": true,
     "manpower": true,
-    "reserve_manpower": true,
+    "reserve_manpower": false,
     "tanks": true,
     "planes": true,
     "ships": true,
-    "satellites": true,
+    "satellites": false,
     "strategic_weapons": false,
     "rods_from_god": false,
     "nuclear_weapons": false,
-    "population": true,
-    "population_stability": true,
-    "occupation": true,
+    "population": false,
+    "population_stability": false,
+    "occupation": false,
     "liberation": false,
-    "nationstates": true,
-    "alliances": true,
-    "diplomacy": true
+    "nationstates": false,
+    "alliances": false,
+    "diplomacy": false
   },
   "nodes": [
     {
@@ -168,5 +168,8 @@
       "supply": 75,
       "experience": 1
     }
+  ],
+  "victory_nodes": [
+    "meridian"
   ]
 }

@@ -41,7 +41,7 @@
   &nbsp;
   <img src="https://img.shields.io/badge/UI-egui_0.31-F3E7D6?style=flat-square&labelColor=1A120B" alt="UI: egui 0.31" />
   &nbsp;
-  <img src="https://img.shields.io/badge/Tests-86_passing-3FA796?style=flat-square&labelColor=1A120B" alt="86 tests passing" />
+  <img src="https://img.shields.io/badge/Tests-89_passing-3FA796?style=flat-square&labelColor=1A120B" alt="89 tests passing" />
 </p>
 
 <!-- Tier 3: quick navigation buttons -->
@@ -69,11 +69,12 @@
 
 </div>
 
-**Status:** Phase 14 — battle modes, the Halcyon Sweep campaign, a scenario
-ruleset with module toggles and NationStates capital lookup, and a **referee
-conflict console** for roleplay adjudication. Scenarios are validated and CLI
-JSON input is capped at 16 MiB. Deterministic core, CLI, egui desktop UI, and
-read-only NationStates data. No account login, no write actions, no credentials.
+**Status:** Phase 15 — battle modes, the Halcyon Sweep campaign with
+map-generated operations, a scenario ruleset with implemented/disabled modules
+and NationStates capital lookup, and a **referee conflict console** with packet
+loading and export. Scenarios are validated and CLI JSON input is capped at
+16 MiB. Deterministic core, CLI, egui desktop UI, and read-only NationStates data.
+No account login, no write actions, no credentials.
 
 <div align="center">
   <img src="docs/gui.png" alt="Drumfire desktop UI" width="92%" />
@@ -199,10 +200,12 @@ cargo run -p drumfire-cli -- campaign replay fixtures/campaign.log.json
 
 The built-in campaign is **The Halcyon Sweep**. Its scenario file is
 [`scenarios/kestrel-coast.json`](scenarios/kestrel-coast.json): city names,
-formations, forts, garrisons, starting resources, and ruleset modules are
-editable. The GUI exposes the same values as text fields and sliders under
-**Ruleset** and **Scenario setup**. NationStates `capital` and `customcapital`
-shards provide a capital name for lookup; scenario values remain directly editable.
+formations, forts, garrisons, starting resources, victory nodes, and ruleset
+modules are editable. Operations are generated from reachable nodes rather than a
+fixed operation list. The GUI exposes the same values as text fields and sliders
+under **Ruleset** and **Scenario setup**. Reserved modules are shown disabled and
+cannot be enabled. NationStates `capital` and `customcapital` shards provide a
+capital name for lookup; scenario values remain directly editable.
 
 Full design: [`docs/campaign.md`](docs/campaign.md). Scenario schema:
 [`docs/scenario.md`](docs/scenario.md).
@@ -226,7 +229,8 @@ report. Edit the scenario and orders, resolve, and publish the record. No winner
 is declared. See [`docs/referee.md`](docs/referee.md).
 
 The GUI referee console adds a map, both sides' order entry, private side views,
-day-by-day resolution, and clipboard report export:
+day-by-day resolution, clipboard report export, and **Packet files** for loading a
+scenario or order sheets and exporting a packet directory:
 
 ```sh
 cargo run -p drumfire-gui -- --demo-referee
@@ -320,7 +324,7 @@ DRUMFIRE_CONTACT="https://example.com/drumfire" cargo run -p drumfire-cli -- nat
 | `drumfire frontline run <input>` | Resolve a multi-sector front-line battle. |
 | `drumfire frontline replay <log>` | Verify a saved front-line log exactly. |
 | `drumfire campaign play` | Play the Halcyon Sweep interactively. |
-| `drumfire campaign demo` | Run the canonical seven-operation campaign. |
+| `drumfire campaign demo` | Auto-play the available campaign operations. |
 | `drumfire campaign demo --scenario <file>` | Run a custom scenario. |
 | `drumfire campaign scenario --out <file>` | Write the built-in scenario template for editing. |
 | `drumfire campaign replay <log>` | Verify every operation in a campaign log. |

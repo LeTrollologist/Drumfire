@@ -8,25 +8,25 @@
     "starting_supply": 60,
     "starting_intel": 40,
     "modules": {
-      "advanced_rules": true,
-      "intel": true,
+      "advanced_rules": false,
+      "intel": false,
       "logistics": true,
       "manpower": true,
-      "reserve_manpower": true,
+      "reserve_manpower": false,
       "tanks": true,
       "planes": true,
       "ships": true,
-      "satellites": true,
+      "satellites": false,
       "strategic_weapons": false,
       "rods_from_god": false,
       "nuclear_weapons": false,
-      "population": true,
-      "population_stability": true,
-      "occupation": true,
+      "population": false,
+      "population_stability": false,
+      "occupation": false,
       "liberation": false,
-      "nationstates": true,
-      "alliances": true,
-      "diplomacy": true
+      "nationstates": false,
+      "alliances": false,
+      "diplomacy": false
     },
     "nodes": [
       {
@@ -169,6 +169,9 @@
         "supply": 75,
         "experience": 1
       }
+    ],
+    "victory_nodes": [
+      "meridian"
     ]
   },
   "name": "The Halcyon Sweep",
@@ -176,8 +179,8 @@
   "turn": 8,
   "max_turns": 8,
   "political_will": 100,
-  "supply": 87,
-  "intel": 72,
+  "supply": 85,
+  "intel": 64,
   "momentum": 5,
   "enemy_intent": "hold",
   "nodes": [
@@ -239,7 +242,7 @@
       "kind": "rail_hub",
       "control": "player",
       "objective": true,
-      "enemy_garrison": 6000,
+      "enemy_garrison": 3000,
       "fortification": 7,
       "connections": [
         "halcyon",
@@ -253,7 +256,7 @@
       "kind": "industrial",
       "control": "player",
       "objective": true,
-      "enemy_garrison": 3000,
+      "enemy_garrison": 6000,
       "fortification": 8,
       "connections": [
         "callas",
@@ -267,7 +270,7 @@
       "kind": "capital",
       "control": "player",
       "objective": true,
-      "enemy_garrison": 500,
+      "enemy_garrison": 1000,
       "fortification": 6,
       "connections": [
         "sable",
@@ -289,16 +292,16 @@
       "id": "ridgewalkers",
       "name": "7th Rifles — The Ridgewalkers",
       "branch": "ground",
-      "strength": 32,
-      "morale": 84,
-      "supply": 70,
+      "strength": 58,
+      "morale": 81,
+      "supply": 75,
       "experience": 2
     },
     {
       "id": "nightjars",
       "name": "4th Air Wing — Nightjars",
       "branch": "air",
-      "strength": 73,
+      "strength": 79,
       "morale": 83,
       "supply": 75,
       "experience": 2
@@ -307,7 +310,7 @@
       "id": "salt-watch",
       "name": "2nd Naval Group — Salt Watch",
       "branch": "naval",
-      "strength": 74,
+      "strength": 65,
       "morale": 78,
       "supply": 75,
       "experience": 2
@@ -316,36 +319,39 @@
       "id": "reserve-corps",
       "name": "Reserve Corps",
       "branch": "reserve",
-      "strength": 65,
-      "morale": 75,
-      "supply": 70,
+      "strength": 35,
+      "morale": 78,
+      "supply": 65,
       "experience": 1
     }
   ],
   "operations": [
     {
       "turn": 1,
-      "id": "iron_tide",
+      "key": {
+        "node_id": "vantage",
+        "kind": "frontlines"
+      },
       "kind": "frontlines",
       "node_id": "vantage",
-      "title": "Operation Iron Tide",
+      "title": "Frontlines — Vantage Ridge",
       "log": {
         "mode": "frontlines",
         "log": {
           "input": {
             "mode": "frontlines",
             "attacker": {
-              "name": "1st Armored — Old Ironsides",
+              "name": "Reserve Corps",
               "reserves": 1900,
-              "morale": 75,
+              "morale": 72,
               "tech": 6,
-              "training": 5,
-              "experience": 6,
-              "logistics": 4,
+              "training": 4,
+              "experience": 5,
+              "logistics": 3,
               "intel": 5
             },
             "defender": {
-              "name": "Halcyon Garrison",
+              "name": "Vantage Ridge Garrison",
               "reserves": 3000,
               "morale": 65,
               "tech": 5,
@@ -385,537 +391,585 @@
               "replenish_rate": 0.25,
               "capture_threshold": 0.25
             },
-            "seed": "cd66c762c00fc0c7b67600280207b527bc605fa71144e345d10412008f977f0d"
+            "seed": "cf07f4feee174f11ae725b71e518343c88977435ef9ae135ce5000bc358a57b4"
           },
-          "input_hash": "8cc0ca920041e8cbdfc042f573986584145b479329cef41c4e4252935c1c9c57",
+          "input_hash": "63440f60a69103accd2b5e628c7ab7c0e77ecb53ecc0f7863081d8613a9cada3",
           "days": [
             {
               "day": 1,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 8.255425088912672,
+                  "attacker_strength": 7.605425088912671,
                   "defender_strength": 7.496097345175956,
-                  "attacker_win_probability": 0.5753543602815326,
-                  "roll": 0.30057720904754703,
+                  "attacker_win_probability": 0.5109310323789044,
+                  "roll": 0.27677068262034965,
                   "sector_winner": "attacker",
-                  "attacker_losses": 247,
-                  "defender_losses": 390,
-                  "attacker_troops_after": 2603,
-                  "defender_troops_after": 1410,
+                  "attacker_losses": 172,
+                  "defender_losses": 273,
+                  "attacker_troops_after": 2678,
+                  "defender_troops_after": 1527,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.660773272144937,
+                  "attacker_strength": 8.010773272144936,
                   "defender_strength": 8.101377353792616,
-                  "attacker_win_probability": 0.5557073567921333,
-                  "roll": 0.4197328823933316,
+                  "attacker_win_probability": 0.4909405834089019,
+                  "roll": 0.37863698581363947,
                   "sector_winner": "attacker",
-                  "attacker_losses": 367,
-                  "defender_losses": 593,
-                  "attacker_troops_after": 3908,
-                  "defender_troops_after": 2107,
+                  "attacker_losses": 460,
+                  "defender_losses": 576,
+                  "attacker_troops_after": 3815,
+                  "defender_troops_after": 2124,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 8.073173680482537,
+                  "attacker_strength": 7.423173680482536,
                   "defender_strength": 7.313886831633462,
-                  "attacker_win_probability": 0.575350363672885,
-                  "roll": 0.17660548743461046,
+                  "attacker_win_probability": 0.5109269448439803,
+                  "roll": 0.4799243802565918,
                   "sector_winner": "attacker",
-                  "attacker_losses": 92,
-                  "defender_losses": 184,
-                  "attacker_troops_after": 2283,
-                  "defender_troops_after": 1316,
+                  "attacker_losses": 130,
+                  "defender_losses": 301,
+                  "attacker_troops_after": 2245,
+                  "defender_troops_after": 1199,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 78,
+              "attacker_morale_after": 75,
               "defender_morale_after": 59,
-              "attacker_reserves_after": 1723,
-              "defender_reserves_after": 2708
+              "attacker_reserves_after": 1709,
+              "defender_reserves_after": 2712
             },
             {
               "day": 2,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 8.187208585813933,
-                  "defender_strength": 7.319202458767849,
-                  "attacker_win_probability": 0.5859390165437485,
-                  "roll": 0.26434064502164334,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 157,
-                  "defender_losses": 251,
-                  "attacker_troops_after": 2505,
-                  "defender_troops_after": 1257,
+                  "attacker_strength": 7.566807490937602,
+                  "defender_strength": 7.392647520721623,
+                  "attacker_win_probability": 0.517408957015294,
+                  "roll": 0.808537736994309,
+                  "sector_winner": "defender",
+                  "attacker_losses": 442,
+                  "defender_losses": 90,
+                  "attacker_troops_after": 2300,
+                  "defender_troops_after": 1533,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.586017468404764,
-                  "defender_strength": 7.898482787880947,
-                  "attacker_win_probability": 0.5683233867771997,
-                  "roll": 0.7974190192352801,
+                  "attacker_strength": 7.913590432617319,
+                  "defender_strength": 7.905712823894428,
+                  "attacker_win_probability": 0.5007877602204783,
+                  "roll": 0.9786774248668149,
                   "sector_winner": "defender",
-                  "attacker_losses": 494,
-                  "defender_losses": 146,
-                  "attacker_troops_after": 3473,
-                  "defender_troops_after": 2058,
+                  "attacker_losses": 560,
+                  "defender_losses": 95,
+                  "attacker_troops_after": 3319,
+                  "defender_troops_after": 2125,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 8.059187438507795,
-                  "defender_strength": 7.254177846456518,
-                  "attacker_win_probability": 0.5798125247616421,
-                  "roll": 0.7210156255914809,
+                  "attacker_strength": 7.394569809354495,
+                  "defender_strength": 7.16703787691222,
+                  "attacker_win_probability": 0.5227375002355531,
+                  "roll": 0.9363711520209531,
                   "sector_winner": "defender",
-                  "attacker_losses": 397,
-                  "defender_losses": 99,
-                  "attacker_troops_after": 1945,
-                  "defender_troops_after": 1314,
+                  "attacker_losses": 319,
+                  "defender_losses": 73,
+                  "attacker_troops_after": 1989,
+                  "defender_troops_after": 1222,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 75,
-              "defender_morale_after": 59,
-              "attacker_reserves_after": 1461,
-              "defender_reserves_after": 2584
+              "attacker_morale_after": 69,
+              "defender_morale_after": 62,
+              "attacker_reserves_after": 1379,
+              "defender_reserves_after": 2647
             },
             {
               "day": 3,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 8.16095636487639,
-                  "defender_strength": 7.170119543449628,
-                  "attacker_win_probability": 0.5978067216012413,
-                  "roll": 0.1097783388428144,
+                  "attacker_strength": 7.437796878181171,
+                  "defender_strength": 7.349873704738337,
+                  "attacker_win_probability": 0.5087914112047307,
+                  "roll": 0.2736085603625117,
                   "sector_winner": "attacker",
-                  "attacker_losses": 105,
-                  "defender_losses": 222,
-                  "attacker_troops_after": 2488,
-                  "defender_troops_after": 1077,
+                  "attacker_losses": 271,
+                  "defender_losses": 300,
+                  "attacker_troops_after": 2139,
+                  "defender_troops_after": 1255,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.477796683277779,
-                  "defender_strength": 7.8496926237115145,
-                  "attacker_win_probability": 0.5624820831972813,
-                  "roll": 0.5286789526607836,
+                  "attacker_strength": 7.790315540159986,
+                  "defender_strength": 7.872292455628756,
+                  "attacker_win_probability": 0.4918030429107783,
+                  "roll": 0.09139713026144969,
                   "sector_winner": "attacker",
-                  "attacker_losses": 129,
-                  "defender_losses": 283,
-                  "attacker_troops_after": 3431,
-                  "defender_troops_after": 1816,
+                  "attacker_losses": 152,
+                  "defender_losses": 251,
+                  "attacker_troops_after": 3277,
+                  "defender_troops_after": 1896,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.917267813628347,
-                  "defender_strength": 7.212294468500341,
-                  "attacker_win_probability": 0.5700338690389241,
-                  "roll": 0.4948819749114175,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 110,
-                  "defender_losses": 283,
-                  "attacker_troops_after": 1922,
-                  "defender_troops_after": 1072,
+                  "attacker_strength": 7.299692623711514,
+                  "defender_strength": 7.126087273299125,
+                  "attacker_win_probability": 0.5173535620570644,
+                  "roll": 0.6431115295659763,
+                  "sector_winner": "defender",
+                  "attacker_losses": 376,
+                  "defender_losses": 95,
+                  "attacker_troops_after": 1723,
+                  "defender_troops_after": 1148,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 78,
-              "defender_morale_after": 53,
-              "attacker_reserves_after": 1375,
-              "defender_reserves_after": 2387
+              "attacker_morale_after": 69,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 1179,
+              "defender_reserves_after": 2485
             },
             {
               "day": 4,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 8.131220214604292,
-                  "defender_strength": 7.042286171939743,
-                  "attacker_win_probability": 0.607203808364109,
-                  "roll": 0.5587697566320078,
+                  "attacker_strength": 7.349389406256736,
+                  "defender_strength": 7.177782416195197,
+                  "attacker_win_probability": 0.5171539639832722,
+                  "roll": 0.07613169254768459,
                   "sector_winner": "attacker",
-                  "attacker_losses": 186,
-                  "defender_losses": 246,
-                  "attacker_troops_after": 2331,
-                  "defender_troops_after": 897,
+                  "attacker_losses": 164,
+                  "defender_losses": 173,
+                  "attacker_troops_after": 2042,
+                  "defender_troops_after": 1136,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.449312843635346,
-                  "defender_strength": 7.740621528657153,
-                  "attacker_win_probability": 0.5703983337221263,
-                  "roll": 0.16517282136889477,
+                  "attacker_strength": 7.76522197256233,
+                  "defender_strength": 7.776097340623111,
+                  "attacker_win_probability": 0.49891246490894425,
+                  "roll": 0.11853665809821967,
                   "sector_winner": "attacker",
-                  "attacker_losses": 177,
-                  "defender_losses": 396,
-                  "attacker_troops_after": 3283,
-                  "defender_troops_after": 1486,
+                  "attacker_losses": 297,
+                  "defender_losses": 412,
+                  "attacker_troops_after": 3047,
+                  "defender_troops_after": 1538,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.876097340623111,
-                  "defender_strength": 7.037027614686276,
-                  "attacker_win_probability": 0.5831280958585496,
-                  "roll": 0.8457557749598447,
+                  "attacker_strength": 7.1399708988348,
+                  "defender_strength": 7.0925737159746784,
+                  "attacker_win_probability": 0.5047395763211991,
+                  "roll": 0.8013508151116191,
                   "sector_winner": "defender",
-                  "attacker_losses": 442,
-                  "defender_losses": 126,
-                  "attacker_troops_after": 1508,
-                  "defender_troops_after": 1011,
+                  "attacker_losses": 204,
+                  "defender_losses": 71,
+                  "attacker_troops_after": 1585,
+                  "defender_troops_after": 1131,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 78,
-              "defender_morale_after": 50,
-              "attacker_reserves_after": 1174,
-              "defender_reserves_after": 2195
+              "attacker_morale_after": 69,
+              "defender_morale_after": 56,
+              "attacker_reserves_after": 1013,
+              "defender_reserves_after": 2321
             },
             {
               "day": 5,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 8.082807262839696,
-                  "defender_strength": 6.8690144506657065,
-                  "attacker_win_probability": 0.619049814385642,
-                  "roll": 0.7564732856318581,
-                  "sector_winner": "defender",
-                  "attacker_losses": 371,
-                  "defender_losses": 67,
-                  "attacker_troops_after": 2027,
-                  "defender_troops_after": 894,
+                  "attacker_strength": 7.299216319820633,
+                  "defender_strength": 7.083387847625295,
+                  "attacker_win_probability": 0.521569452260645,
+                  "roll": 0.16241180545011147,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 183,
+                  "defender_losses": 204,
+                  "attacker_troops_after": 1915,
+                  "defender_troops_after": 987,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.41701408773731,
-                  "defender_strength": 7.546655163176539,
-                  "attacker_win_probability": 0.5861673271647425,
-                  "roll": 0.2732463434789909,
+                  "attacker_strength": 7.69012466444838,
+                  "defender_strength": 7.574001859350161,
+                  "attacker_win_probability": 0.511610193148645,
+                  "roll": 0.40653233307825776,
                   "sector_winner": "attacker",
-                  "attacker_losses": 200,
-                  "defender_losses": 314,
-                  "attacker_troops_after": 3150,
-                  "defender_troops_after": 1236,
+                  "attacker_losses": 309,
+                  "defender_losses": 329,
+                  "attacker_troops_after": 2793,
+                  "defender_troops_after": 1264,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.6626452704178245,
-                  "defender_strength": 6.98100574072173,
-                  "attacker_win_probability": 0.5677447863703226,
-                  "roll": 0.4824306613334711,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 91,
-                  "defender_losses": 202,
-                  "attacker_troops_after": 1484,
-                  "defender_troops_after": 873,
+                  "attacker_strength": 7.053061091090091,
+                  "defender_strength": 7.078341579557671,
+                  "attacker_win_probability": 0.49747197269547294,
+                  "roll": 0.8439156685244146,
+                  "sector_winner": "defender",
+                  "attacker_losses": 211,
+                  "defender_losses": 73,
+                  "attacker_troops_after": 1429,
+                  "defender_troops_after": 1112,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 78,
-              "defender_morale_after": 47,
-              "attacker_reserves_after": 1008,
-              "defender_reserves_after": 2049
+              "attacker_morale_after": 69,
+              "defender_morale_after": 53,
+              "attacker_reserves_after": 837,
+              "defender_reserves_after": 2169
             },
             {
               "day": 6,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 7.942044402873257,
-                  "defender_strength": 6.8501261661455,
-                  "attacker_win_probability": 0.6074884727820857,
-                  "roll": 0.9697540539305853,
-                  "sector_winner": "defender",
-                  "attacker_losses": 432,
-                  "defender_losses": 103,
-                  "attacker_troops_after": 1651,
-                  "defender_troops_after": 840,
+                  "attacker_strength": 7.238323677335222,
+                  "defender_strength": 6.946013991099227,
+                  "attacker_win_probability": 0.529197712238564,
+                  "roll": 0.40878027635444414,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 241,
+                  "defender_losses": 222,
+                  "attacker_troops_after": 1733,
+                  "defender_troops_after": 816,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.372779333169499,
-                  "defender_strength": 7.359291904797565,
-                  "attacker_win_probability": 0.5999831670596923,
-                  "roll": 0.8337751027742173,
-                  "sector_winner": "defender",
-                  "attacker_losses": 460,
-                  "defender_losses": 55,
-                  "attacker_troops_after": 2745,
-                  "defender_troops_after": 1230,
+                  "attacker_strength": 7.606126351213501,
+                  "defender_strength": 7.382352111885263,
+                  "attacker_win_probability": 0.522362495260292,
+                  "roll": 0.01507346344029381,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 159,
+                  "defender_losses": 210,
+                  "attacker_troops_after": 2693,
+                  "defender_troops_after": 1105,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.639537695407674,
-                  "defender_strength": 6.826545223556594,
-                  "attacker_win_probability": 0.580590273366204,
-                  "roll": 0.5671849901146805,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 158,
-                  "defender_losses": 216,
-                  "attacker_troops_after": 1381,
-                  "defender_troops_after": 705,
+                  "attacker_strength": 6.955188215393036,
+                  "defender_strength": 7.0587581525186645,
+                  "attacker_win_probability": 0.48964448732251237,
+                  "roll": 0.9354881690676196,
+                  "sector_winner": "defender",
+                  "attacker_losses": 182,
+                  "defender_losses": 39,
+                  "attacker_troops_after": 1305,
+                  "defender_troops_after": 1123,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 75,
-              "defender_morale_after": 47,
-              "attacker_reserves_after": 745,
-              "defender_reserves_after": 1955
+              "attacker_morale_after": 69,
+              "defender_morale_after": 50,
+              "attacker_reserves_after": 691,
+              "defender_reserves_after": 2051
             },
             {
               "day": 7,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 7.761640392208575,
-                  "defender_strength": 6.771935555839602,
-                  "attacker_win_probability": 0.5976978497735055,
-                  "roll": 0.7974567852717976,
+                  "attacker_strength": 7.13605261786314,
+                  "defender_strength": 6.75343791859778,
+                  "attacker_win_probability": 0.5381869611114678,
+                  "roll": 0.9183620930715495,
                   "sector_winner": "defender",
-                  "attacker_losses": 228,
-                  "defender_losses": 42,
-                  "attacker_troops_after": 1511,
-                  "defender_troops_after": 830,
+                  "attacker_losses": 368,
+                  "defender_losses": 95,
+                  "attacker_troops_after": 1414,
+                  "defender_troops_after": 761,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.249444420250626,
-                  "defender_strength": 7.340453043101158,
-                  "attacker_win_probability": 0.5899107779473025,
-                  "roll": 0.6752085949134948,
-                  "sector_winner": "defender",
-                  "attacker_losses": 574,
-                  "defender_losses": 82,
-                  "attacker_troops_after": 2259,
-                  "defender_troops_after": 1179,
+                  "attacker_strength": 7.566807490937602,
+                  "defender_strength": 7.243159915988341,
+                  "attacker_win_probability": 0.5323196313150517,
+                  "roll": 0.06596085769822724,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 155,
+                  "defender_losses": 146,
+                  "attacker_troops_after": 2587,
+                  "defender_troops_after": 998,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.592337176173877,
-                  "defender_strength": 6.602587892189336,
-                  "attacker_win_probability": 0.5977021248289542,
-                  "roll": 0.06212052692831849,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 63,
-                  "defender_losses": 105,
-                  "attacker_troops_after": 1405,
-                  "defender_troops_after": 631,
+                  "attacker_strength": 6.86081845347222,
+                  "defender_strength": 7.0587581525186645,
+                  "attacker_win_probability": 0.4802163640199779,
+                  "roll": 0.8178847705220219,
+                  "sector_winner": "defender",
+                  "attacker_losses": 270,
+                  "defender_losses": 138,
+                  "attacker_troops_after": 1083,
+                  "defender_troops_after": 1024,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 72,
-              "defender_morale_after": 47,
-              "attacker_reserves_after": 529,
-              "defender_reserves_after": 1898
+              "attacker_morale_after": 66,
+              "defender_morale_after": 50,
+              "attacker_reserves_after": 493,
+              "defender_reserves_after": 1956
             },
             {
               "day": 8,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 7.667708572374371,
-                  "defender_strength": 6.745236349484363,
-                  "attacker_win_probability": 0.5912146358310852,
-                  "roll": 0.6216112071453431,
-                  "sector_winner": "defender",
-                  "attacker_losses": 318,
-                  "defender_losses": 55,
-                  "attacker_troops_after": 1265,
-                  "defender_troops_after": 794,
+                  "attacker_strength": 6.9504728142677985,
+                  "defender_strength": 6.677083461247136,
+                  "attacker_win_probability": 0.5273117230498732,
+                  "roll": 0.42416029893989293,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 83,
+                  "defender_losses": 109,
+                  "attacker_troops_after": 1397,
+                  "defender_troops_after": 684,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.054481547470383,
-                  "defender_strength": 7.289243155027514,
-                  "attacker_win_probability": 0.575931897064334,
-                  "roll": 0.28713100533398117,
+                  "attacker_strength": 7.533823214892152,
+                  "defender_strength": 7.13828448401696,
+                  "attacker_win_probability": 0.5394715692581168,
+                  "roll": 0.4995858426811409,
                   "sector_winner": "attacker",
-                  "attacker_losses": 106,
-                  "defender_losses": 162,
-                  "attacker_troops_after": 2225,
-                  "defender_troops_after": 1036,
+                  "attacker_losses": 201,
+                  "defender_losses": 173,
+                  "attacker_troops_after": 2452,
+                  "defender_troops_after": 857,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.598445101508147,
-                  "defender_strength": 6.478509642208569,
-                  "attacker_win_probability": 0.610157470162227,
-                  "roll": 0.37300036503358347,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 75,
-                  "defender_losses": 141,
-                  "attacker_troops_after": 1402,
-                  "defender_troops_after": 509,
+                  "attacker_strength": 6.6975172213572955,
+                  "defender_strength": 6.962243464266207,
+                  "attacker_win_probability": 0.47355208401893,
+                  "roll": 0.4741109688607329,
+                  "sector_winner": "defender",
+                  "attacker_losses": 176,
+                  "defender_losses": 92,
+                  "attacker_troops_after": 973,
+                  "defender_troops_after": 963,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 72,
-              "defender_morale_after": 44,
-              "attacker_reserves_after": 404,
-              "defender_reserves_after": 1808
+              "attacker_morale_after": 66,
+              "defender_morale_after": 47,
+              "attacker_reserves_after": 378,
+              "defender_reserves_after": 1862
             },
             {
               "day": 9,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 7.476254532017144,
-                  "defender_strength": 6.715383386334681,
-                  "attacker_win_probability": 0.5755051879075695,
-                  "roll": 0.40533906046084234,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 126,
-                  "defender_losses": 164,
-                  "attacker_troops_after": 1181,
-                  "defender_troops_after": 660,
+                  "attacker_strength": 6.920312886079024,
+                  "defender_strength": 6.57507584059962,
+                  "attacker_win_probability": 0.534468944538973,
+                  "roll": 0.913462165019649,
+                  "sector_winner": "defender",
+                  "attacker_losses": 276,
+                  "defender_losses": 69,
+                  "attacker_troops_after": 1160,
+                  "defender_troops_after": 647,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 8.026653664847643,
-                  "defender_strength": 7.172606251301754,
-                  "attacker_win_probability": 0.5845837353102902,
-                  "roll": 0.5157229432317133,
+                  "attacker_strength": 7.47043951526218,
+                  "defender_strength": 6.990097235513905,
+                  "attacker_win_probability": 0.5478869997972127,
+                  "roll": 0.19089223575614234,
                   "sector_winner": "attacker",
-                  "attacker_losses": 254,
-                  "defender_losses": 244,
-                  "attacker_troops_after": 2013,
-                  "defender_troops_after": 822,
+                  "attacker_losses": 204,
+                  "defender_losses": 155,
+                  "attacker_troops_after": 2286,
+                  "defender_troops_after": 733,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.575172319452771,
-                  "defender_strength": 6.29156913955832,
-                  "attacker_win_probability": 0.6256128418232225,
-                  "roll": 0.7012730450122295,
-                  "sector_winner": "defender",
-                  "attacker_losses": 252,
-                  "defender_losses": 31,
-                  "attacker_troops_after": 1191,
-                  "defender_troops_after": 508,
+                  "attacker_strength": 6.569683849847411,
+                  "defender_strength": 6.902742737158593,
+                  "attacker_win_probability": 0.46674328483538385,
+                  "roll": 0.22315843238517008,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 70,
+                  "defender_losses": 177,
+                  "attacker_troops_after": 941,
+                  "defender_troops_after": 817,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 72,
-              "defender_morale_after": 41,
-              "attacker_reserves_after": 246,
-              "defender_reserves_after": 1698
+              "attacker_morale_after": 66,
+              "defender_morale_after": 44,
+              "attacker_reserves_after": 240,
+              "defender_reserves_after": 1762
             },
             {
               "day": 10,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 7.418826249062078,
-                  "defender_strength": 6.548219102762372,
-                  "attacker_win_probability": 0.5861914119330323,
-                  "roll": 0.11326949681059639,
+                  "attacker_strength": 6.745893221097531,
+                  "defender_strength": 6.525029657843462,
+                  "attacker_win_probability": 0.5220720023521652,
+                  "roll": 0.018818694887596688,
                   "sector_winner": "attacker",
-                  "attacker_losses": 44,
-                  "defender_losses": 101,
-                  "attacker_troops_after": 1190,
-                  "defender_troops_after": 596,
+                  "attacker_losses": 70,
+                  "defender_losses": 116,
+                  "attacker_troops_after": 1136,
+                  "defender_troops_after": 565,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 7.933853559681768,
-                  "defender_strength": 6.956932389247553,
-                  "attacker_win_probability": 0.5964676786692241,
-                  "roll": 0.5456500497127704,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 142,
-                  "defender_losses": 144,
-                  "attacker_troops_after": 1924,
-                  "defender_troops_after": 715,
+                  "attacker_strength": 7.40491027202143,
+                  "defender_strength": 6.842486801367256,
+                  "attacker_win_probability": 0.5560063336431215,
+                  "roll": 0.8768810433650303,
+                  "sector_winner": "defender",
+                  "attacker_losses": 289,
+                  "defender_losses": 48,
+                  "attacker_troops_after": 2043,
+                  "defender_troops_after": 718,
                   "captured": false
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.4260872732991245,
-                  "defender_strength": 6.300785794663244,
-                  "attacker_win_probability": 0.6106679052654113,
-                  "roll": 0.11806860488348059,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 80,
-                  "defender_losses": 99,
-                  "attacker_troops_after": 1163,
-                  "defender_troops_after": 445,
+                  "attacker_strength": 6.545682697747868,
+                  "defender_strength": 6.7464121285733745,
+                  "attacker_win_probability": 0.4799378337716857,
+                  "roll": 0.5329132484754551,
+                  "sector_winner": "defender",
+                  "attacker_losses": 123,
+                  "defender_losses": 61,
+                  "attacker_troops_after": 864,
+                  "defender_troops_after": 789,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 75,
-              "defender_morale_after": 35,
-              "attacker_reserves_after": 179,
-              "defender_reserves_after": 1612
+              "attacker_morale_after": 63,
+              "defender_morale_after": 44,
+              "attacker_reserves_after": 119,
+              "defender_reserves_after": 1706
             },
             {
               "day": 11,
               "sectors": [
                 {
                   "sector": "North",
-                  "attacker_strength": 7.401675971619444,
-                  "defender_strength": 6.439350371100098,
-                  "attacker_win_probability": 0.5950616644292599,
-                  "roll": 0.2915845901822479,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 86,
-                  "defender_losses": 102,
-                  "attacker_troops_after": 1127,
-                  "defender_troops_after": 523,
+                  "attacker_strength": 6.721573364211531,
+                  "defender_strength": 6.371611847231857,
+                  "attacker_win_probability": 0.5349391156493742,
+                  "roll": 0.8914187613486577,
+                  "sector_winner": "defender",
+                  "attacker_losses": 191,
+                  "defender_losses": 26,
+                  "attacker_troops_after": 986,
+                  "defender_troops_after": 558,
                   "captured": false
                 },
                 {
                   "sector": "Center",
-                  "attacker_strength": 7.874045005372198,
-                  "defender_strength": 6.81338421837956,
-                  "attacker_win_probability": 0.6045032113027204,
-                  "roll": 0.3102216652015225,
-                  "sector_winner": "attacker",
-                  "attacker_losses": 146,
-                  "defender_losses": 174,
-                  "attacker_troops_after": 1800,
-                  "defender_troops_after": 570,
+                  "attacker_strength": 7.292044402873257,
+                  "defender_strength": 6.803943824600473,
+                  "attacker_win_probability": 0.5486555983897444,
+                  "roll": 0.7043033638855157,
+                  "sector_winner": "defender",
+                  "attacker_losses": 327,
+                  "defender_losses": 58,
+                  "attacker_troops_after": 1756,
+                  "defender_troops_after": 679,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.457934943699925,
+                  "defender_strength": 6.694562058521095,
+                  "attacker_win_probability": 0.4763549384632428,
+                  "roll": 0.6981137626404537,
+                  "sector_winner": "defender",
+                  "attacker_losses": 144,
+                  "defender_losses": 52,
+                  "attacker_troops_after": 760,
+                  "defender_troops_after": 755,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 57,
+              "defender_morale_after": 47,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 1672
+            },
+            {
+              "day": 12,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 6.584397209928557,
+                  "defender_strength": 6.3473892096560105,
+                  "attacker_win_probability": 0.5236830647653811,
+                  "roll": 0.9412510657520513,
+                  "sector_winner": "defender",
+                  "attacker_losses": 207,
+                  "defender_losses": 31,
+                  "attacker_troops_after": 819,
+                  "defender_troops_after": 539,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.143873886783559,
+                  "defender_strength": 6.73813982376767,
+                  "attacker_win_probability": 0.5404845842524049,
+                  "roll": 0.5924020395920863,
+                  "sector_winner": "defender",
+                  "attacker_losses": 381,
+                  "defender_losses": 38,
+                  "attacker_troops_after": 1415,
+                  "defender_troops_after": 652,
                   "captured": true
                 },
                 {
                   "sector": "South",
-                  "attacker_strength": 7.378341579557671,
-                  "defender_strength": 6.161207321695077,
-                  "attacker_win_probability": 0.6193649656263992,
-                  "roll": 0.8066057287429127,
+                  "attacker_strength": 6.334611727667927,
+                  "defender_strength": 6.642486801367256,
+                  "attacker_win_probability": 0.46925134380756484,
+                  "roll": 0.5272758607417305,
                   "sector_winner": "defender",
-                  "attacker_losses": 263,
-                  "defender_losses": 33,
-                  "attacker_troops_after": 922,
-                  "defender_troops_after": 440,
+                  "attacker_losses": 141,
+                  "defender_losses": 76,
+                  "attacker_troops_after": 658,
+                  "defender_troops_after": 690,
                   "captured": false
                 }
               ],
-              "attacker_morale_after": 80,
-              "defender_morale_after": 27,
-              "attacker_reserves_after": 55,
-              "defender_reserves_after": 1535
+              "attacker_morale_after": 56,
+              "defender_morale_after": 45,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 1636
             }
           ],
           "result": {
@@ -924,36 +978,36 @@
             "sectors": [
               {
                 "name": "North",
-                "attacker_troops": 1189,
-                "defender_troops": 562,
+                "attacker_troops": 819,
+                "defender_troops": 557,
                 "fortification": 5,
                 "objective": false,
                 "captured": false
               },
               {
                 "name": "Center",
-                "attacker_troops": 1800,
-                "defender_troops": 570,
+                "attacker_troops": 1415,
+                "defender_troops": 652,
                 "fortification": 6,
                 "objective": true,
                 "captured": true
               },
               {
                 "name": "South",
-                "attacker_troops": 984,
-                "defender_troops": 478,
+                "attacker_troops": 658,
+                "defender_troops": 708,
                 "fortification": 5,
                 "objective": false,
                 "captured": false
               }
             ],
             "final_reserves": {
-              "attacker": 55,
-              "defender": 1535
+              "attacker": 0,
+              "defender": 1636
             },
             "final_morale": {
-              "attacker": 80,
-              "defender": 27
+              "attacker": 56,
+              "defender": 45
             },
             "objectives_captured": 1,
             "objectives_total": 1
@@ -962,8 +1016,8 @@
       },
       "aftermath": {
         "victory": true,
-        "summary": "ridge taken · 65% losses · the road inland is open",
-        "formation_id": "old-ironsides",
+        "summary": "front advanced · 75% losses · the line moved",
+        "formation_id": "reserve-corps",
         "strength_delta": -30,
         "will_delta": 8,
         "supply_delta": 5,
@@ -974,24 +1028,196 @@
     },
     {
       "turn": 2,
-      "id": "swift_bridge",
+      "key": {
+        "node_id": "halcyon",
+        "kind": "dogfight"
+      },
+      "kind": "dogfight",
+      "node_id": "halcyon",
+      "title": "Dogfight — Halcyon Airbase",
+      "log": {
+        "mode": "dogfight",
+        "log": {
+          "input": {
+            "mode": "dogfight",
+            "attacker": {
+              "name": "4th Air Wing — Nightjars",
+              "aircraft": 8,
+              "pilot_skill": 6,
+              "aircraft_quality": 5,
+              "weapons": 6,
+              "radar": 6,
+              "support": 5,
+              "cohesion": 80
+            },
+            "defender": {
+              "name": "Halcyon Airbase Interceptors",
+              "aircraft": 6,
+              "pilot_skill": 5,
+              "aircraft_quality": 5,
+              "weapons": 6,
+              "radar": 5,
+              "support": 5,
+              "cohesion": 65
+            },
+            "config": {
+              "max_passes": 8,
+              "scale": 2.0,
+              "kill_rate": 0.12,
+              "cohesion_break": 20
+            },
+            "seed": "de41a9748e62af9f5fac6adc2c39833d851057f1b9408659443644ae96d4df8b"
+          },
+          "input_hash": "eecb664ed713f1f7065fbc8b6a77e363208583aef3a00cb8d57a3752f80d6062",
+          "passes": [
+            {
+              "pass": 1,
+              "attacker_strength": 3.49722457733622,
+              "defender_strength": 2.445910149055313,
+              "attacker_win_probability": 0.6284696578228267,
+              "roll": 0.6768660398954198,
+              "pass_winner": "defender",
+              "attacker_kills": 0,
+              "defender_kills": 1,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 6,
+              "attacker_cohesion_after": 74,
+              "defender_cohesion_after": 68
+            },
+            {
+              "pass": 2,
+              "attacker_strength": 3.259441541679836,
+              "defender_strength": 2.505910149055313,
+              "attacker_win_probability": 0.59309279197882,
+              "roll": 0.2071148708697924,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 5,
+              "attacker_cohesion_after": 78,
+              "defender_cohesion_after": 62
+            },
+            {
+              "pass": 3,
+              "attacker_strength": 3.339441541679836,
+              "defender_strength": 2.231759469228055,
+              "attacker_win_probability": 0.6350262807771558,
+              "roll": 0.3182000804590229,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 4,
+              "attacker_cohesion_after": 81,
+              "defender_cohesion_after": 55
+            },
+            {
+              "pass": 4,
+              "attacker_strength": 3.399441541679836,
+              "defender_strength": 1.9094379124341003,
+              "attacker_win_probability": 0.6780886456556816,
+              "roll": 0.11338342615526109,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 3,
+              "attacker_cohesion_after": 84,
+              "defender_cohesion_after": 47
+            },
+            {
+              "pass": 5,
+              "attacker_strength": 3.459441541679836,
+              "defender_strength": 1.5262943611198905,
+              "attacker_win_probability": 0.7244360151158074,
+              "roll": 0.32623667660264244,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 2,
+              "attacker_cohesion_after": 87,
+              "defender_cohesion_after": 38
+            },
+            {
+              "pass": 6,
+              "attacker_strength": 3.5194415416798357,
+              "defender_strength": 1.0586122886681097,
+              "attacker_win_probability": 0.7738911353663463,
+              "roll": 0.6996081645632757,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 1,
+              "attacker_cohesion_after": 90,
+              "defender_cohesion_after": 27
+            },
+            {
+              "pass": 7,
+              "attacker_strength": 3.579441541679836,
+              "defender_strength": 0.43314718055994533,
+              "attacker_win_probability": 0.8282318010140551,
+              "roll": 0.6278892236741107,
+              "pass_winner": "attacker",
+              "attacker_kills": 1,
+              "defender_kills": 0,
+              "attacker_aircraft_after": 7,
+              "defender_aircraft_after": 0,
+              "attacker_cohesion_after": 93,
+              "defender_cohesion_after": 8
+            }
+          ],
+          "result": {
+            "winner": "attacker",
+            "ending": "splashed",
+            "final_aircraft": {
+              "attacker": 7,
+              "defender": 0
+            },
+            "final_cohesion": {
+              "attacker": 93,
+              "defender": 8
+            }
+          }
+        }
+      },
+      "aftermath": {
+        "victory": true,
+        "summary": "sweep won · 13% aircraft lost · air superiority 75",
+        "formation_id": "nightjars",
+        "strength_delta": -6,
+        "will_delta": 3,
+        "supply_delta": 0,
+        "intel_delta": 12,
+        "momentum_delta": 1,
+        "control": "halcyon"
+      }
+    },
+    {
+      "turn": 3,
+      "key": {
+        "node_id": "orne",
+        "kind": "skirmish"
+      },
       "kind": "skirmish",
       "node_id": "orne",
-      "title": "Operation Swift Bridge",
+      "title": "Skirmish — Orne Bridge",
       "log": {
         "mode": "ground",
         "log": {
           "input": {
             "mode": "skirmish",
             "attacker": {
-              "name": "7th Rifles — The Ridgewalkers",
-              "forces": 4356,
-              "morale": 78,
+              "name": "1st Armored — Old Ironsides",
+              "forces": 4702,
+              "morale": 75,
               "tech": 6,
-              "training": 5,
+              "training": 6,
               "experience": 6,
               "logistics": 4,
-              "intel": 5,
+              "intel": 6,
               "home": false
             },
             "defender": {
@@ -1012,141 +1238,197 @@
               "casualty_rate": 0.18,
               "morale_rout_threshold": 10
             },
-            "seed": "edc7d70da0a4570df95edb7378a1dbe4b80b980e52d7eda1d50b845f666c2e96"
+            "seed": "5663dc277f583f9fb6949d72f449830156ac2fc8e0feeccfac117b5e92125709"
           },
-          "input_hash": "cd5753ad9ca4e474185acbe30d5c55b15ff82612492f69508123d0c2dcf4845c",
+          "input_hash": "13485b5886f31654bc1c639aace96e23af5422864b29248c9151b034c4043169",
           "rounds": [
             {
               "round": 1,
-              "attacker_strength": 8.552608172199827,
+              "attacker_strength": 9.012562499653292,
               "defender_strength": 8.025246642298994,
-              "attacker_win_probability": 0.5525414664376144,
-              "roll": 0.8742970000163415,
+              "attacker_win_probability": 0.5974680514332334,
+              "roll": 0.6614945176520227,
               "round_winner": "defender",
-              "attacker_casualties": 799,
-              "defender_casualties": 272,
-              "attacker_forces_after": 3557,
-              "defender_forces_after": 4228,
-              "attacker_morale_after": 65,
+              "attacker_casualties": 1192,
+              "defender_casualties": 357,
+              "attacker_forces_after": 3510,
+              "defender_forces_after": 4143,
+              "attacker_morale_after": 58,
               "defender_morale_after": 71
             },
             {
               "round": 2,
-              "attacker_strength": 7.925410787991915,
-              "defender_strength": 8.182262711851616,
-              "attacker_win_probability": 0.47433737748240945,
-              "roll": 0.04562123762402259,
+              "attacker_strength": 8.169107749743167,
+              "defender_strength": 8.165004266348422,
+              "attacker_win_probability": 0.5004103482473455,
+              "roll": 0.20556907144203973,
               "round_winner": "attacker",
-              "attacker_casualties": 390,
-              "defender_casualties": 824,
-              "attacker_forces_after": 3167,
-              "defender_forces_after": 3404,
-              "attacker_morale_after": 71,
+              "attacker_casualties": 365,
+              "defender_casualties": 833,
+              "attacker_forces_after": 3145,
+              "defender_forces_after": 3310,
+              "attacker_morale_after": 64,
               "defender_morale_after": 57
             },
             {
               "round": 3,
-              "attacker_strength": 8.03672738999417,
-              "defender_strength": 7.50805018579607,
-              "attacker_win_probability": 0.5526715774434575,
-              "roll": 0.9343056132758402,
+              "attacker_strength": 8.28580402107549,
+              "defender_strength": 7.484254706915158,
+              "attacker_win_probability": 0.5794752766129827,
+              "roll": 0.6688737776111119,
               "round_winner": "defender",
-              "attacker_casualties": 467,
-              "defender_casualties": 209,
-              "attacker_forces_after": 2700,
-              "defender_forces_after": 3195,
-              "attacker_morale_after": 59,
+              "attacker_casualties": 673,
+              "defender_casualties": 323,
+              "attacker_forces_after": 2472,
+              "defender_forces_after": 2987,
+              "attacker_morale_after": 49,
               "defender_morale_after": 63
             },
             {
               "round": 4,
-              "attacker_strength": 7.481170750723724,
-              "defender_strength": 7.66420701085324,
-              "attacker_win_probability": 0.481704545780922,
-              "roll": 0.20102552384684036,
-              "round_winner": "attacker",
-              "attacker_casualties": 173,
-              "defender_casualties": 679,
-              "attacker_forces_after": 2527,
-              "defender_forces_after": 2516,
-              "attacker_morale_after": 65,
-              "defender_morale_after": 48
+              "attacker_strength": 7.556209177393203,
+              "defender_strength": 7.607005614314801,
+              "attacker_win_probability": 0.49492053105919753,
+              "roll": 0.5679439388005162,
+              "round_winner": "defender",
+              "attacker_casualties": 310,
+              "defender_casualties": 147,
+              "attacker_forces_after": 2162,
+              "defender_forces_after": 2840,
+              "attacker_morale_after": 39,
+              "defender_morale_after": 69
             },
             {
               "round": 5,
-              "attacker_strength": 7.634906191976737,
-              "defender_strength": 6.936199545865017,
-              "attacker_win_probability": 0.5694193862038542,
-              "roll": 0.35672223363808275,
+              "attacker_strength": 7.0923637120600995,
+              "defender_strength": 7.7741246745760595,
+              "attacker_win_probability": 0.432243293306298,
+              "roll": 0.2712285924428778,
               "round_winner": "attacker",
-              "attacker_casualties": 249,
-              "defender_casualties": 476,
-              "attacker_forces_after": 2278,
-              "defender_forces_after": 2040,
-              "attacker_morale_after": 71,
-              "defender_morale_after": 34
+              "attacker_casualties": 194,
+              "defender_casualties": 598,
+              "attacker_forces_after": 1968,
+              "defender_forces_after": 2242,
+              "attacker_morale_after": 45,
+              "defender_morale_after": 54
             },
             {
               "round": 6,
-              "attacker_strength": 7.756768224858832,
-              "defender_strength": 6.268015888388367,
-              "attacker_win_probability": 0.6446263177309445,
-              "roll": 0.16248444936016804,
+              "attacker_strength": 7.222488916843257,
+              "defender_strength": 7.048234104342176,
+              "attacker_win_probability": 0.5174184297399386,
+              "roll": 0.34405994377624727,
               "round_winner": "attacker",
-              "attacker_casualties": 140,
-              "defender_casualties": 387,
-              "attacker_forces_after": 2138,
-              "defender_forces_after": 1653,
-              "attacker_morale_after": 76,
-              "defender_morale_after": 20
+              "attacker_casualties": 173,
+              "defender_casualties": 369,
+              "attacker_forces_after": 1795,
+              "defender_forces_after": 1873,
+              "attacker_morale_after": 51,
+              "defender_morale_after": 42
             },
             {
               "round": 7,
-              "attacker_strength": 7.877879652720045,
-              "defender_strength": 5.599309094246091,
-              "attacker_win_probability": 0.7132923325025384,
-              "roll": 0.9690068668175311,
+              "attacker_strength": 7.3543196615328235,
+              "defender_strength": 6.475455893378611,
+              "attacker_win_probability": 0.5869923101631281,
+              "roll": 0.9067780006086958,
               "round_winner": "defender",
-              "attacker_casualties": 495,
-              "defender_casualties": 138,
-              "attacker_forces_after": 1643,
-              "defender_forces_after": 1515,
-              "attacker_morale_after": 60,
-              "defender_morale_after": 25
+              "attacker_casualties": 450,
+              "defender_casualties": 136,
+              "attacker_forces_after": 1345,
+              "defender_forces_after": 1737,
+              "attacker_morale_after": 34,
+              "defender_morale_after": 48
             },
             {
               "round": 8,
-              "attacker_strength": 7.094154439273706,
-              "defender_strength": 5.700255981271969,
-              "attacker_win_probability": 0.6358876408005952,
-              "roll": 0.41908190599360196,
+              "attacker_strength": 6.514158633673973,
+              "defender_strength": 6.621416759951536,
+              "attacker_win_probability": 0.4892758323098204,
+              "roll": 0.07031726082222667,
               "round_winner": "attacker",
-              "attacker_casualties": 107,
-              "defender_casualties": 348,
-              "attacker_forces_after": 1536,
-              "defender_forces_after": 1167,
-              "attacker_morale_after": 65,
-              "defender_morale_after": 9
+              "attacker_casualties": 108,
+              "defender_casualties": 384,
+              "attacker_forces_after": 1237,
+              "defender_forces_after": 1353,
+              "attacker_morale_after": 40,
+              "defender_morale_after": 33
+            },
+            {
+              "round": 9,
+              "attacker_strength": 6.6530645852578605,
+              "defender_strength": 5.884195685451387,
+              "attacker_win_probability": 0.5762865357346298,
+              "roll": 0.19782348958215445,
+              "round_winner": "attacker",
+              "attacker_casualties": 88,
+              "defender_casualties": 241,
+              "attacker_forces_after": 1149,
+              "defender_forces_after": 1112,
+              "attacker_morale_after": 46,
+              "defender_morale_after": 20
+            },
+            {
+              "round": 10,
+              "attacker_strength": 6.800389638153702,
+              "defender_strength": 5.262592198584213,
+              "attacker_win_probability": 0.6491076234827367,
+              "roll": 0.948997699683565,
+              "round_winner": "defender",
+              "attacker_casualties": 277,
+              "defender_casualties": 131,
+              "attacker_forces_after": 872,
+              "defender_forces_after": 981,
+              "attacker_morale_after": 30,
+              "defender_morale_after": 25
+            },
+            {
+              "round": 11,
+              "attacker_strength": 6.006145222463662,
+              "defender_strength": 5.331152612101295,
+              "attacker_win_probability": 0.5670921793072042,
+              "roll": 0.06958680552098573,
+              "round_winner": "attacker",
+              "attacker_casualties": 43,
+              "defender_casualties": 154,
+              "attacker_forces_after": 829,
+              "defender_forces_after": 827,
+              "attacker_morale_after": 36,
+              "defender_morale_after": 13
+            },
+            {
+              "round": 12,
+              "attacker_strength": 6.173211845672046,
+              "defender_strength": 4.76616118122747,
+              "attacker_win_probability": 0.6371048439034642,
+              "roll": 0.028020749874577144,
+              "round_winner": "attacker",
+              "attacker_casualties": 52,
+              "defender_casualties": 117,
+              "attacker_forces_after": 777,
+              "defender_forces_after": 710,
+              "attacker_morale_after": 41,
+              "defender_morale_after": 2
             }
           ],
           "result": {
             "winner": "attacker",
             "ending": "rout",
             "final_forces": {
-              "attacker": 1536,
-              "defender": 1167
+              "attacker": 777,
+              "defender": 710
             },
             "final_morale": {
-              "attacker": 65,
-              "defender": 9
+              "attacker": 41,
+              "defender": 2
             }
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "objective taken · 65% losses · the bridge is open",
-        "formation_id": "ridgewalkers",
+        "summary": "objective taken · 83% losses · the line moves",
+        "formation_id": "old-ironsides",
         "strength_delta": -30,
         "will_delta": 4,
         "supply_delta": 5,
@@ -1156,191 +1438,14 @@
       }
     },
     {
-      "turn": 3,
-      "id": "bright_lance",
-      "kind": "dogfight",
-      "node_id": "halcyon",
-      "title": "Operation Bright Lance",
-      "log": {
-        "mode": "dogfight",
-        "log": {
-          "input": {
-            "mode": "dogfight",
-            "attacker": {
-              "name": "4th Air Wing — Nightjars",
-              "aircraft": 8,
-              "pilot_skill": 6,
-              "aircraft_quality": 5,
-              "weapons": 6,
-              "radar": 6,
-              "support": 5,
-              "cohesion": 80
-            },
-            "defender": {
-              "name": "Halcyon Interceptors",
-              "aircraft": 6,
-              "pilot_skill": 5,
-              "aircraft_quality": 5,
-              "weapons": 6,
-              "radar": 5,
-              "support": 5,
-              "cohesion": 65
-            },
-            "config": {
-              "max_passes": 8,
-              "scale": 2.0,
-              "kill_rate": 0.12,
-              "cohesion_break": 20
-            },
-            "seed": "2e1e92066a7e4318539799294c372ef8baad546ede1bb75865ee45787d1d8055"
-          },
-          "input_hash": "7e17f9b8ca06b3619d63ed075a37cb578995463b81423c964bb0ee7c8b352a14",
-          "passes": [
-            {
-              "pass": 1,
-              "attacker_strength": 3.49722457733622,
-              "defender_strength": 2.445910149055313,
-              "attacker_win_probability": 0.6284696578228267,
-              "roll": 0.7776948181645935,
-              "pass_winner": "defender",
-              "attacker_kills": 0,
-              "defender_kills": 1,
-              "attacker_aircraft_after": 7,
-              "defender_aircraft_after": 6,
-              "attacker_cohesion_after": 74,
-              "defender_cohesion_after": 68
-            },
-            {
-              "pass": 2,
-              "attacker_strength": 3.259441541679836,
-              "defender_strength": 2.505910149055313,
-              "attacker_win_probability": 0.59309279197882,
-              "roll": 0.44490420009567744,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 7,
-              "defender_aircraft_after": 5,
-              "attacker_cohesion_after": 78,
-              "defender_cohesion_after": 62
-            },
-            {
-              "pass": 3,
-              "attacker_strength": 3.339441541679836,
-              "defender_strength": 2.231759469228055,
-              "attacker_win_probability": 0.6350262807771558,
-              "roll": 0.3918680272379329,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 7,
-              "defender_aircraft_after": 4,
-              "attacker_cohesion_after": 81,
-              "defender_cohesion_after": 55
-            },
-            {
-              "pass": 4,
-              "attacker_strength": 3.399441541679836,
-              "defender_strength": 1.9094379124341003,
-              "attacker_win_probability": 0.6780886456556816,
-              "roll": 0.43248046135907636,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 7,
-              "defender_aircraft_after": 3,
-              "attacker_cohesion_after": 84,
-              "defender_cohesion_after": 47
-            },
-            {
-              "pass": 5,
-              "attacker_strength": 3.459441541679836,
-              "defender_strength": 1.5262943611198905,
-              "attacker_win_probability": 0.7244360151158074,
-              "roll": 0.7269728687908154,
-              "pass_winner": "defender",
-              "attacker_kills": 0,
-              "defender_kills": 1,
-              "attacker_aircraft_after": 6,
-              "defender_aircraft_after": 3,
-              "attacker_cohesion_after": 78,
-              "defender_cohesion_after": 50
-            },
-            {
-              "pass": 6,
-              "attacker_strength": 3.2059101490553132,
-              "defender_strength": 1.5862943611198905,
-              "attacker_win_probability": 0.6920685661600733,
-              "roll": 0.20184625804061906,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 6,
-              "defender_aircraft_after": 2,
-              "attacker_cohesion_after": 81,
-              "defender_cohesion_after": 41
-            },
-            {
-              "pass": 7,
-              "attacker_strength": 3.2659101490553133,
-              "defender_strength": 1.1186122886681098,
-              "attacker_win_probability": 0.7452902218961176,
-              "roll": 0.25539984649912917,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 6,
-              "defender_aircraft_after": 1,
-              "attacker_cohesion_after": 84,
-              "defender_cohesion_after": 30
-            },
-            {
-              "pass": 8,
-              "attacker_strength": 3.3259101490553133,
-              "defender_strength": 0.49314718055994533,
-              "attacker_win_probability": 0.8047705204647289,
-              "roll": 0.3271581010685073,
-              "pass_winner": "attacker",
-              "attacker_kills": 1,
-              "defender_kills": 0,
-              "attacker_aircraft_after": 6,
-              "defender_aircraft_after": 0,
-              "attacker_cohesion_after": 87,
-              "defender_cohesion_after": 11
-            }
-          ],
-          "result": {
-            "winner": "attacker",
-            "ending": "splashed",
-            "final_aircraft": {
-              "attacker": 6,
-              "defender": 0
-            },
-            "final_cohesion": {
-              "attacker": 87,
-              "defender": 11
-            }
-          }
-        }
-      },
-      "aftermath": {
-        "victory": true,
-        "summary": "sweep won · 25% aircraft lost · air superiority 75",
-        "formation_id": "nightjars",
-        "strength_delta": -12,
-        "will_delta": 3,
-        "supply_delta": 0,
-        "intel_delta": 12,
-        "momentum_delta": 1,
-        "control": "halcyon"
-      }
-    },
-    {
       "turn": 4,
-      "id": "crimson_wake",
+      "key": {
+        "node_id": "callas",
+        "kind": "naval"
+      },
       "kind": "naval",
       "node_id": "callas",
-      "title": "Operation Crimson Wake",
+      "title": "Naval — Port Callas",
       "log": {
         "mode": "naval",
         "log": {
@@ -1357,7 +1462,7 @@
               "readiness": 75
             },
             "defender": {
-              "name": "Callas Defense Flotilla",
+              "name": "Port Callas Defense Flotilla",
               "ships": 4,
               "hull_quality": 6,
               "sensors": 6,
@@ -1372,114 +1477,128 @@
               "hit_rate": 0.14,
               "readiness_break": 20
             },
-            "seed": "6bca701544488d635ab5785da27759d62e76fac5d7bbc007dd31ccd18b568518"
+            "seed": "66230aebcc5713ba415f1b05119590bf383c3fa8bb6b935649f0bf34b1cbb154"
           },
-          "input_hash": "737f6b131b61d7fd74a3074837682b59ef1b730afacab2cbc3cc701f0813923e",
+          "input_hash": "b0eb014c3cbe83108d6ee3ce637a71c94f31452c2fe332e4ebec8baa36bffdb8",
           "salvos": [
             {
               "salvo": 1,
               "attacker_strength": 3.445910149055313,
               "defender_strength": 2.7594379124341,
               "attacker_win_probability": 0.5849763999651689,
-              "roll": 0.37532385884334074,
-              "salvo_winner": "attacker",
-              "attacker_sunk": 1,
-              "defender_sunk": 0,
-              "attacker_ships_after": 6,
-              "defender_ships_after": 3,
-              "attacker_readiness_after": 79,
-              "defender_readiness_after": 55
-            },
-            {
-              "salvo": 2,
-              "attacker_strength": 3.525910149055313,
-              "defender_strength": 2.3362943611198905,
-              "attacker_win_probability": 0.6444675378398619,
-              "roll": 0.29503473937773217,
-              "salvo_winner": "attacker",
-              "attacker_sunk": 1,
-              "defender_sunk": 0,
-              "attacker_ships_after": 6,
-              "defender_ships_after": 2,
-              "attacker_readiness_after": 82,
-              "defender_readiness_after": 43
-            },
-            {
-              "salvo": 3,
-              "attacker_strength": 3.585910149055313,
-              "defender_strength": 1.80861228866811,
-              "attacker_win_probability": 0.7086112805183554,
-              "roll": 0.982772324677276,
+              "roll": 0.8612376557768032,
               "salvo_winner": "defender",
               "attacker_sunk": 0,
               "defender_sunk": 1,
               "attacker_ships_after": 5,
-              "defender_ships_after": 2,
-              "attacker_readiness_after": 74,
-              "defender_readiness_after": 46
+              "defender_ships_after": 4,
+              "attacker_readiness_after": 67,
+              "defender_readiness_after": 69
             },
             {
-              "salvo": 4,
-              "attacker_strength": 3.2717594692280545,
-              "defender_strength": 1.8686122886681098,
-              "attacker_win_probability": 0.6685365650075121,
-              "roll": 0.6685720074661627,
+              "salvo": 2,
+              "attacker_strength": 3.1317594692280544,
+              "defender_strength": 2.8394379124341,
+              "attacker_win_probability": 0.5364752826672533,
+              "roll": 0.9268611719606235,
               "salvo_winner": "defender",
               "attacker_sunk": 0,
               "defender_sunk": 1,
               "attacker_ships_after": 4,
-              "defender_ships_after": 2,
-              "attacker_readiness_after": 65,
-              "defender_readiness_after": 49
+              "defender_ships_after": 4,
+              "attacker_readiness_after": 58,
+              "defender_readiness_after": 73
+            },
+            {
+              "salvo": 3,
+              "attacker_strength": 2.7694379124341,
+              "defender_strength": 2.9194379124341,
+              "attacker_win_probability": 0.4812587841214648,
+              "roll": 0.7332570899016978,
+              "salvo_winner": "defender",
+              "attacker_sunk": 0,
+              "defender_sunk": 1,
+              "attacker_ships_after": 3,
+              "defender_ships_after": 4,
+              "attacker_readiness_after": 48,
+              "defender_readiness_after": 77
+            },
+            {
+              "salvo": 4,
+              "attacker_strength": 2.3462943611198903,
+              "defender_strength": 2.9994379124341,
+              "attacker_win_probability": 0.4190749959989365,
+              "roll": 0.1302475275991417,
+              "salvo_winner": "attacker",
+              "attacker_sunk": 1,
+              "defender_sunk": 0,
+              "attacker_ships_after": 3,
+              "defender_ships_after": 3,
+              "attacker_readiness_after": 52,
+              "defender_readiness_after": 67
             },
             {
               "salvo": 5,
-              "attacker_strength": 2.9094379124341,
-              "defender_strength": 1.9286122886681099,
-              "attacker_win_probability": 0.6202036754504522,
-              "roll": 0.5076669170339225,
+              "attacker_strength": 2.4262943611198904,
+              "defender_strength": 2.5762943611198903,
+              "attacker_win_probability": 0.4812587841214648,
+              "roll": 0.1673663143540871,
               "salvo_winner": "attacker",
               "attacker_sunk": 1,
               "defender_sunk": 0,
-              "attacker_ships_after": 4,
-              "defender_ships_after": 1,
-              "attacker_readiness_after": 69,
-              "defender_readiness_after": 34
+              "attacker_ships_after": 3,
+              "defender_ships_after": 2,
+              "attacker_readiness_after": 56,
+              "defender_readiness_after": 55
             },
             {
               "salvo": 6,
-              "attacker_strength": 2.9894379124341,
-              "defender_strength": 1.2231471805599452,
-              "attacker_win_probability": 0.7074735939181854,
-              "roll": 0.08408014579375256,
+              "attacker_strength": 2.5062943611198905,
+              "defender_strength": 2.0486122886681097,
+              "attacker_win_probability": 0.5569618930055154,
+              "roll": 0.13186004643089666,
               "salvo_winner": "attacker",
               "attacker_sunk": 1,
               "defender_sunk": 0,
-              "attacker_ships_after": 4,
+              "attacker_ships_after": 3,
+              "defender_ships_after": 1,
+              "attacker_readiness_after": 60,
+              "defender_readiness_after": 40
+            },
+            {
+              "salvo": 7,
+              "attacker_strength": 2.5862943611198905,
+              "defender_strength": 1.3431471805599453,
+              "attacker_win_probability": 0.6505763524631956,
+              "roll": 0.4385783360746148,
+              "salvo_winner": "attacker",
+              "attacker_sunk": 1,
+              "defender_sunk": 0,
+              "attacker_ships_after": 3,
               "defender_ships_after": 0,
-              "attacker_readiness_after": 72,
-              "defender_readiness_after": 9
+              "attacker_readiness_after": 63,
+              "defender_readiness_after": 15
             }
           ],
           "result": {
             "winner": "attacker",
             "ending": "sunk",
             "final_ships": {
-              "attacker": 4,
+              "attacker": 3,
               "defender": 0
             },
             "final_readiness": {
-              "attacker": 72,
-              "defender": 9
+              "attacker": 63,
+              "defender": 15
             }
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "port opened · 33% ships lost · supply 70",
+        "summary": "port opened · 50% ships lost · supply 70",
         "formation_id": "salt-watch",
-        "strength_delta": -16,
+        "strength_delta": -25,
         "will_delta": 4,
         "supply_delta": 12,
         "intel_delta": 0,
@@ -1489,675 +1608,1974 @@
     },
     {
       "turn": 5,
-      "id": "sable_hammer",
-      "kind": "battle",
+      "key": {
+        "node_id": "sable",
+        "kind": "frontlines"
+      },
+      "kind": "frontlines",
       "node_id": "sable",
-      "title": "Operation Sable Hammer",
+      "title": "Frontlines — Sable Junction",
       "log": {
-        "mode": "ground",
+        "mode": "frontlines",
         "log": {
           "input": {
+            "mode": "frontlines",
             "attacker": {
-              "name": "1st Armored — Old Ironsides",
-              "forces": 7150,
+              "name": "7th Rifles — The Ridgewalkers",
+              "reserves": 1760,
               "morale": 78,
               "tech": 6,
               "training": 6,
               "experience": 6,
-              "logistics": 3,
-              "intel": 6,
-              "home": false
+              "logistics": 4,
+              "intel": 6
             },
             "defender": {
               "name": "Sable Junction Garrison",
-              "forces": 6000,
+              "reserves": 3000,
               "morale": 65,
               "tech": 5,
               "training": 5,
               "experience": 5,
               "logistics": 5,
-              "intel": 5,
-              "home": true
+              "intel": 5
             },
+            "sectors": [
+              {
+                "name": "North",
+                "attacker_troops": 2640,
+                "defender_troops": 900,
+                "fortification": 6,
+                "objective": false
+              },
+              {
+                "name": "Center",
+                "attacker_troops": 3960,
+                "defender_troops": 1350,
+                "fortification": 7,
+                "objective": true
+              },
+              {
+                "name": "South",
+                "attacker_troops": 2200,
+                "defender_troops": 750,
+                "fortification": 6,
+                "objective": false
+              }
+            ],
             "config": {
-              "max_rounds": 24,
+              "max_days": 12,
               "scale": 2.5,
-              "home_bonus": 0.35,
-              "casualty_rate": 0.18,
-              "morale_rout_threshold": 10
+              "casualty_rate": 0.2,
+              "morale_rout_threshold": 20,
+              "replenish_rate": 0.25,
+              "capture_threshold": 0.25
             },
-            "seed": "0547e861d7df930ddc1450b6a05295ae7b49ca6c520b2dd2b2a0366f2ade9580"
+            "seed": "7bd2b04b992d8e5fc1cb27b8b1926f4e8bf1e79a13bf6efd20311d5441d2ef20"
           },
-          "input_hash": "0024716fdda5715e3d0dabb58d16032913473f0eeeb224fdc5f00fea83b1eef2",
-          "rounds": [
+          "input_hash": "7209ae7aa643b343fa1e036d6cdc109333f222791d32db1a8abdb4ee8fdfd117",
+          "days": [
             {
-              "round": 1,
-              "attacker_strength": 10.075007486048396,
-              "defender_strength": 9.424681400989513,
-              "attacker_win_probability": 0.5646683551047398,
-              "roll": 0.6894508819460032,
-              "round_winner": "defender",
-              "attacker_casualties": 972,
-              "defender_casualties": 320,
-              "attacker_forces_after": 6178,
-              "defender_forces_after": 5680,
-              "attacker_morale_after": 70,
-              "defender_morale_after": 70
+              "day": 1,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.578912912297133,
+                  "defender_strength": 7.003505257608338,
+                  "attacker_win_probability": 0.652526435058529,
+                  "roll": 0.08808690328769775,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 99,
+                  "defender_losses": 116,
+                  "attacker_troops_after": 2541,
+                  "defender_troops_after": 784,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.984251797621917,
+                  "defender_strength": 7.608600337960199,
+                  "attacker_win_probability": 0.6341960463456371,
+                  "roll": 0.20179867640730498,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 265,
+                  "defender_losses": 182,
+                  "attacker_troops_after": 3695,
+                  "defender_troops_after": 1168,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 8.396667081526461,
+                  "defender_strength": 6.821405651764135,
+                  "attacker_win_probability": 0.6525131731765792,
+                  "roll": 0.4807380787952883,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 141,
+                  "defender_losses": 105,
+                  "attacker_troops_after": 2059,
+                  "defender_troops_after": 645,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 81,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 1634,
+              "defender_reserves_after": 2899
             },
             {
-              "round": 2,
-              "attacker_strength": 9.72891172506098,
-              "defender_strength": 9.494882552557126,
-              "attacker_win_probability": 0.5233858419512857,
-              "roll": 0.8901283461854258,
-              "round_winner": "defender",
-              "attacker_casualties": 880,
-              "defender_casualties": 375,
-              "attacker_forces_after": 5298,
-              "defender_forces_after": 5305,
-              "attacker_morale_after": 61,
-              "defender_morale_after": 75
+              "day": 2,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.557093864902493,
+                  "defender_strength": 6.90808408385307,
+                  "attacker_win_probability": 0.6591714072588832,
+                  "roll": 0.9874019759575394,
+                  "sector_winner": "defender",
+                  "attacker_losses": 382,
+                  "defender_losses": 33,
+                  "attacker_troops_after": 2201,
+                  "defender_troops_after": 785,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.926305988015509,
+                  "defender_strength": 7.492573715974679,
+                  "attacker_win_probability": 0.6395687543565994,
+                  "roll": 0.548953965449072,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 257,
+                  "defender_losses": 238,
+                  "attacker_troops_after": 3480,
+                  "defender_troops_after": 964,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 8.350644551436897,
+                  "defender_strength": 6.7206211275586965,
+                  "attacker_win_probability": 0.6574631265455341,
+                  "roll": 0.05019526033185773,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 208,
+                  "defender_losses": 158,
+                  "attacker_troops_after": 1893,
+                  "defender_troops_after": 520,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 81,
+              "defender_morale_after": 56,
+              "attacker_reserves_after": 1422,
+              "defender_reserves_after": 2792
             },
             {
-              "round": 3,
-              "attacker_strength": 9.350273402492762,
-              "defender_strength": 9.551593534697684,
-              "attacker_win_probability": 0.47987885901425725,
-              "roll": 0.35211122865191313,
-              "round_winner": "attacker",
-              "attacker_casualties": 291,
-              "defender_casualties": 856,
-              "attacker_forces_after": 5007,
-              "defender_forces_after": 4449,
-              "attacker_morale_after": 66,
-              "defender_morale_after": 66
+              "day": 3,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.428855823852544,
+                  "defender_strength": 6.91174039505618,
+                  "attacker_win_probability": 0.6472210359353489,
+                  "roll": 0.9357872271286956,
+                  "sector_winner": "defender",
+                  "attacker_losses": 351,
+                  "defender_losses": 62,
+                  "attacker_troops_after": 1921,
+                  "defender_troops_after": 759,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.875266104112061,
+                  "defender_strength": 7.308754779315221,
+                  "attacker_win_probability": 0.6517191515544625,
+                  "roll": 0.8606226176490029,
+                  "sector_winner": "defender",
+                  "attacker_losses": 610,
+                  "defender_losses": 67,
+                  "attacker_troops_after": 2941,
+                  "defender_troops_after": 933,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 8.282738488914411,
+                  "defender_strength": 6.5207682942505825,
+                  "attacker_win_probability": 0.6692484944472359,
+                  "roll": 0.6789731448225425,
+                  "sector_winner": "defender",
+                  "attacker_losses": 505,
+                  "defender_losses": 59,
+                  "attacker_troops_after": 1458,
+                  "defender_troops_after": 496,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 75,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 1055,
+              "defender_reserves_after": 2745
             },
             {
-              "round": 4,
-              "attacker_strength": 9.418791912779934,
-              "defender_strength": 9.150659375160286,
-              "attacker_win_probability": 0.5267875800888284,
-              "roll": 0.28972203561296306,
-              "round_winner": "attacker",
-              "attacker_casualties": 228,
-              "defender_casualties": 765,
-              "attacker_forces_after": 4779,
-              "defender_forces_after": 3684,
-              "attacker_morale_after": 71,
-              "defender_morale_after": 56
+              "day": 4,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.323153068476902,
+                  "defender_strength": 6.854152520183219,
+                  "attacker_win_probability": 0.6428143353328549,
+                  "roll": 0.26617079697675283,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 102,
+                  "defender_losses": 133,
+                  "attacker_troops_after": 1942,
+                  "defender_troops_after": 642,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.727476530860484,
+                  "defender_strength": 7.256461984594587,
+                  "attacker_win_probability": 0.642999282893461,
+                  "roll": 0.7686944069389149,
+                  "sector_winner": "defender",
+                  "attacker_losses": 647,
+                  "defender_losses": 82,
+                  "attacker_troops_after": 2416,
+                  "defender_troops_after": 867,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 8.06581283720947,
+                  "defender_strength": 6.438324625039508,
+                  "attacker_win_probability": 0.6572347127817793,
+                  "roll": 0.35874806262683945,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 136,
+                  "defender_losses": 95,
+                  "attacker_troops_after": 1444,
+                  "defender_troops_after": 416,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 75,
+              "defender_morale_after": 56,
+              "attacker_reserves_after": 834,
+              "defender_reserves_after": 2667
             },
             {
-              "round": 5,
-              "attacker_strength": 9.497195825485502,
-              "defender_strength": 8.712025804623437,
-              "attacker_win_probability": 0.5778779039863549,
-              "roll": 0.42138348580919316,
-              "round_winner": "attacker",
-              "attacker_casualties": 221,
-              "defender_casualties": 577,
-              "attacker_forces_after": 4558,
-              "defender_forces_after": 3107,
-              "attacker_morale_after": 76,
-              "defender_morale_after": 47
+              "day": 5,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.309366537954212,
+                  "defender_strength": 6.705784060128229,
+                  "attacker_win_probability": 0.6550773183352091,
+                  "roll": 0.7487147125748685,
+                  "sector_winner": "defender",
+                  "attacker_losses": 489,
+                  "defender_losses": 45,
+                  "attacker_troops_after": 1527,
+                  "defender_troops_after": 623,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.520439515262181,
+                  "defender_strength": 7.195705775173514,
+                  "attacker_win_probability": 0.6294582712660134,
+                  "roll": 0.8232873752628332,
+                  "sector_winner": "defender",
+                  "attacker_losses": 637,
+                  "defender_losses": 111,
+                  "attacker_troops_after": 1853,
+                  "defender_troops_after": 782,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 8.025148957955574,
+                  "defender_strength": 6.293569770045136,
+                  "attacker_win_probability": 0.6665521000713053,
+                  "roll": 0.8860239960879279,
+                  "sector_winner": "defender",
+                  "attacker_losses": 366,
+                  "defender_losses": 48,
+                  "attacker_troops_after": 1151,
+                  "defender_troops_after": 394,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 69,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 461,
+              "defender_reserves_after": 2616
             },
             {
-              "round": 6,
-              "attacker_strength": 9.574858580213442,
-              "defender_strength": 8.316734711487538,
-              "attacker_win_probability": 0.6232226824873088,
-              "roll": 0.23329411575533798,
-              "round_winner": "attacker",
-              "attacker_casualties": 348,
-              "defender_casualties": 508,
-              "attacker_forces_after": 4210,
-              "defender_forces_after": 2599,
-              "attacker_morale_after": 80,
-              "defender_morale_after": 37
+              "day": 6,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.110347097821023,
+                  "defender_strength": 6.66302945692067,
+                  "attacker_win_probability": 0.6408204846676459,
+                  "roll": 0.17177889400352553,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 75,
+                  "defender_losses": 92,
+                  "attacker_troops_after": 1577,
+                  "defender_troops_after": 548,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.289841512182656,
+                  "defender_strength": 7.0846117276679275,
+                  "attacker_win_probability": 0.6182417279268169,
+                  "roll": 0.33568338474859183,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 188,
+                  "defender_losses": 191,
+                  "attacker_troops_after": 1789,
+                  "defender_troops_after": 608,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.851485463904735,
+                  "defender_strength": 6.221023349349527,
+                  "attacker_win_probability": 0.6575026436509346,
+                  "roll": 0.5879665427092992,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 123,
+                  "defender_losses": 87,
+                  "attacker_troops_after": 1152,
+                  "defender_troops_after": 324,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 72,
+              "defender_morale_after": 53,
+              "attacker_reserves_after": 364,
+              "defender_reserves_after": 2523
             },
             {
-              "round": 7,
-              "attacker_strength": 9.595455428161928,
-              "defender_strength": 7.888266724009573,
-              "attacker_win_probability": 0.6643801726518673,
-              "roll": 0.043950708385933845,
-              "round_winner": "attacker",
-              "attacker_casualties": 140,
-              "defender_casualties": 373,
-              "attacker_forces_after": 4070,
-              "defender_forces_after": 2226,
-              "attacker_morale_after": 84,
-              "defender_morale_after": 28
+              "day": 7,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.084610383176972,
+                  "defender_strength": 6.563028103540465,
+                  "attacker_win_probability": 0.6476288877574059,
+                  "roll": 0.07346812560755622,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 86,
+                  "defender_losses": 130,
+                  "attacker_troops_after": 1524,
+                  "defender_troops_after": 449,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.207690077819903,
+                  "defender_strength": 6.861468176353718,
+                  "attacker_win_probability": 0.6314607949558867,
+                  "roll": 0.9152094367168062,
+                  "sector_winner": "defender",
+                  "attacker_losses": 270,
+                  "defender_losses": 46,
+                  "attacker_troops_after": 1551,
+                  "defender_troops_after": 593,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.777498053569231,
+                  "defender_strength": 6.074930730852031,
+                  "attacker_win_probability": 0.6639678587833299,
+                  "roll": 0.18155067367127498,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 62,
+                  "defender_losses": 46,
+                  "attacker_troops_after": 1122,
+                  "defender_troops_after": 309,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 72,
+              "defender_morale_after": 50,
+              "attacker_reserves_after": 259,
+              "defender_reserves_after": 2467
             },
             {
-              "round": 8,
-              "attacker_strength": 9.661643948502979,
-              "defender_strength": 7.508410667257367,
-              "attacker_win_probability": 0.7029307935487907,
-              "roll": 0.7467349903995993,
-              "round_winner": "defender",
-              "attacker_casualties": 695,
-              "defender_casualties": 79,
-              "attacker_forces_after": 3375,
-              "defender_forces_after": 2147,
-              "attacker_morale_after": 74,
-              "defender_morale_after": 32
+              "day": 8,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.052441100243582,
+                  "defender_strength": 6.350602768446279,
+                  "attacker_win_probability": 0.6639027962831167,
+                  "roll": 0.9559352713779231,
+                  "sector_winner": "defender",
+                  "attacker_losses": 358,
+                  "defender_losses": 26,
+                  "attacker_troops_after": 1201,
+                  "defender_troops_after": 442,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.069600720526408,
+                  "defender_strength": 6.818364935936212,
+                  "attacker_win_probability": 0.622575489754495,
+                  "roll": 0.338991444710398,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 46,
+                  "defender_losses": 77,
+                  "attacker_troops_after": 1540,
+                  "defender_troops_after": 535,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.75444965813294,
+                  "defender_strength": 5.993013608384144,
+                  "attacker_win_probability": 0.6692011984893628,
+                  "roll": 0.09917706324469155,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 82,
+                  "defender_losses": 71,
+                  "attacker_troops_after": 1075,
+                  "defender_troops_after": 256,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 72,
+              "defender_morale_after": 47,
+              "attacker_reserves_after": 137,
+              "defender_reserves_after": 2423
             },
             {
-              "round": 9,
-              "attacker_strength": 9.224446855715847,
-              "defender_strength": 7.572292455628755,
-              "attacker_win_probability": 0.6594539443130489,
-              "roll": 0.9918141317652373,
-              "round_winner": "defender",
-              "attacker_casualties": 441,
-              "defender_casualties": 108,
-              "attacker_forces_after": 2934,
-              "defender_forces_after": 2039,
-              "attacker_morale_after": 66,
-              "defender_morale_after": 36
+              "day": 9,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.825283091510712,
+                  "defender_strength": 6.3268691841141855,
+                  "attacker_win_probability": 0.6455111436195916,
+                  "roll": 0.24344647191426028,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 122,
+                  "defender_losses": 107,
+                  "attacker_troops_after": 1120,
+                  "defender_troops_after": 350,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.066445148327597,
+                  "defender_strength": 6.711734809152915,
+                  "attacker_win_probability": 0.6322506067580362,
+                  "roll": 0.036917327124460164,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 146,
+                  "defender_losses": 105,
+                  "attacker_troops_after": 1435,
+                  "defender_troops_after": 445,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.717506142941256,
+                  "defender_strength": 5.802118820879701,
+                  "attacker_win_probability": 0.6826885413012993,
+                  "roll": 0.7443525740104824,
+                  "sector_winner": "defender",
+                  "attacker_losses": 182,
+                  "defender_losses": 16,
+                  "attacker_troops_after": 933,
+                  "defender_troops_after": 254,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 72,
+              "defender_morale_after": 44,
+              "attacker_reserves_after": 24,
+              "defender_reserves_after": 2366
             },
             {
-              "round": 10,
-              "attacker_strength": 8.884462732262197,
-              "defender_strength": 7.620705086838262,
-              "attacker_win_probability": 0.6237516961129298,
-              "roll": 0.5642050287074196,
-              "round_winner": "attacker",
-              "attacker_casualties": 176,
-              "defender_casualties": 458,
-              "attacker_forces_after": 2758,
-              "defender_forces_after": 1581,
-              "attacker_morale_after": 70,
-              "defender_morale_after": 24
+              "day": 10,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.755312843339752,
+                  "defender_strength": 6.11350300563827,
+                  "attacker_win_probability": 0.6585240824034118,
+                  "roll": 0.8342910309989832,
+                  "sector_winner": "defender",
+                  "attacker_losses": 244,
+                  "defender_losses": 36,
+                  "attacker_troops_after": 914,
+                  "defender_troops_after": 333,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.995735072749281,
+                  "defender_strength": 6.542037405587356,
+                  "attacker_win_probability": 0.6414076685438771,
+                  "roll": 0.20596334612925982,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 64,
+                  "defender_losses": 86,
+                  "attacker_troops_after": 1409,
+                  "defender_troops_after": 378,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.578326468291325,
+                  "defender_strength": 5.813128106388071,
+                  "attacker_win_probability": 0.6695342602702844,
+                  "roll": 0.14864546740322004,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 84,
+                  "defender_losses": 56,
+                  "attacker_troops_after": 886,
+                  "defender_troops_after": 217,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 72,
+              "defender_morale_after": 41,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 2321
             },
             {
-              "round": 11,
-              "attacker_strength": 8.922623574217287,
-              "defender_strength": 7.066445148327598,
-              "attacker_win_probability": 0.6775360403272905,
-              "roll": 0.39075266202189274,
-              "round_winner": "attacker",
-              "attacker_casualties": 238,
-              "defender_casualties": 320,
-              "attacker_forces_after": 2520,
-              "defender_forces_after": 1261,
-              "attacker_morale_after": 74,
-              "defender_morale_after": 13
-            },
-            {
-              "round": 12,
-              "attacker_strength": 8.93241092718792,
-              "defender_strength": 6.565453043101158,
-              "attacker_win_probability": 0.720467784304257,
-              "roll": 0.3392765893609615,
-              "round_winner": "attacker",
-              "attacker_casualties": 167,
-              "defender_casualties": 233,
-              "attacker_forces_after": 2353,
-              "defender_forces_after": 1028,
-              "attacker_morale_after": 78,
-              "defender_morale_after": 3
+              "day": 11,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.527629234502852,
+                  "defender_strength": 6.055071922202427,
+                  "attacker_win_probability": 0.6431409279103519,
+                  "roll": 0.22366498441971583,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 98,
+                  "defender_losses": 75,
+                  "attacker_troops_after": 824,
+                  "defender_troops_after": 273,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.957002707092072,
+                  "defender_strength": 6.376350909297934,
+                  "attacker_win_probability": 0.653001896516223,
+                  "roll": 0.016840511491441612,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 95,
+                  "defender_losses": 103,
+                  "attacker_troops_after": 1322,
+                  "defender_troops_after": 290,
+                  "captured": true
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.496823718274856,
+                  "defender_strength": 5.6510384535657,
+                  "attacker_win_probability": 0.6766270876613896,
+                  "roll": 0.30207109211860295,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 84,
+                  "defender_losses": 50,
+                  "attacker_troops_after": 810,
+                  "defender_troops_after": 182,
+                  "captured": true
+                }
+              ],
+              "attacker_morale_after": 85,
+              "defender_morale_after": 25,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 2264
             }
           ],
           "result": {
             "winner": "attacker",
-            "ending": "rout",
-            "final_forces": {
-              "attacker": 2353,
-              "defender": 1028
+            "ending": "breakthrough",
+            "sectors": [
+              {
+                "name": "North",
+                "attacker_troops": 824,
+                "defender_troops": 330,
+                "fortification": 6,
+                "objective": false,
+                "captured": false
+              },
+              {
+                "name": "Center",
+                "attacker_troops": 1322,
+                "defender_troops": 290,
+                "fortification": 7,
+                "objective": true,
+                "captured": true
+              },
+              {
+                "name": "South",
+                "attacker_troops": 810,
+                "defender_troops": 182,
+                "fortification": 6,
+                "objective": false,
+                "captured": true
+              }
+            ],
+            "final_reserves": {
+              "attacker": 0,
+              "defender": 2264
             },
             "final_morale": {
-              "attacker": 78,
-              "defender": 3
-            }
+              "attacker": 85,
+              "defender": 25
+            },
+            "objectives_captured": 1,
+            "objectives_total": 1
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "objective taken · 67% losses · the rail hub is ours",
-        "formation_id": "old-ironsides",
+        "summary": "front advanced · 72% losses · the line moved",
+        "formation_id": "ridgewalkers",
         "strength_delta": -30,
-        "will_delta": 9,
-        "supply_delta": 7,
-        "intel_delta": 5,
-        "momentum_delta": 2,
+        "will_delta": 8,
+        "supply_delta": 5,
+        "intel_delta": 3,
+        "momentum_delta": 1,
         "control": "sable"
       }
     },
     {
       "turn": 6,
-      "id": "ashfall",
-      "kind": "battle",
+      "key": {
+        "node_id": "vesper",
+        "kind": "frontlines"
+      },
+      "kind": "frontlines",
       "node_id": "vesper",
-      "title": "Operation Ashfall",
+      "title": "Frontlines — Vesper Works",
       "log": {
-        "mode": "ground",
+        "mode": "frontlines",
         "log": {
           "input": {
+            "mode": "frontlines",
             "attacker": {
-              "name": "7th Rifles — The Ridgewalkers",
-              "forces": 6380,
-              "morale": 81,
+              "name": "Reserve Corps",
+              "reserves": 1300,
+              "morale": 75,
               "tech": 6,
-              "training": 6,
-              "experience": 6,
+              "training": 5,
+              "experience": 5,
               "logistics": 3,
-              "intel": 6,
-              "home": false
+              "intel": 6
             },
             "defender": {
               "name": "Vesper Works Garrison",
-              "forces": 3000,
+              "reserves": 3000,
               "morale": 65,
               "tech": 5,
               "training": 5,
               "experience": 5,
               "logistics": 5,
-              "intel": 5,
-              "home": true
+              "intel": 5
             },
+            "sectors": [
+              {
+                "name": "North",
+                "attacker_troops": 1950,
+                "defender_troops": 1800,
+                "fortification": 7,
+                "objective": false
+              },
+              {
+                "name": "Center",
+                "attacker_troops": 2925,
+                "defender_troops": 2700,
+                "fortification": 8,
+                "objective": true
+              },
+              {
+                "name": "South",
+                "attacker_troops": 1625,
+                "defender_troops": 1500,
+                "fortification": 7,
+                "objective": false
+              }
+            ],
             "config": {
-              "max_rounds": 24,
+              "max_days": 12,
               "scale": 2.5,
-              "home_bonus": 0.35,
-              "casualty_rate": 0.18,
-              "morale_rout_threshold": 10
+              "casualty_rate": 0.2,
+              "morale_rout_threshold": 20,
+              "replenish_rate": 0.25,
+              "capture_threshold": 0.25
             },
-            "seed": "85aec6fdc79387cc28eb5464617d3e497c6a181dba65bd6f9318290f9e1b0895"
+            "seed": "9739e2d3521be74098473271e4a73824a71afe13aac7093862cdef8ddffe1e52"
           },
-          "input_hash": "ee3ec18e7d4d3030604f8f784856a975944b98199300988ef0aead9b9fdb4ee5",
-          "rounds": [
+          "input_hash": "82d3bde16fff4dc11a6e5b17001545c3e0b1a6bd86c578636c041d1137f761cb",
+          "days": [
             {
-              "round": 1,
-              "attacker_strength": 10.036080103868347,
-              "defender_strength": 8.731700845440367,
-              "attacker_win_probability": 0.6275572818338836,
-              "roll": 0.3617755250040213,
-              "round_winner": "attacker",
-              "attacker_casualties": 632,
-              "defender_casualties": 672,
-              "attacker_forces_after": 5748,
-              "defender_forces_after": 2328,
-              "attacker_morale_after": 85,
-              "defender_morale_after": 53
+              "day": 1,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.626097340623111,
+                  "defender_strength": 7.896097345175956,
+                  "attacker_win_probability": 0.473026212971126,
+                  "roll": 0.07741354495683395,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 155,
+                  "defender_losses": 246,
+                  "attacker_troops_after": 1795,
+                  "defender_troops_after": 1554,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.03139158158007,
+                  "defender_strength": 8.501377353792616,
+                  "attacker_win_probability": 0.45313935342207035,
+                  "roll": 0.8571443533116732,
+                  "sector_winner": "defender",
+                  "attacker_losses": 592,
+                  "defender_losses": 290,
+                  "attacker_troops_after": 2333,
+                  "defender_troops_after": 2410,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.443878290107755,
+                  "defender_strength": 7.713886831633462,
+                  "attacker_win_probability": 0.4730253617584682,
+                  "roll": 0.6528734787862476,
+                  "sector_winner": "defender",
+                  "attacker_losses": 278,
+                  "defender_losses": 116,
+                  "attacker_troops_after": 1347,
+                  "defender_troops_after": 1384,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 72,
+              "defender_morale_after": 65,
+              "attacker_reserves_after": 1044,
+              "defender_reserves_after": 2837
             },
             {
-              "round": 2,
-              "attacker_strength": 10.031781205623291,
-              "defender_strength": 8.178194269884342,
-              "attacker_win_probability": 0.6773095221641555,
-              "roll": 0.27484219296105517,
-              "round_winner": "attacker",
-              "attacker_casualties": 333,
-              "defender_casualties": 495,
-              "attacker_forces_after": 5415,
-              "defender_forces_after": 1833,
-              "attacker_morale_after": 89,
-              "defender_morale_after": 41
+              "day": 2,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.5900903201453245,
+                  "defender_strength": 7.783989457978509,
+                  "attacker_win_probability": 0.48061980037553664,
+                  "roll": 0.8477437685258563,
+                  "sector_winner": "defender",
+                  "attacker_losses": 278,
+                  "defender_losses": 127,
+                  "attacker_troops_after": 1603,
+                  "defender_troops_after": 1482,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.841109510610028,
+                  "defender_strength": 8.409947086476791,
+                  "attacker_win_probability": 0.44336039485284234,
+                  "roll": 0.3238136860945757,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 102,
+                  "defender_losses": 306,
+                  "attacker_troops_after": 2316,
+                  "defender_troops_after": 2158,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.317525427828172,
+                  "defender_strength": 7.671703706887368,
+                  "attacker_win_probability": 0.4646412920006534,
+                  "roll": 0.5359413890962921,
+                  "sector_winner": "defender",
+                  "attacker_losses": 274,
+                  "defender_losses": 126,
+                  "attacker_troops_after": 1158,
+                  "defender_troops_after": 1312,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 69,
+              "defender_morale_after": 65,
+              "attacker_reserves_after": 880,
+              "defender_reserves_after": 2697
             },
             {
-              "round": 3,
-              "attacker_strength": 10.07211281459211,
-              "defender_strength": 7.63925465281641,
-              "attacker_win_probability": 0.7257455735875382,
-              "roll": 0.5836994792506289,
-              "round_winner": "attacker",
-              "attacker_casualties": 465,
-              "defender_casualties": 428,
-              "attacker_forces_after": 4950,
-              "defender_forces_after": 1405,
-              "attacker_morale_after": 93,
-              "defender_morale_after": 29
+              "day": 3,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.463970290190444,
+                  "defender_strength": 7.7330230143864815,
+                  "attacker_win_probability": 0.4731206662801931,
+                  "roll": 0.8887734270411694,
+                  "sector_winner": "defender",
+                  "attacker_losses": 334,
+                  "defender_losses": 151,
+                  "attacker_troops_after": 1324,
+                  "defender_troops_after": 1378,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.8214887601176155,
+                  "defender_strength": 8.298936199813447,
+                  "attacker_win_probability": 0.4523998447434689,
+                  "roll": 0.9628888083212233,
+                  "sector_winner": "defender",
+                  "attacker_losses": 349,
+                  "defender_losses": 177,
+                  "attacker_troops_after": 2022,
+                  "defender_troops_after": 2028,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.15085190894405,
+                  "defender_strength": 7.614504414151144,
+                  "attacker_win_probability": 0.4537671913794191,
+                  "roll": 0.6925020686253917,
+                  "sector_winner": "defender",
+                  "attacker_losses": 228,
+                  "defender_losses": 91,
+                  "attacker_troops_after": 984,
+                  "defender_troops_after": 1267,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 63,
+              "defender_morale_after": 68,
+              "attacker_reserves_after": 652,
+              "defender_reserves_after": 2592
             },
             {
-              "round": 4,
-              "attacker_strength": 10.082344855361422,
-              "defender_strength": 7.07350407237061,
-              "attacker_win_probability": 0.7691532764928223,
-              "roll": 0.6197567761444507,
-              "round_winner": "attacker",
-              "attacker_casualties": 483,
-              "defender_casualties": 317,
-              "attacker_forces_after": 4467,
-              "defender_forces_after": 1088,
-              "attacker_morale_after": 96,
-              "defender_morale_after": 17
+              "day": 4,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.294941546337006,
+                  "defender_strength": 7.654177846456518,
+                  "attacker_win_probability": 0.4641380555593515,
+                  "roll": 0.8568126995330868,
+                  "sector_winner": "defender",
+                  "attacker_losses": 263,
+                  "defender_losses": 85,
+                  "attacker_troops_after": 1137,
+                  "defender_troops_after": 1328,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.699216319820633,
+                  "defender_strength": 8.232401126601454,
+                  "attacker_win_probability": 0.4468827069160458,
+                  "roll": 0.7138007845788007,
+                  "sector_winner": "defender",
+                  "attacker_losses": 370,
+                  "defender_losses": 141,
+                  "attacker_troops_after": 1728,
+                  "defender_troops_after": 1922,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.016967138613983,
+                  "defender_strength": 7.5724245771248455,
+                  "attacker_win_probability": 0.44468163632103225,
+                  "roll": 0.7896886818193035,
+                  "sector_winner": "defender",
+                  "attacker_losses": 191,
+                  "defender_losses": 120,
+                  "attacker_troops_after": 869,
+                  "defender_troops_after": 1182,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 57,
+              "defender_morale_after": 71,
+              "attacker_reserves_after": 446,
+              "defender_reserves_after": 2505
             },
             {
-              "round": 5,
-              "attacker_strength": 10.054696160189092,
-              "defender_strength": 6.51801512293296,
-              "attacker_win_probability": 0.8045018602817371,
-              "roll": 0.9991141446768537,
-              "round_winner": "defender",
-              "attacker_casualties": 990,
-              "defender_casualties": 54,
-              "attacker_forces_after": 3477,
-              "defender_forces_after": 1034,
-              "attacker_morale_after": 84,
-              "defender_morale_after": 20
+              "day": 5,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.1458932210975314,
+                  "defender_strength": 7.613768308118642,
+                  "attacker_win_probability": 0.4533485762478195,
+                  "roll": 0.2991872248441282,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 74,
+                  "defender_losses": 228,
+                  "attacker_troops_after": 1132,
+                  "defender_troops_after": 1129,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.544430215031565,
+                  "defender_strength": 8.176609766973037,
+                  "attacker_win_probability": 0.43711677282017036,
+                  "roll": 0.34896156691339175,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 141,
+                  "defender_losses": 424,
+                  "attacker_troops_after": 1656,
+                  "defender_troops_after": 1527,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.893749949006224,
+                  "defender_strength": 7.50002716662926,
+                  "attacker_win_probability": 0.4396676751761253,
+                  "roll": 0.485819208044193,
+                  "sector_winner": "defender",
+                  "attacker_losses": 201,
+                  "defender_losses": 129,
+                  "attacker_troops_after": 736,
+                  "defender_troops_after": 1082,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 57,
+              "defender_morale_after": 68,
+              "attacker_reserves_after": 342,
+              "defender_reserves_after": 2310
             },
             {
-              "round": 6,
-              "attacker_strength": 9.504212694914228,
-              "defender_strength": 6.542156705699469,
-              "attacker_win_probability": 0.7658137752264803,
-              "roll": 0.5402283547900859,
-              "round_winner": "attacker",
-              "attacker_casualties": 189,
-              "defender_casualties": 159,
-              "attacker_forces_after": 3288,
-              "defender_forces_after": 875,
-              "attacker_morale_after": 87,
-              "defender_morale_after": 11
+              "day": 6,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.113048163388172,
+                  "defender_strength": 7.485901464365611,
+                  "attacker_win_probability": 0.46278362840209,
+                  "roll": 0.0019114331678093954,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 84,
+                  "defender_losses": 239,
+                  "attacker_troops_after": 1083,
+                  "defender_troops_after": 955,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.483666540166168,
+                  "defender_strength": 7.973374309910049,
+                  "attacker_win_probability": 0.45118520937307366,
+                  "roll": 0.639627249685175,
+                  "sector_winner": "defender",
+                  "attacker_losses": 369,
+                  "defender_losses": 152,
+                  "attacker_troops_after": 1322,
+                  "defender_troops_after": 1440,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.697688373563329,
+                  "defender_strength": 7.445776576879512,
+                  "attacker_win_probability": 0.42574443565783127,
+                  "roll": 0.07789901490124318,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 40,
+                  "defender_losses": 146,
+                  "attacker_troops_after": 730,
+                  "defender_troops_after": 1001,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 57,
+              "defender_morale_after": 65,
+              "attacker_reserves_after": 219,
+              "defender_reserves_after": 2176
             },
             {
-              "round": 7,
-              "attacker_strength": 9.523338846189057,
-              "defender_strength": 6.150366090936391,
-              "attacker_win_probability": 0.7939970246966197,
-              "roll": 0.3069145234284846,
-              "round_winner": "attacker",
-              "attacker_casualties": 275,
-              "defender_casualties": 191,
-              "attacker_forces_after": 3013,
-              "defender_forces_after": 684,
-              "attacker_morale_after": 90,
-              "defender_morale_after": 0
+              "day": 7,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.0755383146385205,
+                  "defender_strength": 7.308754779315221,
+                  "attacker_win_probability": 0.47669525166003174,
+                  "roll": 0.08922100090205554,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 63,
+                  "defender_losses": 169,
+                  "attacker_troops_after": 1061,
+                  "defender_troops_after": 831,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.268176838403408,
+                  "defender_strength": 7.903843225277704,
+                  "attacker_win_probability": 0.4367736346744854,
+                  "roll": 0.9889707819267994,
+                  "sector_winner": "defender",
+                  "attacker_losses": 296,
+                  "defender_losses": 155,
+                  "attacker_troops_after": 1067,
+                  "defender_troops_after": 1330,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.698984550024776,
+                  "defender_strength": 7.352728644624869,
+                  "attacker_win_probability": 0.43499559134670046,
+                  "roll": 0.8806676446924797,
+                  "sector_winner": "defender",
+                  "attacker_losses": 103,
+                  "defender_losses": 44,
+                  "attacker_troops_after": 668,
+                  "defender_troops_after": 1001,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 54,
+              "defender_morale_after": 65,
+              "attacker_reserves_after": 103,
+              "defender_reserves_after": 2084
+            },
+            {
+              "day": 8,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.05397413672268,
+                  "defender_strength": 7.160414691083428,
+                  "attacker_win_probability": 0.48935755217652416,
+                  "roll": 0.13060718803560867,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 86,
+                  "defender_losses": 127,
+                  "attacker_troops_after": 1014,
+                  "defender_troops_after": 735,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.059408932708637,
+                  "defender_strength": 7.816709486709458,
+                  "attacker_win_probability": 0.4248437664072827,
+                  "roll": 0.40011166760278216,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 91,
+                  "defender_losses": 302,
+                  "attacker_troops_after": 1015,
+                  "defender_troops_after": 1059,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.611030665896573,
+                  "defender_strength": 7.3392539460415085,
+                  "attacker_win_probability": 0.4276882514706435,
+                  "roll": 0.007811322919048069,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 21,
+                  "defender_losses": 125,
+                  "attacker_troops_after": 685,
+                  "defender_troops_after": 906,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 57,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 53,
+              "defender_reserves_after": 1945
+            },
+            {
+              "day": 9,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 6.989253946041508,
+                  "defender_strength": 7.063132695990803,
+                  "attacker_win_probability": 0.49261266260527725,
+                  "roll": 0.5357525613278173,
+                  "sector_winner": "defender",
+                  "attacker_losses": 155,
+                  "defender_losses": 45,
+                  "attacker_troops_after": 876,
+                  "defender_troops_after": 737,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 6.990222469119638,
+                  "defender_strength": 7.608505182082281,
+                  "attacker_win_probability": 0.4384849505336586,
+                  "roll": 0.26850418833659495,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 69,
+                  "defender_losses": 166,
+                  "attacker_troops_after": 963,
+                  "defender_troops_after": 939,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.603933404025811,
+                  "defender_strength": 7.259614903654202,
+                  "attacker_win_probability": 0.4348051351064789,
+                  "roll": 0.4423640481232167,
+                  "sector_winner": "defender",
+                  "attacker_losses": 134,
+                  "defender_losses": 65,
+                  "attacker_troops_after": 567,
+                  "defender_troops_after": 887,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 54,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 1876
+            },
+            {
+              "day": 10,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 6.846823718274855,
+                  "defender_strength": 7.034633357861686,
+                  "attacker_win_probability": 0.4812278637368716,
+                  "roll": 0.4702148200013089,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 42,
+                  "defender_losses": 101,
+                  "attacker_troops_after": 852,
+                  "defender_troops_after": 659,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 6.939591308354466,
+                  "defender_strength": 7.470053411798126,
+                  "attacker_win_probability": 0.447151920011801,
+                  "roll": 0.2100741989535323,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 68,
+                  "defender_losses": 121,
+                  "attacker_troops_after": 913,
+                  "defender_troops_after": 841,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.421611847231857,
+                  "defender_strength": 7.214542897259959,
+                  "attacker_win_probability": 0.421365004900457,
+                  "roll": 0.29646128804005745,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 47,
+                  "defender_losses": 145,
+                  "attacker_troops_after": 537,
+                  "defender_troops_after": 765,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 57,
+              "defender_morale_after": 53,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 1784
+            },
+            {
+              "day": 11,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 6.798759547491679,
+                  "defender_strength": 6.938139823767671,
+                  "attacker_win_probability": 0.48606558154564805,
+                  "roll": 0.7224433602949283,
+                  "sector_winner": "defender",
+                  "attacker_losses": 158,
+                  "defender_losses": 57,
+                  "attacker_troops_after": 694,
+                  "defender_troops_after": 633,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 6.867830571454149,
+                  "defender_strength": 7.3719355558396025,
+                  "attacker_win_probability": 0.44975961536588044,
+                  "roll": 0.1134336303376291,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 76,
+                  "defender_losses": 191,
+                  "attacker_troops_after": 837,
+                  "defender_troops_after": 681,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.337858560161784,
+                  "defender_strength": 7.079599185844383,
+                  "attacker_win_probability": 0.4263653102106018,
+                  "roll": 0.7491926901872533,
+                  "sector_winner": "defender",
+                  "attacker_losses": 120,
+                  "defender_losses": 78,
+                  "attacker_troops_after": 417,
+                  "defender_troops_after": 717,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 54,
+              "defender_morale_after": 53,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 1702
+            },
+            {
+              "day": 12,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 6.593911845564792,
+                  "defender_strength": 6.895265555937009,
+                  "attacker_win_probability": 0.4699010655584914,
+                  "roll": 0.8281014102548071,
+                  "sector_winner": "defender",
+                  "attacker_losses": 155,
+                  "defender_losses": 80,
+                  "attacker_troops_after": 539,
+                  "defender_troops_after": 581,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 6.781018100482083,
+                  "defender_strength": 7.163855526532128,
+                  "attacker_win_probability": 0.46179089620140884,
+                  "roll": 0.18600276026911966,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 72,
+                  "defender_losses": 148,
+                  "attacker_troops_after": 765,
+                  "defender_troops_after": 560,
+                  "captured": true
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 6.085481432524756,
+                  "defender_strength": 7.01338421837956,
+                  "attacker_win_probability": 0.40826048522970576,
+                  "roll": 0.31418356367350797,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 39,
+                  "defender_losses": 181,
+                  "attacker_troops_after": 378,
+                  "defender_troops_after": 563,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 59,
+              "defender_morale_after": 45,
+              "attacker_reserves_after": 0,
+              "defender_reserves_after": 1600
             }
           ],
           "result": {
             "winner": "attacker",
-            "ending": "rout",
-            "final_forces": {
-              "attacker": 3013,
-              "defender": 684
+            "ending": "breakthrough",
+            "sectors": [
+              {
+                "name": "North",
+                "attacker_troops": 539,
+                "defender_troops": 632,
+                "fortification": 7,
+                "objective": false,
+                "captured": false
+              },
+              {
+                "name": "Center",
+                "attacker_troops": 765,
+                "defender_troops": 560,
+                "fortification": 8,
+                "objective": true,
+                "captured": true
+              },
+              {
+                "name": "South",
+                "attacker_troops": 378,
+                "defender_troops": 614,
+                "fortification": 7,
+                "objective": false,
+                "captured": false
+              }
+            ],
+            "final_reserves": {
+              "attacker": 0,
+              "defender": 1600
             },
             "final_morale": {
-              "attacker": 90,
-              "defender": 0
-            }
+              "attacker": 59,
+              "defender": 45
+            },
+            "objectives_captured": 1,
+            "objectives_total": 1
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "objective taken · 53% losses · the works are silent",
-        "formation_id": "ridgewalkers",
-        "strength_delta": -26,
-        "will_delta": 12,
-        "supply_delta": 4,
-        "intel_delta": 4,
-        "momentum_delta": 2,
+        "summary": "front advanced · 78% losses · the line moved",
+        "formation_id": "reserve-corps",
+        "strength_delta": -30,
+        "will_delta": 8,
+        "supply_delta": 5,
+        "intel_delta": 3,
+        "momentum_delta": 1,
         "control": "vesper"
       }
     },
     {
       "turn": 7,
-      "id": "meridian",
-      "kind": "battle",
+      "key": {
+        "node_id": "meridian",
+        "kind": "frontlines"
+      },
+      "kind": "frontlines",
       "node_id": "meridian",
-      "title": "Operation Meridian",
+      "title": "Frontlines — Meridian",
       "log": {
-        "mode": "ground",
+        "mode": "frontlines",
         "log": {
           "input": {
+            "mode": "frontlines",
             "attacker": {
-              "name": "Reserve Corps",
-              "forces": 10450,
-              "morale": 72,
+              "name": "1st Armored — Old Ironsides",
+              "reserves": 1300,
+              "morale": 78,
               "tech": 6,
-              "training": 5,
-              "experience": 5,
+              "training": 6,
+              "experience": 6,
               "logistics": 3,
-              "intel": 6,
-              "home": false
+              "intel": 6
             },
             "defender": {
               "name": "Meridian Garrison",
-              "forces": 500,
+              "reserves": 3000,
               "morale": 65,
               "tech": 5,
               "training": 5,
               "experience": 5,
               "logistics": 5,
-              "intel": 5,
-              "home": true
+              "intel": 5
             },
+            "sectors": [
+              {
+                "name": "North",
+                "attacker_troops": 1950,
+                "defender_troops": 300,
+                "fortification": 5,
+                "objective": false
+              },
+              {
+                "name": "Center",
+                "attacker_troops": 2925,
+                "defender_troops": 450,
+                "fortification": 6,
+                "objective": true
+              },
+              {
+                "name": "South",
+                "attacker_troops": 1625,
+                "defender_troops": 250,
+                "fortification": 5,
+                "objective": false
+              }
+            ],
             "config": {
-              "max_rounds": 24,
+              "max_days": 12,
               "scale": 2.5,
-              "home_bonus": 0.35,
-              "casualty_rate": 0.18,
-              "morale_rout_threshold": 10
+              "casualty_rate": 0.2,
+              "morale_rout_threshold": 20,
+              "replenish_rate": 0.25,
+              "capture_threshold": 0.25
             },
-            "seed": "321115b56958cbf75dec67fb9ad1ca70c920af098834d7331811837ce64fa3c2"
+            "seed": "73575e419cd19dfddd3fd1ad08a2cc57a7efff782ce50937a758a3abd12ebe6f"
           },
-          "input_hash": "1cc7288768bc340c8207800ee318a43eb65aa512a0b63478ebaa4844c6896166",
-          "rounds": [
+          "input_hash": "080035c2c70a2d177091a3e0344f641a24df82a9db86d986ddbe1fa8b7cb409b",
+          "days": [
             {
-              "round": 1,
-              "attacker_strength": 9.854452946594504,
-              "defender_strength": 6.941606101084864,
-              "attacker_win_probability": 0.7622651960584147,
-              "roll": 0.49903959731279923,
-              "round_winner": "attacker",
-              "attacker_casualties": 667,
-              "defender_casualties": 101,
-              "attacker_forces_after": 9783,
-              "defender_forces_after": 399,
-              "attacker_morale_after": 75,
-              "defender_morale_after": 54
-            },
-            {
-              "round": 2,
-              "attacker_strength": 9.863503677367008,
-              "defender_strength": 6.441464547107981,
-              "attacker_win_probability": 0.7971887369537106,
-              "roll": 0.7693593399286629,
-              "round_winner": "attacker",
-              "attacker_casualties": 512,
-              "defender_casualties": 60,
-              "attacker_forces_after": 9271,
-              "defender_forces_after": 339,
-              "attacker_morale_after": 78,
-              "defender_morale_after": 45
-            },
-            {
-              "round": 3,
-              "attacker_strength": 9.884754385019587,
-              "defender_strength": 6.053945617610207,
-              "attacker_win_probability": 0.8223460166976055,
-              "roll": 0.15054858967565632,
-              "round_winner": "attacker",
-              "attacker_casualties": 862,
-              "defender_casualties": 97,
-              "attacker_forces_after": 8409,
-              "defender_forces_after": 242,
+              "day": 1,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.076097340623111,
+                  "defender_strength": 5.707110264748875,
+                  "attacker_win_probability": 0.7206312218330653,
+                  "roll": 0.6275665560224051,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 117,
+                  "defender_losses": 46,
+                  "attacker_troops_after": 1833,
+                  "defender_troops_after": 254,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.48139158158007,
+                  "defender_strength": 6.311467339502679,
+                  "attacker_win_probability": 0.7043230585963824,
+                  "roll": 0.29495878542443843,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 155,
+                  "defender_losses": 80,
+                  "attacker_troops_after": 2770,
+                  "defender_troops_after": 370,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.8938782901077555,
+                  "defender_strength": 5.5254529391317835,
+                  "attacker_win_probability": 0.7205859845892629,
+                  "roll": 0.4323446118129307,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 62,
+                  "defender_losses": 40,
+                  "attacker_troops_after": 1563,
+                  "defender_troops_after": 210,
+                  "captured": false
+                }
+              ],
               "attacker_morale_after": 81,
-              "defender_morale_after": 31
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 1216,
+              "defender_reserves_after": 2958
             },
             {
-              "round": 4,
-              "attacker_strength": 9.862176752966995,
-              "defender_strength": 5.368061443340548,
-              "attacker_win_probability": 0.8578621576768061,
-              "roll": 0.9837939927211269,
-              "round_winner": "defender",
-              "attacker_casualties": 2215,
-              "defender_casualties": 19,
-              "attacker_forces_after": 6194,
-              "defender_forces_after": 223,
-              "attacker_morale_after": 67,
-              "defender_morale_after": 34
+              "day": 2,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 8.029406457837013,
+                  "defender_strength": 5.594711379601839,
+                  "attacker_win_probability": 0.725891796485973,
+                  "roll": 0.8261485755366964,
+                  "sector_winner": "defender",
+                  "attacker_losses": 479,
+                  "defender_losses": 18,
+                  "attacker_troops_after": 1382,
+                  "defender_troops_after": 250,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.437017489515453,
+                  "defender_strength": 6.153243334287785,
+                  "attacker_win_probability": 0.713717810951575,
+                  "roll": 0.79849811917845,
+                  "sector_winner": "defender",
+                  "attacker_losses": 537,
+                  "defender_losses": 30,
+                  "attacker_troops_after": 2261,
+                  "defender_troops_after": 354,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.8727463664043285,
+                  "defender_strength": 5.41610040220442,
+                  "attacker_win_probability": 0.7276353795865734,
+                  "roll": 0.43465712409238244,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 176,
+                  "defender_losses": 64,
+                  "attacker_troops_after": 1415,
+                  "defender_troops_after": 160,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 78,
+              "defender_morale_after": 59,
+              "attacker_reserves_after": 918,
+              "defender_reserves_after": 2930
             },
             {
-              "round": 5,
-              "attacker_strength": 9.206497794063244,
-              "defender_strength": 5.361646051855039,
-              "attacker_win_probability": 0.8231651637142103,
-              "roll": 0.0951285601152313,
-              "round_winner": "attacker",
-              "attacker_casualties": 237,
-              "defender_casualties": 34,
-              "attacker_forces_after": 5957,
-              "defender_forces_after": 189,
-              "attacker_morale_after": 70,
-              "defender_morale_after": 25
+              "day": 3,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.801822342137932,
+                  "defender_strength": 5.564520407322694,
+                  "attacker_win_probability": 0.7099046027835544,
+                  "roll": 0.0072075269460462055,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 53,
+                  "defender_losses": 37,
+                  "attacker_troops_after": 1429,
+                  "defender_troops_after": 223,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.266840537085512,
+                  "defender_strength": 6.097153867636741,
+                  "attacker_win_probability": 0.7043032682137763,
+                  "roll": 0.00449383242832091,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 178,
+                  "defender_losses": 61,
+                  "attacker_troops_after": 2182,
+                  "defender_troops_after": 302,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.823170717943469,
+                  "defender_strength": 5.135798437050262,
+                  "attacker_win_probability": 0.7455369223285274,
+                  "roll": 0.8308050788806447,
+                  "sector_winner": "defender",
+                  "attacker_losses": 268,
+                  "defender_losses": 8,
+                  "attacker_troops_after": 1246,
+                  "defender_troops_after": 161,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 78,
+              "defender_morale_after": 56,
+              "attacker_reserves_after": 793,
+              "defender_reserves_after": 2903
             },
             {
-              "round": 6,
-              "attacker_strength": 9.242490133273229,
-              "defender_strength": 4.972024072160486,
-              "attacker_win_probability": 0.8466009071667046,
-              "roll": 0.839893421946626,
-              "round_winner": "attacker",
-              "attacker_casualties": 381,
-              "defender_casualties": 42,
-              "attacker_forces_after": 5576,
-              "defender_forces_after": 147,
-              "attacker_morale_after": 73,
-              "defender_morale_after": 13
+              "day": 4,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.79437729928882,
+                  "defender_strength": 5.4510384535657,
+                  "attacker_win_probability": 0.7185611345051498,
+                  "roll": 0.5618619812049114,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 60,
+                  "defender_losses": 47,
+                  "attacker_troops_after": 1411,
+                  "defender_troops_after": 185,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.20751219460034,
+                  "defender_strength": 5.943003187809483,
+                  "attacker_win_probability": 0.7121406831004072,
+                  "roll": 0.3262335677425474,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 209,
+                  "defender_losses": 84,
+                  "attacker_troops_after": 2015,
+                  "defender_troops_after": 227,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.660845906664299,
+                  "defender_strength": 5.14166355650266,
+                  "attacker_win_probability": 0.7325644929880071,
+                  "roll": 0.08230705862924204,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 120,
+                  "defender_losses": 46,
+                  "attacker_troops_after": 1167,
+                  "defender_troops_after": 124,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 81,
+              "defender_morale_after": 50,
+              "attacker_reserves_after": 696,
+              "defender_reserves_after": 2859
             },
             {
-              "round": 7,
-              "attacker_strength": 9.251406276389554,
-              "defender_strength": 4.4222122737641145,
-              "attacker_win_probability": 0.8734349886929886,
-              "roll": 0.9043873499125633,
-              "round_winner": "defender",
-              "attacker_casualties": 1097,
-              "defender_casualties": 7,
-              "attacker_forces_after": 4479,
-              "defender_forces_after": 140,
-              "attacker_morale_after": 62,
-              "defender_morale_after": 16
+              "day": 5,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.775864600546532,
+                  "defender_strength": 5.303304908059076,
+                  "attacker_win_probability": 0.7288950766705996,
+                  "roll": 0.4765738574625358,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 93,
+                  "defender_losses": 30,
+                  "attacker_troops_after": 1351,
+                  "defender_troops_after": 170,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 8.124618986159398,
+                  "defender_strength": 5.693061443340548,
+                  "attacker_win_probability": 0.7256420119018898,
+                  "roll": 0.7820493196523516,
+                  "sector_winner": "defender",
+                  "attacker_losses": 476,
+                  "defender_losses": 21,
+                  "attacker_troops_after": 1571,
+                  "defender_troops_after": 221,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.590076835776092,
+                  "defender_strength": 4.9344739331306915,
+                  "attacker_win_probability": 0.7431186010902692,
+                  "roll": 0.36828643244732984,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 98,
+                  "defender_losses": 27,
+                  "attacker_troops_after": 1101,
+                  "defender_troops_after": 111,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 81,
+              "defender_morale_after": 47,
+              "attacker_reserves_after": 529,
+              "defender_reserves_after": 2839
             },
             {
-              "round": 8,
-              "attacker_strength": 8.757378325409032,
-              "defender_strength": 4.448759890378168,
-              "attacker_win_probability": 0.8485723471704374,
-              "roll": 0.884004333821833,
-              "round_winner": "defender",
-              "attacker_casualties": 657,
-              "defender_casualties": 8,
-              "attacker_forces_after": 3822,
-              "defender_forces_after": 132,
-              "attacker_morale_after": 53,
-              "defender_morale_after": 19
+              "day": 6,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.749925536717988,
+                  "defender_strength": 5.181783550292085,
+                  "attacker_win_probability": 0.7363837227119173,
+                  "roll": 0.5170966476607395,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 103,
+                  "defender_losses": 35,
+                  "attacker_troops_after": 1304,
+                  "defender_troops_after": 142,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.895107546562485,
+                  "defender_strength": 5.63372200355424,
+                  "attacker_win_probability": 0.7118844957867924,
+                  "roll": 0.10324140894126599,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 143,
+                  "defender_losses": 44,
+                  "attacker_troops_after": 1484,
+                  "defender_troops_after": 184,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.553585727193677,
+                  "defender_strength": 4.770684624465665,
+                  "attacker_win_probability": 0.752717845735276,
+                  "roll": 0.6217501214984172,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 82,
+                  "defender_losses": 30,
+                  "attacker_troops_after": 1074,
+                  "defender_troops_after": 87,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 84,
+              "defender_morale_after": 41,
+              "attacker_reserves_after": 447,
+              "defender_reserves_after": 2812
             },
             {
-              "round": 9,
-              "attacker_strength": 8.373790733696413,
-              "defender_strength": 4.465349128221753,
-              "attacker_win_probability": 0.8268373453408798,
-              "roll": 0.9037365128248028,
-              "round_winner": "defender",
-              "attacker_casualties": 590,
-              "defender_casualties": 7,
-              "attacker_forces_after": 3232,
-              "defender_forces_after": 125,
-              "attacker_morale_after": 44,
-              "defender_morale_after": 22
+              "day": 7,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.695187320178709,
+                  "defender_strength": 5.0238805208462765,
+                  "attacker_win_probability": 0.7443158764701632,
+                  "roll": 0.7072952321618713,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 114,
+                  "defender_losses": 31,
+                  "attacker_troops_after": 1218,
+                  "defender_troops_after": 120,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.821188556739477,
+                  "defender_strength": 5.467858159063328,
+                  "attacker_win_probability": 0.7193686687832789,
+                  "roll": 0.43024913100899354,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 107,
+                  "defender_losses": 35,
+                  "attacker_troops_after": 1404,
+                  "defender_troops_after": 158,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.504881989712859,
+                  "defender_strength": 4.574710978503383,
+                  "attacker_win_probability": 0.7635186860418837,
+                  "roll": 0.7656394300286368,
+                  "sector_winner": "defender",
+                  "attacker_losses": 316,
+                  "defender_losses": 8,
+                  "attacker_troops_after": 785,
+                  "defender_troops_after": 88,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 84,
+              "defender_morale_after": 38,
+              "attacker_reserves_after": 313,
+              "defender_reserves_after": 2793
             },
             {
-              "round": 10,
-              "attacker_strength": 7.981165777725433,
-              "defender_strength": 4.486281906951477,
-              "attacker_win_probability": 0.8018589467497105,
-              "roll": 0.9509016439689676,
-              "round_winner": "defender",
-              "attacker_casualties": 595,
-              "defender_casualties": 9,
-              "attacker_forces_after": 2637,
-              "defender_forces_after": 116,
-              "attacker_morale_after": 34,
-              "defender_morale_after": 25
+              "day": 8,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.642036574706803,
+                  "defender_strength": 4.852030263919617,
+                  "attacker_win_probability": 0.7532464731343601,
+                  "roll": 0.6412595792567057,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 52,
+                  "defender_losses": 21,
+                  "attacker_troops_after": 1211,
+                  "defender_troops_after": 106,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.779318835414619,
+                  "defender_strength": 5.3059454739005805,
+                  "attacker_win_probability": 0.7289593865714918,
+                  "roll": 0.39606299451437166,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 48,
+                  "defender_losses": 26,
+                  "attacker_troops_after": 1401,
+                  "defender_troops_after": 138,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.221425700790643,
+                  "defender_strength": 4.553876891600541,
+                  "attacker_win_probability": 0.744029698554316,
+                  "roll": 0.8323241989009625,
+                  "sector_winner": "defender",
+                  "attacker_losses": 122,
+                  "defender_losses": 4,
+                  "attacker_troops_after": 707,
+                  "defender_troops_after": 90,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 84,
+              "defender_morale_after": 35,
+              "attacker_reserves_after": 257,
+              "defender_reserves_after": 2780
             },
             {
-              "round": 11,
-              "attacker_strength": 7.527776333277259,
-              "defender_strength": 4.487173934797756,
-              "attacker_win_probability": 0.771401351655113,
-              "roll": 0.2908810746227529,
-              "round_winner": "attacker",
-              "attacker_casualties": 130,
-              "defender_casualties": 28,
-              "attacker_forces_after": 2507,
-              "defender_forces_after": 88,
-              "attacker_morale_after": 37,
-              "defender_morale_after": 12
+              "day": 9,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.615582126184454,
+                  "defender_strength": 4.718498871295094,
+                  "attacker_win_probability": 0.7611206550950682,
+                  "roll": 0.49207928807224255,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 140,
+                  "defender_losses": 33,
+                  "attacker_troops_after": 1090,
+                  "defender_troops_after": 78,
+                  "captured": false
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.7591161280971,
+                  "defender_strength": 5.162844630259907,
+                  "attacker_win_probability": 0.738562136789474,
+                  "roll": 0.7704732473388971,
+                  "sector_winner": "defender",
+                  "attacker_losses": 230,
+                  "defender_losses": 6,
+                  "attacker_troops_after": 1190,
+                  "defender_troops_after": 136,
+                  "captured": false
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.087550014824796,
+                  "defender_strength": 4.553876891600541,
+                  "attacker_win_probability": 0.7336985378173962,
+                  "roll": 0.6177634097358168,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 36,
+                  "defender_losses": 18,
+                  "attacker_troops_after": 689,
+                  "defender_troops_after": 76,
+                  "captured": false
+                }
+              ],
+              "attacker_morale_after": 84,
+              "defender_morale_after": 32,
+              "attacker_reserves_after": 155,
+              "defender_reserves_after": 2766
             },
             {
-              "round": 12,
-              "attacker_strength": 7.552240901752811,
-              "defender_strength": 3.8886363697321396,
-              "attacker_win_probability": 0.8123635751878949,
-              "roll": 0.8961979664117449,
-              "round_winner": "defender",
-              "attacker_casualties": 568,
-              "defender_casualties": 5,
-              "attacker_forces_after": 1939,
-              "defender_forces_after": 83,
-              "attacker_morale_after": 25,
-              "defender_morale_after": 15
-            },
-            {
-              "round": 13,
-              "attacker_strength": 6.995443252057374,
-              "defender_strength": 3.9058167988433135,
-              "attacker_win_probability": 0.7748409221148738,
-              "roll": 0.6687364062446917,
-              "round_winner": "attacker",
-              "attacker_casualties": 101,
-              "defender_casualties": 15,
-              "attacker_forces_after": 1838,
-              "defender_forces_after": 68,
-              "attacker_morale_after": 28,
-              "defender_morale_after": 5
+              "day": 10,
+              "sectors": [
+                {
+                  "sector": "North",
+                  "attacker_strength": 7.525538314638521,
+                  "defender_strength": 4.430816798843313,
+                  "attacker_win_probability": 0.775196281819343,
+                  "roll": 0.4469026003841404,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 125,
+                  "defender_losses": 23,
+                  "attacker_troops_after": 999,
+                  "defender_troops_after": 60,
+                  "captured": true
+                },
+                {
+                  "sector": "Center",
+                  "attacker_strength": 7.610696122978827,
+                  "defender_strength": 5.155827057601261,
+                  "attacker_win_probability": 0.7274944969583607,
+                  "roll": 0.568191226046539,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 77,
+                  "defender_losses": 31,
+                  "attacker_troops_after": 1147,
+                  "defender_troops_after": 110,
+                  "captured": true
+                },
+                {
+                  "sector": "South",
+                  "attacker_strength": 7.084791392385716,
+                  "defender_strength": 4.394449154672439,
+                  "attacker_win_probability": 0.7457622307086087,
+                  "roll": 0.1995258988509513,
+                  "sector_winner": "attacker",
+                  "attacker_losses": 70,
+                  "defender_losses": 23,
+                  "attacker_troops_after": 653,
+                  "defender_troops_after": 57,
+                  "captured": true
+                }
+              ],
+              "attacker_morale_after": 100,
+              "defender_morale_after": 11,
+              "attacker_reserves_after": 155,
+              "defender_reserves_after": 2766
             }
           ],
           "result": {
             "winner": "attacker",
-            "ending": "rout",
-            "final_forces": {
-              "attacker": 1838,
-              "defender": 68
+            "ending": "breakthrough",
+            "sectors": [
+              {
+                "name": "North",
+                "attacker_troops": 999,
+                "defender_troops": 60,
+                "fortification": 5,
+                "objective": false,
+                "captured": true
+              },
+              {
+                "name": "Center",
+                "attacker_troops": 1147,
+                "defender_troops": 110,
+                "fortification": 6,
+                "objective": true,
+                "captured": true
+              },
+              {
+                "name": "South",
+                "attacker_troops": 653,
+                "defender_troops": 57,
+                "fortification": 5,
+                "objective": false,
+                "captured": true
+              }
+            ],
+            "final_reserves": {
+              "attacker": 155,
+              "defender": 2766
             },
             "final_morale": {
-              "attacker": 28,
-              "defender": 5
-            }
+              "attacker": 100,
+              "defender": 11
+            },
+            "objectives_captured": 1,
+            "objectives_total": 1
           }
         }
       },
       "aftermath": {
         "victory": true,
-        "summary": "objective taken · 82% losses · the capital is taken",
-        "formation_id": "reserve-corps",
+        "summary": "front advanced · 62% losses · the line moved",
+        "formation_id": "old-ironsides",
         "strength_delta": -30,
-        "will_delta": 20,
-        "supply_delta": 6,
-        "intel_delta": 8,
-        "momentum_delta": 3,
+        "will_delta": 8,
+        "supply_delta": 5,
+        "intel_delta": 3,
+        "momentum_delta": 1,
         "control": "meridian"
       }
     }
   ],
   "chronicle": [
-    "Turn 1 · Operation Iron Tide · Vantage Ridge — ridge taken · 65% losses · the road inland is open",
-    "Turn 2 · Operation Swift Bridge · Orne Bridge — objective taken · 65% losses · the bridge is open",
+    "Turn 1 · Frontlines — Vantage Ridge · Vantage Ridge — front advanced · 75% losses · the line moved",
+    "Turn 2 · Dogfight — Halcyon Airbase · Halcyon Airbase — sweep won · 13% aircraft lost · air superiority 75",
     "Enemy intent — interdicts the supply road",
-    "Turn 3 · Operation Bright Lance · Halcyon Airbase — sweep won · 25% aircraft lost · air superiority 75",
-    "Turn 4 · Operation Crimson Wake · Port Callas — port opened · 33% ships lost · supply 70",
+    "Turn 3 · Skirmish — Orne Bridge · Orne Bridge — objective taken · 83% losses · the line moves",
+    "Turn 4 · Naval — Port Callas · Port Callas — port opened · 50% ships lost · supply 70",
     "Enemy intent — interdicts the supply road",
-    "Turn 5 · Operation Sable Hammer · Sable Junction — objective taken · 67% losses · the rail hub is ours",
-    "Enemy intent — withdraws from Vesper Works",
-    "Turn 6 · Operation Ashfall · Vesper Works — objective taken · 53% losses · the works are silent",
-    "Turn 7 · Operation Meridian · Meridian — objective taken · 82% losses · the capital is taken",
-    "The Halcyon Sweep succeeds."
+    "Turn 5 · Frontlines — Sable Junction · Sable Junction — front advanced · 72% losses · the line moved",
+    "Enemy intent — withdraws from Sable Junction",
+    "Turn 6 · Frontlines — Vesper Works · Vesper Works — front advanced · 78% losses · the line moved",
+    "Turn 7 · Frontlines — Meridian · Meridian — front advanced · 62% losses · the line moved",
+    "Enemy intent — withdraws from Meridian",
+    "The Halcyon Sweep wins the campaign."
   ],
   "finished": true,
   "result": "victory"

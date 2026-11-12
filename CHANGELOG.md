@@ -3,6 +3,24 @@
 All notable changes to Drumfire are documented here. The combat rules have
 their own version in [`docs/rules.md`](docs/rules.md).
 
+## Unreleased
+
+### Changed
+
+- Campaign operations are now generated from reachable nodes and modes instead of
+  a fixed `OperationId` list. Victory nodes are scenario data.
+- Referee movement resolves simultaneously by destination rather than in unit
+  array order. Defending air/naval units now contribute support strength.
+- Reserved campaign modules are disabled in the GUI and rejected by validation;
+  only manpower, logistics, tanks, planes, and ships have simulation effects.
+- The default NationStates User-Agent contact now points to Drumfire.
+- Referee GUI can load a scenario and two order sheets, then export a packet.
+
+### Fixed
+
+- README, campaign, mode, scenario, and referee docs now match the implemented
+  operations, module policy, and referee resolution.
+
 ## 0.3.0 — 2026-11-10
 
 The referee release: a roleplay conflict console and packet, plus hardened

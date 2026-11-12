@@ -11,23 +11,16 @@ five days, and two order sheets.
 
 ---
 
-## 1. GUI referee console
+## 0. GUI referee console
 
 ```sh
 cargo run -p drumfire-gui -- --demo-referee
 ```
 
-The console provides:
-
-- a connected-zone map with owners, forts, and unit chips;
-- **Referee (all)**, **Aurelia**, and **Vermillion** views;
-- per-unit order entry for both sides: Defend, Move, Attack, Recon, Resupply;
-- target selectors for movement and attacks;
-- **Resolve day** and **Copy report as Markdown**;
-- the latest day's events, casualties, and control changes.
-
-There is no player side and no victory screen. The view selector is an
-information filter, not a faction login.
+The console provides a connected-zone map, Referee/Aurelia/Vermillion views,
+per-unit order entry, day resolution, clipboard report export, and **Packet files**
+for loading a scenario, loading two order sheets, or exporting a packet directory.
+Loaded order sheets take precedence over manual order forms.
 
 ---
 
@@ -144,7 +137,7 @@ and take ground; air and naval units currently add support strength.
   "orders": [
     { "day": 1, "unit": "aurelia_1", "action": { "type": "move", "to": "rail_junction" } },
     { "day": 1, "unit": "aurelia_air", "action": { "type": "recon" } },
-    { "day": 3, "unit": "aurelia_1", "action": { "type": "attack", "target": "vesper" } },
+    { "day": 3, "unit": "aurelia_1", "action": { "type": "attack", "target": "rail_junction" } },
     { "day": 4, "unit": "aurelia_1", "action": { "type": "defend" } },
     { "day": 5, "unit": "aurelia_1", "action": { "type": "resupply" } }
   ]
@@ -169,13 +162,19 @@ A unit can have one order per day. Duplicate orders are rejected.
 Each day:
 
 1. Orders are collected for both sides.
-2. Recon and resupply resolve.
-3. Ground units move or attack.
-4. Engagements run through the existing **Battle** engine with forces derived from
-   the units, terrain, fortification, morale, experience, and air/naval support.
-5. Casualties reduce unit strength; supply and morale are adjusted.
-6. Supply is traced from owned capitals and supply hubs through owned zones.
-7. Detection contacts are recorded for the report.
+2. Recon, resupply, and hold orders resolve.
+3. All movement orders are collected and grouped by destination. Movement is
+   simultaneous: no side gets to move first because of scenario array order.
+4. A single side entering an empty/friendly zone advances. If defenders are
+   present, all attacking ground units at that destination fight together.
+5. If both sides enter the same neutral zone, a seeded meeting engagement
+   resolves it; if the zone is owned, the owner defends.
+6. Engagements run through the existing **Battle** engine with forces derived from
+   the units, terrain, fortification, morale, experience, and **air/naval support
+   for both sides**. Defending air/naval units matter.
+7. Casualties reduce unit strength; supply and morale are adjusted.
+8. Supply is traced from owned capitals and supply hubs through owned zones.
+9. Detection contacts are recorded for the report.
 
 The report is not a score. It contains:
 
@@ -197,8 +196,10 @@ Referee mode reuses the campaign module flags. The meaningful ones today:
 - `logistics` — supply tracing and drain.
 - `intel` — recon contacts; if off, the referee still sees the state.
 - `manpower` — unit strength changes persist.
-- `planes`, `ships` — future independent air/naval operations; currently support.
-- `population`, `occupation`, `alliances`, and strategic weapons — reserved hooks.
+- `logistics` — supply tracing and drain.
+- `planes`, `ships` — support strength in this build; independent missions are future work.
+- `population`, `occupation`, `alliances`, strategic weapons, and other reserved
+  modules are rejected by scenario validation until their hooks exist.
 
 ---
 

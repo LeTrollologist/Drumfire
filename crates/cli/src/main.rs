@@ -8,9 +8,7 @@ use clap::{Parser, Subcommand};
 use drumfire_campaign::referee::{
     conflict_markdown, resolve_conflict, ConflictLog, RefereeScenario,
 };
-use drumfire_campaign::{
-    replay_campaign, Campaign, CampaignScenario, OperationId, OperationRecord,
-};
+use drumfire_campaign::{replay_campaign, Campaign, CampaignScenario, OperationRecord};
 use drumfire_core::dogfight::{
     classify_dogfight, replay_dogfight, simulate_dogfight, DogfightEnding, DogfightLog,
 };
@@ -196,7 +194,7 @@ enum CampaignCommand {
         #[arg(long)]
         scenario: Option<PathBuf>,
     },
-    /// Run the canonical seven-operation demo.
+    /// Auto-play the available campaign operations.
     Demo {
         /// Campaign seed, or `random`.
         #[arg(long)]
@@ -429,8 +427,15 @@ fn main() -> Result<()> {
             } => {
                 let scenario = load_scenario(scenario)?;
                 let mut campaign = Campaign::from_scenario(campaign_seed(seed)?, scenario)?;
-                for id in OperationId::ALL {
-                    campaign.play_operation(id)?;
+                while !campaign.finished {
+                    let Some(option) = campaign
+                        .options()
+                        .into_iter()
+                        .find(|option| option.available)
+                    else {
+                        break;
+                    };
+                    campaign.play_operation(option.key)?;
                 }
                 if let Some(path) = out {
                     write_json(&path, &campaign)?;
@@ -704,7 +709,7 @@ fn play_campaign(seed: Seed, scenario: CampaignScenario) -> Result<()> {
             println!("That operation is not available.\n");
             continue;
         }
-        match campaign.play_operation(option.id) {
+        match campaign.play_operation(option.key.clone()) {
             Ok(record) => print_operation(&record),
             Err(err) => println!("Operation failed: {err}\n"),
         }

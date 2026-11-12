@@ -170,7 +170,7 @@ mode together:
 
 “All of them” means a campaign can contain skirmishes, battles, frontlines,
 dogfights, and naval actions. The Halcyon Sweep strings all five together across
-seven nodes and seven operations.
+seven nodes, with operations generated from whichever node is reachable.
 
 ## 4. What changes in the UI
 
@@ -202,8 +202,8 @@ Do not build six shallow modes at once. Build vertical slices:
 4. **Frontlines** — ✅ done. Sectors, reserves, fortifications, objective
    capture, CLI `frontline run/replay`, GUI sector board.
 5. **Campaign** — ✅ full Halcyon Sweep implemented in CLI and GUI: seven nodes,
-   five formations, all five battle modes, five enemy intents, persistent
-   resources, campaign replay, war room, and chronicle.
+   five formations, all five battle modes, node-driven operations, five enemy
+   intents, persistent resources, campaign replay, war room, and chronicle.
 
 Rough effort, part-time:
 

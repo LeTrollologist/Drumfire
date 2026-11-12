@@ -1,7 +1,7 @@
 # Drumfire Campaign — design and implementation plan
 
 **Status:** implemented in CLI and GUI: seven-node Halcyon Sweep, all five battle
-modes, five enemy intents, and exact campaign replay.
+modes, five enemy intents, node-driven operations, and exact campaign replay.
 
 **Goal:** make Campaign the capstone mode: a short, replayable, combined-arms
 campaign that uses Skirmish, Battle, Frontlines, Dogfight, and Naval as
@@ -16,21 +16,23 @@ The **Halcyon Sweep** is playable now:
 - 7 nodes: Vantage Ridge, Halcyon Airbase, Orne Bridge, Port Callas, Sable
   Junction, Vesper Works, Meridian.
 - 5 formations: Old Ironsides, Ridgewalkers, Nightjars, Salt Watch, Reserve Corps.
-- 7 operations using all five modes: Frontlines, Skirmish, Battle, Dogfight, and
-  Naval.
+- Operations are generated from the map: any reachable enemy/contested node
+  offers the modes that fit its node kind (Frontlines, Skirmish, Battle,
+  Dogfight, Naval). There is no fixed `OperationId` list.
 - 4 resources: political will, supply, intel, momentum.
 - 5 enemy intents: Hold, Reinforce, Counterattack, Interdict, Withdraw.
 - Cross-mode effects: air superiority raises naval air cover; ground losses
-  persist; the four-node combined-arms gate opens Meridian.
+  persist. Victory nodes are scenario data (`victory_nodes`, default Meridian).
 - Campaign log with every mode log embedded, plus exact campaign replay.
 - Scenario ruleset: editable city/formation names, owners, forts, garrisons,
-  starting resources, turn limit, and module toggles.
-- NationStates `capital` / `customcapital` import for nation capitals.
+  starting resources, turn limit, victory nodes, and implemented module toggles.
+  Reserved modules are rejected by validation.
+- NationStates `capital` / `customcapital` lookup for nation capitals.
 - CLI: `campaign play`, `campaign demo`, `campaign scenario`, `campaign replay`.
 - GUI war room: paper map, resource rail, formation rail, operation briefing,
   after-action report, ruleset editor, scenario setup, and chronicle.
 
-A winning run uses all five modes and roughly seven operations:
+A winning run uses several modes and around seven operations:
 
 ```sh
 cargo run -p drumfire-cli -- campaign demo
@@ -43,10 +45,9 @@ cargo run -p drumfire-gui -- --demo-campaign
 
 ## 1. The one-sentence pitch
 
-**Command a coalition through a seven-operation theater: choose where to push,
-spend scarce reserves, win the air and sea before the ground, and watch named
-formations carry the scars into the next battle — then export the whole war as a
-chronicle.**
+**Command a coalition through a theater: choose where to push, spend scarce
+reserves, win the air and sea before the ground, and watch named formations carry
+the scars into the next battle — then export the whole war as a chronicle.**
 
 ---
 
@@ -91,15 +92,10 @@ Vantage Ridge ── Halcyon Airbase ── Sable Junction ── Meridian
       └── Orne Bridge ── Port Callas ── Vesper Works ── Meridian
 ```
 
-The player starts at Vantage Ridge. Meridian is only assaultable when at least
-two of these are true:
-
-- Sable Junction is friendly;
-- Port Callas is friendly;
-- Halcyon Airbase is friendly and air superiority is at least 60.
-
-This is the core “combined arms gate.” It forces the player to use at least three
-modes before the finale.
+The player starts at Vantage Ridge. A node becomes attackable when it is the
+contested start node or shares an edge with a player-controlled node. The campaign
+is won by taking all `victory_nodes` (default: Meridian); there is no hard-coded
+"combined-arms gate."
 
 ---
 
@@ -218,9 +214,8 @@ An operation is a small package:
 
 ```text
 Operation {
-  id, name, node, mode,
-  committed formations,
-  stance: Bold | Measured | Cautious,
+  key: { node_id, kind }, name, node, mode,
+  committed formation,
   support: Air | Naval | Reserves | None,
   seed,
   briefing,
@@ -230,29 +225,28 @@ Operation {
 
 ### Stances
 
+**Planned, not implemented in v0.3.0.** The current engine commits the strongest
+formation matching the operation branch; there is no stance selector.
+
 | Stance | Bonus | Cost |
 |---|---|---|
 | **Bold** | +10% strength, +1 momentum on win | Higher casualties; worse on loss |
 | **Measured** | No modifier | — |
 | **Cautious** | −10% casualties, +supply recovery | −10% strength; may stall |
 
-Stances give the player a meaningful risk dial without a hundred sliders.
-
 ### Operation generation
 
-Each node offers 2–4 operation options, gated by control and prerequisites:
+Operations are generated from the map. Every reachable node not already controlled
+by the player offers the modes that fit its kind:
 
-- **Vantage Ridge**: Frontlines (main advance) or Skirmish (night raid).
-- **Halcyon Airbase**: Dogfight (sweep) or Skirmish (airfield raid).
-- **Orne Bridge**: Skirmish (coup de main) or Battle (set-piece crossing).
-- **Port Callas**: Naval (convoy/sea control) or Battle (overland assault) or
-  Naval + ground (amphibious).
-- **Sable Junction**: Frontlines (broad advance) or Battle (rail-hub assault).
-- **Vesper Works**: Battle (urban assault) or Frontlines (encirclement).
-- **Meridian**: Frontlines or Battle, with the combined-arms gate.
+- **Ridge / rail hub / industrial / capital**: Frontlines, Battle, Skirmish.
+- **Airbase**: Dogfight, Skirmish, Battle.
+- **Port**: Naval, Battle, Skirmish.
+- **Bridge**: Skirmish, Battle, Frontlines.
 
-The player can always choose a suboptimal mode, but the briefing tells them what
-they are giving up.
+Dogfight requires the planes module; Naval requires ships. A missing branch
+formation makes the option unavailable rather than crashing. The player can
+choose any listed mode; the briefing explains the tradeoff.
 
 ---
 
@@ -281,7 +275,7 @@ It is legible enough that the player can plan around it.
 
 ### Victory
 
-- **Military victory:** capture Meridian and hold it for one turn.
+- **Military victory:** capture all scenario `victory_nodes` (default Meridian).
 - **Political victory:** reduce enemy political will to 0.
 - **Negotiated victory:** both sides below 20 will; the player may accept a
   ceasefire with the captured nodes they hold.
@@ -556,7 +550,7 @@ The MVP is done when:
 | Risk | Why it matters | Mitigation |
 |---|---|---|
 | **Mode handoff complexity** | Five schemas, five logs, one campaign | Build one adapter at a time; test each in isolation |
-| **Campaign becomes a menu** | Player picks a mode with no consequences | Enforce combined-arms gates and cross-mode modifiers |
+| **Campaign becomes a menu** | Player picks a mode with no consequences | Node control, cross-mode modifiers, and formation persistence |
 | **Resource spreadsheet** | Too many numbers, not enough decisions | Four resources maximum; one screen, one next action |
 | **Balance drift** | One mode or formation dominates | Paper playthrough, then 10 scripted campaigns |
 | **UI scope creep** | Map becomes a tactical game | Node cards and connections only; no hexes |

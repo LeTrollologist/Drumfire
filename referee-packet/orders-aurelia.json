@@ -36,7 +36,7 @@
       "unit": "aurelia_1",
       "action": {
         "type": "attack",
-        "target": "vesper"
+        "target": "rail_junction"
       }
     },
     {

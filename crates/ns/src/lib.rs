@@ -26,7 +26,7 @@ use thiserror::Error;
 pub const API_VERSION: &str = "13";
 
 const API_BASE: &str = "https://www.nationstates.net/cgi-bin/api.cgi";
-const DEFAULT_CONTACT: &str = "https://github.com/LeTrollologist/NationStatesBattleSim";
+const DEFAULT_CONTACT: &str = "https://github.com/LeTrollologist/Drumfire";
 const DEFAULT_LIMIT: u32 = 50;
 const DEFAULT_WINDOW_SECS: u64 = 30;
 
@@ -188,7 +188,7 @@ fn normalize_nation(nation: &str) -> Result<String, NsError> {
 
 /// Fetch one nation with a single batched public-shard request.
 ///
-/// The request is `q=name+fullname+region+population+category+motto+currency+flag`
+/// The request is `q=name+fullname+region+population+category+capital+customcapital+motto+currency+flag`
 /// pinned to [`API_VERSION`]. No credentials are sent.
 pub fn fetch_nation(nation: &str) -> Result<NationSummary, NsError> {
     let nation = normalize_nation(nation)?;

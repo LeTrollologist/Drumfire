@@ -12,7 +12,7 @@ use drumfire_campaign::referee::{
 };
 use drumfire_campaign::{
     Branch, Campaign, CampaignModules, CampaignResult, Control, Formation, ModulePreset, NodeKind,
-    OperationId, OperationLog, OperationRecord,
+    OperationKey, OperationKind, OperationLog, OperationRecord,
 };
 use drumfire_core::dogfight::{classify_dogfight, simulate_dogfight, DogfightEnding, DogfightLog};
 use drumfire_core::frontline::{
@@ -462,7 +462,7 @@ impl SectorForm {
 #[derive(Debug, Clone)]
 enum CampaignScreen {
     WarRoom,
-    Briefing(OperationId),
+    Briefing(OperationKey),
     Aftermath(Box<OperationRecord>),
     Chronicle,
 }
@@ -501,6 +501,10 @@ struct DrumfireApp {
     referee_orders: HashMap<String, RefOrderForm>,
     referee_days: Vec<DayReport>,
     referee_view: RefereeView,
+    referee_scenario_path: String,
+    referee_order_paths: [String; 2],
+    referee_export_dir: String,
+    referee_external_orders: Option<Vec<OrderSheet>>,
     attacker: TeamForm,
     defender: TeamForm,
     dogfight_attacker: AirForceForm,
@@ -579,8 +583,16 @@ impl DrumfireApp {
         let mut app = Self::default();
         app.open_campaign();
         if let Some(campaign) = &mut app.campaign {
-            let _ = campaign.play_operation(OperationId::IronTide);
-            let _ = campaign.play_operation(OperationId::BrightLance);
+            for _ in 0..2 {
+                let Some(option) = campaign
+                    .options()
+                    .into_iter()
+                    .find(|option| option.available)
+                else {
+                    break;
+                };
+                let _ = campaign.play_operation(option.key);
+            }
         }
         app.campaign_screen = CampaignScreen::WarRoom;
         app
@@ -590,8 +602,14 @@ impl DrumfireApp {
         let mut app = Self::default();
         app.open_campaign();
         if let Some(campaign) = &mut app.campaign {
-            if let Ok(record) = campaign.play_operation(OperationId::IronTide) {
-                app.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
+            if let Some(option) = campaign
+                .options()
+                .into_iter()
+                .find(|option| option.available)
+            {
+                if let Ok(record) = campaign.play_operation(option.key) {
+                    app.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
+                }
             }
         }
         app
@@ -612,11 +630,11 @@ impl DrumfireApp {
         self.error = None;
     }
 
-    fn launch_campaign_operation(&mut self, id: OperationId) {
+    fn launch_campaign_operation(&mut self, key: OperationKey) {
         let Some(campaign) = &mut self.campaign else {
             return;
         };
-        match campaign.play_operation(id) {
+        match campaign.play_operation(key) {
             Ok(record) => {
                 self.campaign_screen = CampaignScreen::Aftermath(Box::new(record));
                 self.error = None;
@@ -652,6 +670,13 @@ impl DrumfireApp {
             referee_orders: HashMap::new(),
             referee_days: Vec::new(),
             referee_view: RefereeView::All,
+            referee_scenario_path: "referee-packet/scenario.json".to_string(),
+            referee_order_paths: [
+                "referee-packet/orders-aurelia.json".to_string(),
+                "referee-packet/orders-vermillion.json".to_string(),
+            ],
+            referee_export_dir: "referee-packet".to_string(),
+            referee_external_orders: None,
             attacker: TeamForm::from_team(&input.attacker),
             defender: TeamForm::from_team(&input.defender),
             dogfight_attacker: AirForceForm::from_force(&air.attacker),
@@ -2026,6 +2051,7 @@ impl DrumfireApp {
                 self.referee_orders = default_referee_orders(&sim);
                 self.referee_days.clear();
                 self.referee_view = RefereeView::All;
+                self.referee_external_orders = None;
                 self.referee_sim = Some(sim);
                 self.referee_active = true;
                 self.campaign_active = false;
@@ -2035,7 +2061,150 @@ impl DrumfireApp {
         }
     }
 
+    fn load_referee_scenario(&mut self) {
+        let path = self.referee_scenario_path.trim();
+        if path.is_empty() {
+            self.error = Some("Enter a scenario path first.".to_string());
+            return;
+        }
+        let result = (|| -> Result<RefereeSimulation, String> {
+            let meta = std::fs::metadata(path).map_err(|err| err.to_string())?;
+            if meta.len() > 16 * 1024 * 1024 {
+                return Err("scenario is larger than the 16 MiB limit".to_string());
+            }
+            let text = std::fs::read_to_string(path).map_err(|err| err.to_string())?;
+            let scenario: RefereeScenario = serde_json::from_str(&text)
+                .map_err(|err| format!("invalid scenario JSON: {err}"))?;
+            RefereeSimulation::new(scenario).map_err(|err| err.to_string())
+        })();
+        match result {
+            Ok(sim) => {
+                self.referee_orders = default_referee_orders(&sim);
+                self.referee_days.clear();
+                self.referee_external_orders = None;
+                self.referee_view = RefereeView::All;
+                self.referee_sim = Some(sim);
+                self.referee_active = true;
+                self.campaign_active = false;
+                self.error = None;
+            }
+            Err(err) => self.error = Some(err),
+        }
+    }
+
+    fn load_referee_orders(&mut self) {
+        let paths: Vec<&str> = self
+            .referee_order_paths
+            .iter()
+            .map(|path| path.trim())
+            .filter(|path| !path.is_empty())
+            .collect();
+        if paths.is_empty() {
+            self.error = Some("Enter at least one order-sheet path.".to_string());
+            return;
+        }
+        let mut sheets = Vec::new();
+        for path in paths {
+            let meta = match std::fs::metadata(path) {
+                Ok(meta) => meta,
+                Err(err) => {
+                    self.error = Some(format!("{path}: {err}"));
+                    return;
+                }
+            };
+            if meta.len() > 16 * 1024 * 1024 {
+                self.error = Some(format!("{path} is larger than the 16 MiB limit"));
+                return;
+            }
+            let text = match std::fs::read_to_string(path) {
+                Ok(text) => text,
+                Err(err) => {
+                    self.error = Some(format!("{path}: {err}"));
+                    return;
+                }
+            };
+            match serde_json::from_str::<OrderSheet>(&text) {
+                Ok(sheet) => sheets.push(sheet),
+                Err(err) => {
+                    self.error = Some(format!("{path}: invalid order sheet: {err}"));
+                    return;
+                }
+            }
+        }
+        self.referee_external_orders = Some(sheets);
+        self.error = None;
+    }
+
+    fn export_referee_packet(&mut self) {
+        let Some(sim) = self.referee_sim.clone() else {
+            self.error = Some("Open a referee scenario first.".to_string());
+            return;
+        };
+        let dir = std::path::PathBuf::from(self.referee_export_dir.trim());
+        if dir.as_os_str().is_empty() {
+            self.error = Some("Enter an export directory first.".to_string());
+            return;
+        }
+        if let Err(err) = std::fs::create_dir_all(&dir) {
+            self.error = Some(format!("create {}: {err}", dir.display()));
+            return;
+        }
+        let write = |name: &str, text: String| -> Result<(), String> {
+            std::fs::write(dir.join(name), text).map_err(|err| format!("{name}: {err}"))
+        };
+        let log = sim.log(&self.referee_days);
+        let scenario = match serde_json::to_string_pretty(sim.scenario()) {
+            Ok(text) => text,
+            Err(err) => {
+                self.error = Some(err.to_string());
+                return;
+            }
+        };
+        if let Err(err) = write("scenario.json", scenario) {
+            self.error = Some(err);
+            return;
+        }
+        let sheets = self
+            .referee_external_orders
+            .clone()
+            .unwrap_or_else(|| self.referee_sheets());
+        for sheet in sheets {
+            let name = format!("orders-{}.json", sheet.side);
+            let text = match serde_json::to_string_pretty(&sheet) {
+                Ok(text) => text,
+                Err(err) => {
+                    self.error = Some(err.to_string());
+                    return;
+                }
+            };
+            if let Err(err) = write(&name, text) {
+                self.error = Some(err);
+                return;
+            }
+        }
+        let log_json = match serde_json::to_string_pretty(&log) {
+            Ok(text) => text,
+            Err(err) => {
+                self.error = Some(err.to_string());
+                return;
+            }
+        };
+        if let Err(err) = write("conflict.log.json", log_json) {
+            self.error = Some(err);
+            return;
+        }
+        if let Err(err) = write("report.md", conflict_markdown(&log)) {
+            self.error = Some(err);
+            return;
+        }
+        self.error = None;
+        self.referee_days.clear();
+    }
+
     fn referee_sheets(&self) -> Vec<OrderSheet> {
+        if let Some(sheets) = &self.referee_external_orders {
+            return sheets.clone();
+        }
         let Some(sim) = &self.referee_sim else {
             return Vec::new();
         };
@@ -2122,6 +2291,38 @@ impl DrumfireApp {
                 ui.ctx().copy_text(conflict_markdown(&log));
             }
         }
+        egui::CollapsingHeader::new("Packet files")
+            .default_open(false)
+            .show(ui, |ui| {
+                ui.label(tiny("Scenario JSON", p));
+                ui.text_edit_singleline(&mut self.referee_scenario_path);
+                if ui.button("Load scenario").clicked() {
+                    self.load_referee_scenario();
+                }
+                ui.add_space(4.0);
+                ui.label(tiny("Order sheets", p));
+                ui.text_edit_singleline(&mut self.referee_order_paths[0]);
+                ui.text_edit_singleline(&mut self.referee_order_paths[1]);
+                if ui.button("Load orders").clicked() {
+                    self.load_referee_orders();
+                }
+                if self.referee_external_orders.is_some() {
+                    ui.label(
+                        egui::RichText::new("Loaded order sheets are active.")
+                            .size(9.0)
+                            .color(p.muted),
+                    );
+                    if ui.button("Use manual orders").clicked() {
+                        self.referee_external_orders = None;
+                    }
+                }
+                ui.add_space(4.0);
+                ui.label(tiny("Export packet to", p));
+                ui.text_edit_singleline(&mut self.referee_export_dir);
+                if ui.button("Export packet").clicked() {
+                    self.export_referee_packet();
+                }
+            });
         if finished {
             ui.label(
                 egui::RichText::new("All days resolved.")
@@ -2178,6 +2379,13 @@ impl DrumfireApp {
 
         ui.add_space(10.0);
         ui.label(tiny("ORDERS", p));
+        if self.referee_external_orders.is_some() {
+            ui.label(
+                egui::RichText::new("Loaded order sheets are active; manual edits are ignored.")
+                    .size(9.0)
+                    .color(p.muted),
+            );
+        }
         ui.add_space(4.0);
         let scenario = sim.scenario().clone();
         let units = sim.units().to_vec();
@@ -2364,7 +2572,6 @@ impl DrumfireApp {
                     for (preset, label) in [
                         (ModulePreset::Abstract, "Abstract"),
                         (ModulePreset::CombinedArms, "Combined Arms"),
-                        (ModulePreset::FullSpectrum, "Full Spectrum"),
                     ] {
                         if ui
                             .add_enabled(!locked, egui::Button::new(label).small())
@@ -2506,7 +2713,7 @@ impl DrumfireApp {
                                 ui,
                                 &mut modules.nationstates,
                                 "NationStates",
-                                "read-only nation and capital import",
+                                "read-only nation and capital lookup",
                             );
                             module_checkbox(
                                 ui,
@@ -2789,7 +2996,8 @@ impl DrumfireApp {
                                     )
                                     .fill(p.sand);
                                     if ui.add(button).clicked() {
-                                        self.campaign_screen = CampaignScreen::Briefing(option.id);
+                                        self.campaign_screen =
+                                            CampaignScreen::Briefing(option.key.clone());
                                     }
                                 } else {
                                     ui.label(
@@ -2832,18 +3040,18 @@ impl DrumfireApp {
         ui: &mut egui::Ui,
         p: &Palette,
         campaign: &Campaign,
-        id: OperationId,
+        id: OperationKey,
     ) {
         let Some(option) = campaign
             .options()
             .into_iter()
-            .find(|option| option.id == id)
+            .find(|option| option.key == id)
         else {
             self.campaign_screen = CampaignScreen::WarRoom;
             return;
         };
         let node = campaign.node(&option.node_id);
-        let formation = campaign.formation_for(id);
+        let formation = campaign.formation_for_kind(id.kind);
 
         ui.horizontal(|ui| {
             ui.label(tiny("CAMPAIGN · BRIEFING", p));
@@ -2874,7 +3082,7 @@ impl DrumfireApp {
         ui.add_space(10.0);
         card(p).show(ui, |ui| {
             ui.label(tiny("WHAT IS AT STAKE", p));
-            ui.label(egui::RichText::new(stakes_for(id)).size(14.0).color(p.ink));
+            ui.label(egui::RichText::new(stakes_for(&id)).size(14.0).color(p.ink));
             ui.add_space(8.0);
             ui.label(tiny("COMMITTED", p));
             ui.label(
@@ -2899,7 +3107,7 @@ impl DrumfireApp {
             ui.add_space(8.0);
             ui.label(tiny("CROSS-MODE EFFECT", p));
             ui.label(
-                egui::RichText::new(cross_mode_text(campaign, id))
+                egui::RichText::new(cross_mode_text(campaign, &id))
                     .size(12.5)
                     .color(p.muted),
             );
@@ -4166,67 +4374,53 @@ fn paint_campaign_map(ui: &mut egui::Ui, p: &Palette, campaign: &Campaign) {
     );
 }
 
-fn stakes_for(id: OperationId) -> &'static str {
-    match id {
-        OperationId::IronTide => {
-            "Break the Vantage Ridge line. The road inland opens only if the ridge falls."
+fn stakes_for(key: &OperationKey) -> &'static str {
+    match key.kind {
+        OperationKind::Frontlines => {
+            "Break the forward line. A win moves the front and opens the next node."
         }
-        OperationId::SwiftBridge => {
-            "Seize the Orne Bridge before dawn. It opens the supply road to Port Callas."
+        OperationKind::Skirmish => {
+            "A fast raid to unhinge the garrison before the main push."
         }
-        OperationId::BrightLance => {
-            "Sweep Halcyon's skies. Air superiority makes every later ground and naval operation safer."
+        OperationKind::Dogfight => {
+            "Sweep the node's skies. Air superiority makes later ground and naval operations safer."
         }
-        OperationId::CrimsonWake => {
-            "Open Port Callas. The port restores supply and gives the coalition a sea route for the next push."
+        OperationKind::Naval => {
+            "Open the sea route. The port restores supply and gives the coalition a coastal option."
         }
-        OperationId::SableHammer => {
-            "Take Sable Junction. The rail hub shortens enemy reinforcement and opens the road to Meridian."
-        }
-        OperationId::Ashfall => {
-            "Break Vesper Works. The industrial city is the enemy's will to keep fighting."
-        }
-        OperationId::Meridian => {
-            "Take the capital. Every arm of the coalition has to be ready for this one."
+        OperationKind::Battle => {
+            "A set-piece battle for the node. The garrison, fortification, and terrain are the defense."
         }
     }
 }
 
-fn cross_mode_text(campaign: &Campaign, id: OperationId) -> String {
-    match id {
-        OperationId::IronTide => {
-            "A win takes Vantage Ridge and opens the road inland. Losses stay with Old Ironsides."
+fn cross_mode_text(campaign: &Campaign, key: &OperationKey) -> String {
+    match key.kind {
+        OperationKind::Frontlines => {
+            "A win takes the node and opens its neighbours. Losses stay with the committed formation."
                 .to_string()
         }
-        OperationId::SwiftBridge => {
-            "The Ridgewalkers raid the bridge. A win opens Orne and raises intel for the coastal push."
+        OperationKind::Skirmish => {
+            "A raid resolves quickly and raises intel; a loss costs less than a full battle."
                 .to_string()
         }
-        OperationId::BrightLance => format!(
-            "Air superiority is {}. A win raises it and adds +2 air cover to Salt Watch's naval operation.",
+        OperationKind::Dogfight => format!(
+            "Air superiority is {}. A win raises it and adds air cover to later naval operations.",
             campaign.air_superiority()
         ),
-        OperationId::CrimsonWake => {
+        OperationKind::Naval => {
             if campaign.air_superiority() >= 60 {
                 format!(
-                    "Air superiority at {} grants +2 air cover to the fleet. A win restores supply and secures the port.",
+                    "Air superiority at {} grants air cover to the fleet. A win restores supply and secures the port.",
                     campaign.air_superiority()
                 )
             } else {
-                "Without air superiority the fleet fights at baseline air cover. Taking Halcyon first would help."
-                    .to_string()
+                "Without air superiority the fleet fights at baseline air cover.".to_string()
             }
         }
-        OperationId::SableHammer => {
-            "A set-piece battle for the rail hub. Taking it is one of the four keys to Meridian."
-                .to_string()
-        }
-        OperationId::Ashfall => {
-            "A second set-piece battle. Vesper Works is the industrial key to the capital."
-                .to_string()
-        }
-        OperationId::Meridian => format!(
-            "The combined-arms gate is met. Air superiority {}, naval control {}, and the rail/industrial corridor are yours.",
+        OperationKind::Battle => format!(
+            "A ground battle for {}. Air superiority {}, naval control {}.",
+            key.node_id,
             campaign.air_superiority(),
             campaign.naval_control()
         ),
@@ -4277,7 +4471,34 @@ fn operation_synopsis(record: &OperationRecord) -> String {
 }
 
 fn module_checkbox(ui: &mut egui::Ui, value: &mut bool, label: &str, help: &str) {
-    ui.checkbox(value, label).on_hover_text(help);
+    let reserved = matches!(
+        label,
+        "Rules / Logic"
+            | "Intel"
+            | "Reserve manpower"
+            | "Satellites"
+            | "Strategic weapons"
+            | "Rods from God"
+            | "Nuclear weapons"
+            | "Population"
+            | "Population stability"
+            | "Occupation"
+            | "Liberation"
+            | "NationStates"
+            | "Alliances"
+            | "Diplomacy"
+    );
+    if reserved {
+        ui.add_enabled(false, egui::Checkbox::new(value, label))
+            .on_hover_text(format!("Reserved; disabled in this build. {help}"));
+        ui.label(
+            egui::RichText::new("reserved")
+                .size(8.0)
+                .color(ui.visuals().weak_text_color()),
+        );
+    } else {
+        ui.checkbox(value, label).on_hover_text(help);
+    }
 }
 
 impl RefOrderForm {
@@ -4979,7 +5200,16 @@ mod tests {
     fn campaign_launch_shows_aftermath() {
         let mut app = DrumfireApp::default();
         app.open_campaign();
-        app.launch_campaign_operation(OperationId::IronTide);
+        let key = app
+            .campaign
+            .as_ref()
+            .unwrap()
+            .options()
+            .into_iter()
+            .find(|option| option.available)
+            .unwrap()
+            .key;
+        app.launch_campaign_operation(key);
         assert!(app.error.is_none());
         assert!(matches!(app.campaign_screen, CampaignScreen::Aftermath(_)));
     }
@@ -5004,5 +5234,44 @@ mod tests {
         app.resolve_referee_day();
         assert!(app.error.is_none());
         assert_eq!(app.referee_days.len(), 1);
+    }
+
+    #[test]
+    fn referee_packet_exports() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let out = root.join(format!("target/referee-test-{}", std::process::id()));
+        let mut app = DrumfireApp::default();
+        app.open_referee();
+        app.referee_export_dir = out.display().to_string();
+        app.export_referee_packet();
+        assert!(app.error.is_none(), "{:?}", app.error);
+        assert!(out.join("scenario.json").is_file());
+        assert!(out.join("report.md").is_file());
+        assert!(out.join("conflict.log.json").is_file());
+        let _ = std::fs::remove_dir_all(out);
+    }
+
+    #[test]
+    fn referee_packet_files_load() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let mut app = DrumfireApp::default();
+        app.open_referee();
+        app.referee_scenario_path = root
+            .join("referee-packet/scenario.json")
+            .display()
+            .to_string();
+        app.load_referee_scenario();
+        assert!(app.error.is_none(), "{:?}", app.error);
+        app.referee_order_paths = [
+            root.join("referee-packet/orders-aurelia.json")
+                .display()
+                .to_string(),
+            root.join("referee-packet/orders-vermillion.json")
+                .display()
+                .to_string(),
+        ];
+        app.load_referee_orders();
+        assert!(app.error.is_none(), "{:?}", app.error);
+        assert_eq!(app.referee_external_orders.as_ref().unwrap().len(), 2);
     }
 }

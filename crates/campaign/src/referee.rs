@@ -4,7 +4,7 @@
 //! fixed operation cards. A referee supplies a scenario and order sheets, gets a
 //! multi-day report, and uses it as a shared record for roleplay.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 
 use drumfire_core::{simulate, BattleLog, SimError};
 use drumfire_model::{
@@ -288,7 +288,9 @@ impl RefereeSimulation {
         let mut control_changes = Vec::new();
         let mut notes = Vec::new();
         let mut contacts = Vec::new();
+        let mut moves: Vec<(usize, String)> = Vec::new();
 
+        // Recon, supply, and holding actions are independent of movement order.
         for unit in self.scenario.units.clone() {
             let Some((order_side, action)) = orders.get(&unit.id) else {
                 continue;
@@ -343,24 +345,123 @@ impl RefereeSimulation {
                             from, to
                         )));
                     }
-                    if self.has_enemy_units(to, side) || self.zone_owner(to) != side {
-                        self.engage(
-                            index,
-                            to,
-                            day,
-                            &mut events,
-                            &mut casualties,
-                            &mut control_changes,
-                        )?;
-                    } else {
-                        self.units[index].zone = to.clone();
+                    moves.push((index, to.clone()));
+                }
+            }
+        }
+
+        // Resolve movement as simultaneous contacts grouped by destination.
+        let mut targets: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+        for (index, target) in moves {
+            targets.entry(target).or_default().push(index);
+        }
+        for (target, movers) in targets {
+            let sides: HashSet<String> = movers
+                .iter()
+                .map(|index| self.units[*index].side.clone())
+                .collect();
+            if sides.len() > 1 {
+                let owner = self.zone_owner(&target).to_string();
+                let (attacker_side, defender_side) = if sides.contains(&owner) {
+                    let attacker = sides
+                        .iter()
+                        .find(|side| **side != owner)
+                        .cloned()
+                        .unwrap_or_else(|| owner.clone());
+                    (attacker, owner)
+                } else {
+                    let mut ordered: Vec<String> = sides.into_iter().collect();
+                    ordered.sort();
+                    let meeting_attacker =
+                        meeting_attacker(&self.scenario.name, day, &target, &ordered);
+                    let defender = ordered
+                        .iter()
+                        .find(|side| **side != meeting_attacker)
+                        .cloned()
+                        .unwrap_or_else(|| meeting_attacker.clone());
+                    (meeting_attacker, defender)
+                };
+                let attacker_indices: Vec<usize> = movers
+                    .iter()
+                    .copied()
+                    .filter(|index| self.units[*index].side == attacker_side)
+                    .collect();
+                let mut defender_indices: Vec<usize> = movers
+                    .iter()
+                    .copied()
+                    .filter(|index| self.units[*index].side == defender_side)
+                    .collect();
+                for (index, unit) in self.units.iter().enumerate() {
+                    if unit.zone == target
+                        && unit.side == defender_side
+                        && unit.branch == Branch::Ground
+                        && unit.strength > 0
+                        && !defender_indices.contains(&index)
+                    {
+                        defender_indices.push(index);
+                    }
+                }
+                let meeting = self.zone_owner(&target) != defender_side
+                    || self.zone_owner(&target) == "neutral";
+                self.engage_group(
+                    &attacker_indices,
+                    &defender_indices,
+                    &target,
+                    day,
+                    !meeting,
+                    &mut events,
+                    &mut casualties,
+                    &mut control_changes,
+                )?;
+            } else {
+                let side = self.units[movers[0]].side.clone();
+                let defenders: Vec<usize> = self
+                    .units
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, unit)| {
+                        unit.zone == target
+                            && unit.side != side
+                            && unit.branch == Branch::Ground
+                            && unit.strength > 0
+                    })
+                    .map(|(index, _)| index)
+                    .collect();
+                if defenders.is_empty() {
+                    for index in &movers {
+                        self.units[*index].zone = target.clone();
+                    }
+                    let owner = self.zone_owner(&target).to_string();
+                    if owner != side {
+                        self.set_owner(&target, &side);
+                        control_changes.push(format!(
+                            "{} occupied {}",
+                            self.side_name(&side),
+                            self.zone_name(&target)
+                        ));
                         events.push(format!(
-                            "{} advances from {} to {}",
-                            self.units[index].name,
-                            self.zone_name(&from),
-                            self.zone_name(to)
+                            "{} occupies {}",
+                            self.side_name(&side),
+                            self.zone_name(&target)
+                        ));
+                    } else {
+                        events.push(format!(
+                            "{} advances into {}",
+                            self.side_name(&side),
+                            self.zone_name(&target)
                         ));
                     }
+                } else {
+                    self.engage_group(
+                        &movers,
+                        &defenders,
+                        &target,
+                        day,
+                        true,
+                        &mut events,
+                        &mut casualties,
+                        &mut control_changes,
+                    )?;
                 }
             }
         }
@@ -380,41 +481,54 @@ impl RefereeSimulation {
         })
     }
 
-    fn engage(
+    #[allow(clippy::too_many_arguments)]
+    fn engage_group(
         &mut self,
-        attacker_index: usize,
+        attacker_indices: &[usize],
+        defender_indices: &[usize],
         target_zone: &str,
-        _day: u32,
+        day: u32,
+        fortified: bool,
         events: &mut Vec<String>,
         casualties: &mut Vec<Casualty>,
         control_changes: &mut Vec<String>,
     ) -> Result<(), RefereeError> {
-        let attacker = self.units[attacker_index].clone();
-        let defender_indices: Vec<usize> = self
-            .units
+        let attackers: Vec<usize> = attacker_indices
             .iter()
-            .enumerate()
-            .filter(|(_, unit)| {
-                unit.zone == target_zone
-                    && unit.side != attacker.side
-                    && unit.strength > 0
-                    && unit.branch == Branch::Ground
+            .copied()
+            .filter(|index| {
+                self.units[*index].strength > 0 && self.units[*index].branch == Branch::Ground
             })
-            .map(|(index, _)| index)
             .collect();
-        if defender_indices.is_empty() {
-            self.set_owner(target_zone, &attacker.side);
-            self.units[attacker_index].zone = target_zone.to_string();
-            let name = self.zone_name(target_zone);
+        let defenders: Vec<usize> = defender_indices
+            .iter()
+            .copied()
+            .filter(|index| {
+                self.units[*index].strength > 0 && self.units[*index].branch == Branch::Ground
+            })
+            .collect();
+        let Some(first_attacker) = attackers.first().copied() else {
+            return Ok(());
+        };
+        let attacker_side = self.units[first_attacker].side.clone();
+        let Some(first_defender) = defenders.first().copied() else {
+            for index in &attackers {
+                self.units[*index].zone = target_zone.to_string();
+            }
+            self.set_owner(target_zone, &attacker_side);
             control_changes.push(format!(
                 "{} occupied {}",
-                self.side_name(&attacker.side),
-                name
+                self.side_name(&attacker_side),
+                self.zone_name(target_zone)
             ));
-            events.push(format!("{} occupies {}", attacker.name, name));
+            events.push(format!(
+                "{} occupies {}",
+                self.side_name(&attacker_side),
+                self.zone_name(target_zone)
+            ));
             return Ok(());
-        }
-
+        };
+        let defender_side = self.units[first_defender].side.clone();
         let zone = self
             .scenario
             .zones
@@ -422,25 +536,44 @@ impl RefereeSimulation {
             .find(|zone| zone.id == target_zone)
             .cloned()
             .ok_or_else(|| RefereeError::Orders(format!("unknown zone {target_zone}")))?;
-        let defender_strength: u32 = defender_indices
+
+        let attacker_strength: u32 = attackers
             .iter()
             .map(|index| self.units[*index].strength)
             .sum();
-        let support = self.support_strength(&attacker.side, target_zone);
-        let attacker_strength = (attacker.strength as f64 + support as f64).round() as u32;
-        let defender_forces = ((defender_strength as f64)
-            * zone.terrain.defender_multiplier()
-            * (1.0 + zone.fortification as f64 * 0.03))
-            .round() as u32;
-        let attacker_force = attacker_strength.max(1);
+        let defender_strength: u32 = defenders
+            .iter()
+            .map(|index| self.units[*index].strength)
+            .sum();
+        let attacker_support = self.support_strength(&attacker_side, target_zone);
+        let defender_support = self.support_strength(&defender_side, target_zone);
+        let terrain = if fortified {
+            zone.terrain.defender_multiplier() * (1.0 + zone.fortification as f64 * 0.03)
+        } else {
+            1.0
+        };
+        let attacker_force = ((attacker_strength as f64) + attacker_support as f64)
+            .round()
+            .max(1.0) as u32;
+        let defender_force = ((defender_strength as f64) * terrain + defender_support as f64)
+            .round()
+            .max(1.0) as u32;
+
         let input = BattleInput {
             mode: Mode::Battle,
-            attacker: team_from_unit(&attacker, attacker_force, false),
-            defender: team_from_defenders(
+            attacker: team_from_group(
                 &self.units,
-                &defender_indices,
-                defender_forces.max(1),
-                &zone,
+                &attackers,
+                format!("{} attack", self.side_name(&attacker_side)),
+                attacker_force,
+                false,
+            ),
+            defender: team_from_group(
+                &self.units,
+                &defenders,
+                format!("{} defense", self.side_name(&defender_side)),
+                defender_force,
+                true,
             ),
             config: BattleConfig {
                 max_rounds: 16,
@@ -448,41 +581,37 @@ impl RefereeSimulation {
                 morale_rout_threshold: 8,
                 ..BattleConfig::default()
             },
-            seed: seed_for(&self.scenario.name, attacker_index, target_zone),
+            seed: seed_for(&self.scenario.name, day as usize, target_zone),
         };
         let log: BattleLog = simulate(&input)?;
         let a_initial = input.attacker.forces.get();
         let d_initial = input.defender.forces.get();
         let a_loss = a_initial.saturating_sub(log.result.final_forces.attacker);
         let d_loss = d_initial.saturating_sub(log.result.final_forces.defender);
+        let a_total = attacker_strength.max(1);
+        let d_total = defender_strength.max(1);
+        let a_share_total =
+            ((a_loss as f64 / a_initial.max(1) as f64) * a_total as f64).round() as u32;
+        let d_share_total =
+            ((d_loss as f64 / d_initial.max(1) as f64) * d_total as f64).round() as u32;
 
-        let a_share = if a_initial == 0 {
-            0
-        } else {
-            ((a_loss as f64 / a_initial as f64) * attacker.strength as f64).round() as u32
-        };
-        self.units[attacker_index].strength = self.units[attacker_index]
-            .strength
-            .saturating_sub(a_share.max(1));
-        self.units[attacker_index].supply = self.units[attacker_index].supply.saturating_sub(12);
-        casualties.push(Casualty {
-            side: attacker.side.clone(),
-            unit: attacker.name.clone(),
-            losses: a_share,
-        });
-
-        let d_total: u32 = defender_indices
-            .iter()
-            .map(|index| self.units[*index].strength)
-            .sum();
-        for index in &defender_indices {
-            let share = if d_total == 0 {
-                0
-            } else {
-                ((d_loss as f64 / d_initial.max(1) as f64) * self.units[*index].strength as f64)
-                    .round() as u32
-            };
-            self.units[*index].strength = self.units[*index].strength.saturating_sub(share.max(1));
+        for index in &attackers {
+            let share = ((a_share_total as f64 / a_total as f64)
+                * self.units[*index].strength as f64)
+                .round() as u32;
+            self.units[*index].strength = self.units[*index].strength.saturating_sub(share);
+            self.units[*index].supply = self.units[*index].supply.saturating_sub(12);
+            casualties.push(Casualty {
+                side: self.units[*index].side.clone(),
+                unit: self.units[*index].name.clone(),
+                losses: share,
+            });
+        }
+        for index in &defenders {
+            let share = ((d_share_total as f64 / d_total as f64)
+                * self.units[*index].strength as f64)
+                .round() as u32;
+            self.units[*index].strength = self.units[*index].strength.saturating_sub(share);
             self.units[*index].supply = self.units[*index].supply.saturating_sub(10);
             casualties.push(Casualty {
                 side: self.units[*index].side.clone(),
@@ -492,28 +621,57 @@ impl RefereeSimulation {
         }
 
         if log.result.winner == drumfire_core::Winner::Attacker {
-            self.set_owner(target_zone, &attacker.side);
-            self.units[attacker_index].zone = target_zone.to_string();
+            for index in &attackers {
+                self.units[*index].zone = target_zone.to_string();
+            }
+            for index in &defenders {
+                if self.units[*index].strength > 0 {
+                    if let Some(retreat) = self.retreat_zone(&defender_side, target_zone) {
+                        self.units[*index].zone = retreat;
+                    }
+                }
+            }
+            self.set_owner(target_zone, &attacker_side);
             control_changes.push(format!(
                 "{} captured {}",
-                self.side_name(&attacker.side),
+                self.side_name(&attacker_side),
                 self.zone_name(target_zone)
             ));
             events.push(format!(
                 "{} takes {} after {} rounds",
-                attacker.name,
+                self.side_name(&attacker_side),
                 zone.name,
                 log.rounds.len()
             ));
         } else {
             events.push(format!(
                 "{} holds {} after {} rounds",
-                self.side_name(&self.zone_owner(target_zone)),
+                self.side_name(&defender_side),
                 zone.name,
                 log.rounds.len()
             ));
         }
         Ok(())
+    }
+
+    fn retreat_zone(&self, side: &str, target: &str) -> Option<String> {
+        let zone = self.scenario.zones.iter().find(|zone| zone.id == target)?;
+        zone.connections
+            .iter()
+            .find(|candidate| {
+                *candidate != target
+                    && self
+                        .zones
+                        .iter()
+                        .any(|state| state.id == **candidate && state.owner == side)
+            })
+            .cloned()
+            .or_else(|| {
+                zone.connections
+                    .iter()
+                    .find(|candidate| *candidate != target)
+                    .cloned()
+            })
     }
 
     fn support_strength(&self, side: &str, target: &str) -> u32 {
@@ -668,12 +826,6 @@ impl RefereeSimulation {
             .map(|zone| zone.connections.iter().any(|id| id == b))
             .unwrap_or(false)
     }
-
-    fn has_enemy_units(&self, zone: &str, side: &str) -> bool {
-        self.units
-            .iter()
-            .any(|unit| unit.zone == zone && unit.side != side && unit.strength > 0)
-    }
 }
 
 fn collect_orders(
@@ -700,47 +852,50 @@ fn collect_orders(
     Ok(output)
 }
 
-fn team_from_unit(unit: &UnitState, forces: u32, home: bool) -> TeamInput {
+fn team_from_group(
+    units: &[UnitState],
+    indices: &[usize],
+    name: String,
+    forces: u32,
+    home: bool,
+) -> TeamInput {
+    let count = indices.len().max(1) as u32;
+    let morale = indices
+        .iter()
+        .map(|index| units[*index].morale as u32)
+        .sum::<u32>()
+        / count;
+    let supply = indices
+        .iter()
+        .map(|index| units[*index].supply as u32)
+        .sum::<u32>()
+        / count;
+    let experience = indices
+        .iter()
+        .map(|index| units[*index].experience as u32)
+        .sum::<u32>()
+        / count;
     TeamInput {
-        name: unit.name.clone(),
+        name,
         forces: ForceCount::new(forces.max(1)).unwrap(),
-        morale: Morale::new(unit.morale).unwrap(),
+        morale: Morale::new(morale.min(100) as u8).unwrap(),
         tech: Rating::new(6).unwrap(),
-        training: Rating::new((4 + unit.experience / 2).min(10)).unwrap(),
-        experience: Rating::new((4 + unit.experience).min(10)).unwrap(),
-        logistics: Rating::new((unit.supply / 20).clamp(1, 10)).unwrap(),
+        training: Rating::new((4 + experience / 2).min(10) as u8).unwrap(),
+        experience: Rating::new((4 + experience).min(10) as u8).unwrap(),
+        logistics: Rating::new((supply / 20).clamp(1, 10) as u8).unwrap(),
         intel: Rating::new(5).unwrap(),
         home,
     }
 }
 
-fn team_from_defenders(
-    units: &[UnitState],
-    indices: &[usize],
-    forces: u32,
-    zone: &Zone,
-) -> TeamInput {
-    let morale = indices
-        .iter()
-        .map(|index| units[*index].morale as u32)
-        .sum::<u32>()
-        / indices.len().max(1) as u32;
-    let supply = indices
-        .iter()
-        .map(|index| units[*index].supply as u32)
-        .sum::<u32>()
-        / indices.len().max(1) as u32;
-    TeamInput {
-        name: format!("{} Garrison", zone.name),
-        forces: ForceCount::new(forces.max(1)).unwrap(),
-        morale: Morale::new(morale.min(100) as u8).unwrap(),
-        tech: Rating::new(6).unwrap(),
-        training: Rating::new(5).unwrap(),
-        experience: Rating::new(5).unwrap(),
-        logistics: Rating::new((supply / 20).clamp(1, 10) as u8).unwrap(),
-        intel: Rating::new(5).unwrap(),
-        home: true,
-    }
+fn meeting_attacker(name: &str, day: u32, target: &str, sides: &[String]) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(name.as_bytes());
+    hasher.update(day.to_le_bytes());
+    hasher.update(target.as_bytes());
+    let digest = hasher.finalize();
+    let index = digest[0] as usize % sides.len().max(1);
+    sides[index].clone()
 }
 
 fn seed_for(name: &str, index: usize, target: &str) -> Seed {
@@ -1125,7 +1280,7 @@ impl RefereeScenario {
                         day: 3,
                         unit: "aurelia_1".to_string(),
                         action: OrderAction::Attack {
-                            target: "vesper".to_string(),
+                            target: "rail_junction".to_string(),
                         },
                     },
                     Order {
@@ -1312,6 +1467,76 @@ mod tests {
         let log = resolve_conflict(&scenario, &RefereeScenario::demo_orders()).unwrap();
         assert_eq!(log.days.len(), 5);
         assert!(!log.summary.is_empty());
+    }
+
+    #[test]
+    fn simultaneous_moves_are_independent_of_unit_order() {
+        let orders = vec![
+            OrderSheet {
+                side: "aurelia".to_string(),
+                orders: vec![Order {
+                    day: 1,
+                    unit: "aurelia_1".to_string(),
+                    action: OrderAction::Move {
+                        to: "rail_junction".to_string(),
+                    },
+                }],
+            },
+            OrderSheet {
+                side: "vermillion".to_string(),
+                orders: vec![Order {
+                    day: 1,
+                    unit: "vermillion_7".to_string(),
+                    action: OrderAction::Move {
+                        to: "rail_junction".to_string(),
+                    },
+                }],
+            },
+        ];
+        let mut scenario = RefereeScenario::demo();
+        scenario
+            .units
+            .retain(|unit| unit.id == "aurelia_1" || unit.id == "vermillion_7");
+        scenario.units[0].zone = "alder_gate".to_string();
+        scenario.units[1].zone = "vesper".to_string();
+        let mut reversed = scenario.clone();
+        reversed.units.reverse();
+
+        let forward = RefereeSimulation::new(scenario)
+            .unwrap()
+            .resolve(&orders)
+            .unwrap();
+        let backward = RefereeSimulation::new(reversed)
+            .unwrap()
+            .resolve(&orders)
+            .unwrap();
+
+        let rail_owner = |log: &ConflictLog| {
+            log.final_zones
+                .iter()
+                .find(|zone| zone.id == "rail_junction")
+                .unwrap()
+                .owner
+                .clone()
+        };
+        assert_eq!(rail_owner(&forward), rail_owner(&backward));
+        for unit in ["aurelia_1", "vermillion_7"] {
+            let strength = |log: &ConflictLog| {
+                log.final_units
+                    .iter()
+                    .find(|state| state.id == unit)
+                    .unwrap()
+                    .strength
+            };
+            assert_eq!(strength(&forward), strength(&backward));
+        }
+    }
+
+    #[test]
+    fn air_support_is_counted_for_both_sides() {
+        let sim = RefereeSimulation::new(RefereeScenario::demo()).unwrap();
+        assert!(sim.support_strength("aurelia", "alder_gate") > 0);
+        assert!(sim.support_strength("vermillion", "vesper") > 0);
     }
 
     #[test]
